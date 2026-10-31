@@ -22,7 +22,8 @@
  *     plain query, so no native delete operation hides from that search;
  *   · legal basis, rights (restriction of processing added at R2i-a) and the complaint right (R2h-3) → text anchors;
  *   · some services process data outside the EU/EEA (R2i-b) → one sentence, placed right after the services list, and
- *     nothing about safeguards on the page (the ruling stops at that sentence);
+ *     no transfer-mechanism term on the page, the panel notice or the footer (the ruling stops at that sentence) — a
+ *     list of terms (TRANSFER_TERMS), so a wording it does not name passes; the anchors are source text, not render;
  *   · the services list → every outside host a workflow calls maps to a listed service (comment-only hosts allowlisted);
  *   · "nothing is sent over WhatsApp" → Main's `Should Send?` (the gate in front of `Send WhatsApp (Zernio)`) is fed only
  *     by the WhatsApp ACK responder, and Reminders' literal holds `whatsappSendDisabled: true`;
@@ -160,7 +161,7 @@ test('legal basis, rights and the complaint right are stated (R2h-3, R2i-a; the 
     'lodge a complaint with a data-protection supervisory authority']) assert.ok(PAGE.includes(anchor), `page: ${anchor}`);
 });
 
-test('processing outside the EU/EEA: one sentence, right after the services list, nothing about safeguards (R2i-b)', () => {
+test('processing outside the EU/EEA: one sentence, right after the services list, no transfer-mechanism term (R2i-b)', () => {
   const line = 'Some of these services process data outside the EU/EEA, including in the United States; where each one';
   assert.ok(PAGE.includes(line), 'page: the non-EU sentence');
   assert.ok(PAGE.includes('processes data is described in its own privacy policy.'), 'page: each policy says where');
@@ -168,8 +169,12 @@ test('processing outside the EU/EEA: one sentence, right after the services list
   const at = PAGE.indexOf(line);
   assert.ok(list !== -1 && at > list && PAGE.slice(list, at).split('</ul>').length === 2 && !/<h2|<\/p>|<li/.test(PAGE.slice(list, at).split('</ul>')[1]),
     'the sentence follows the services list, before anything else');
-  // The ruling stops at that sentence: no claim about a transfer mechanism the demo has not had reviewed.
-  assert.ok(!/safeguard|contractual clause|adequacy|Data Privacy Framework/i.test(PAGE), 'page: nothing about safeguards');
+  // The ruling stops at that sentence: no claim about a transfer mechanism the demo has not had reviewed. The list is
+  // what is checked — names and abbreviations of the GDPR's transfer tools — not every possible wording of one.
+  const TRANSFER_TERMS = /safeguard|contractual clause|\bSCCs?\b|adequa(cy|te)|Data Privacy Framework|\bDPF\b|Privacy Shield|binding corporate|\bBCRs?\b|Art(icle)?\.?\s*4[5-9]\b|never leaves the EU|stays in the EU/i;
+  for (const [name, text] of [['page', PAGE], ['notice', PANEL], ['footer', FOOTER]]) {
+    assert.ok(!TRANSFER_TERMS.test(text), `${name}: no transfer-mechanism term`);
+  }
 });
 
 test('cancelling: the calendar event is deleted and the booking row is kept, marked cancelled (as the page says)', () => {

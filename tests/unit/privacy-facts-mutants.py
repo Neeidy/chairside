@@ -74,6 +74,12 @@ MUTANTS = {
     'the non-EU sentence moved above the services list': (PAGE, '        <ul>\n          {PROCESSORS.map((p) => <li key={p.name}><strong>{p.name}</strong> — {p.use}</li>)}\n        </ul>\n        <p>\n          Some of these services process data outside the EU/EEA, including in the United States; where each one\n          processes data is described in its own privacy policy.\n        </p>\n',
         '        <p>\n          Some of these services process data outside the EU/EEA, including in the United States; where each one\n          processes data is described in its own privacy policy.\n        </p>\n        <ul>\n          {PROCESSORS.map((p) => <li key={p.name}><strong>{p.name}</strong> — {p.use}</li>)}\n        </ul>\n'),
     'a safeguard claim added': (PAGE, 'described in its own privacy policy.', 'described in its own privacy policy, under standard contractual clauses.'),
+    # R2i, security-auditor LOW-1 / INFO-2: the abbreviations, and the two other surfaces
+    'a DPF claim added': (PAGE, 'described in its own privacy policy.', 'described in its own privacy policy; transfers rely on the EU-U.S. DPF.'),
+    'an SCC claim added': (PAGE, 'described in its own privacy policy.', 'described in its own privacy policy, covered by SCCs.'),
+    'an adequacy claim added': (PAGE, 'described in its own privacy policy.', 'described in its own privacy policy, with adequate protection.'),
+    'a Privacy Shield claim added': (PAGE, 'described in its own privacy policy.', 'described in its own privacy policy under Privacy Shield.'),
+    'the footer saying data never leaves the EU': ('web/site/components/site/SiteFooter.tsx', '</footer>', 'Your data never leaves the EU.</footer>'),
 }
 
 
