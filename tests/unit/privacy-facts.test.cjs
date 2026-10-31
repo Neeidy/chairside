@@ -165,9 +165,11 @@ test('legal basis, rights and the complaint right are stated (R2h-3, R2i-a; the 
 test('processing outside the EU/EEA: one sentence, right after the services list, no transfer-mechanism term (R2i-b)', () => {
   const line = 'Some of these services process data outside the EU/EEA, including in the United States; where each';
   assert.ok(PAGE.includes(line), 'page: the non-EU sentence');
-  // Go-live ruling (1): "third-party", because the author's own server is in the list and has no privacy policy.
-  assert.ok(PAGE.includes('third-party service processes data is described in its own privacy policy.'),
-    'page: each third-party policy says where');
+  // Go-live ruling (1): "third-party", because the author's own server is in the list and has no privacy policy. The
+  // whole sentence, whitespace collapsed, so nothing can sit between its two source lines.
+  assert.ok(PAGE.replace(/\s+/g, ' ').includes('Some of these services process data outside the EU/EEA, including in the '
+    + 'United States; where each third-party service processes data is described in its own privacy policy.'),
+    'page: the whole sentence, as ruled');
   const list = PAGE.indexOf('{PROCESSORS.map(');
   const at = PAGE.indexOf(line);
   assert.ok(list !== -1 && at > list && PAGE.slice(list, at).split('</ul>').length === 2 && !/<h2|<\/p>|<li/.test(PAGE.slice(list, at).split('</ul>')[1]),
