@@ -22,8 +22,9 @@
  *     plain query, so no native delete operation hides from that search;
  *   · legal basis, rights (restriction of processing added at R2i-a) and the complaint right (R2h-3) → text anchors;
  *   · some services process data outside the EU/EEA (R2i-b) → one sentence, placed right after the services list, and
- *     no transfer-mechanism term on the page, the panel notice or the footer (the ruling stops at that sentence) — a
- *     list of terms (TRANSFER_TERMS), so a wording it does not name passes; the anchors are source text, not render;
+ *     no transfer-mechanism term on the page, the panel notice, the footer or the services' texts (the ruling stops at
+ *     that sentence) — a list of terms (TRANSFER_TERMS), so a wording it does not name passes; the anchors are source
+ *     text, not render;
  *   · the services list → every outside host a workflow calls maps to a listed service (comment-only hosts allowlisted);
  *   · "nothing is sent over WhatsApp" → Main's `Should Send?` (the gate in front of `Send WhatsApp (Zernio)`) is fed only
  *     by the WhatsApp ACK responder, and Reminders' literal holds `whatsappSendDisabled: true`;
@@ -171,8 +172,12 @@ test('processing outside the EU/EEA: one sentence, right after the services list
     'the sentence follows the services list, before anything else');
   // The ruling stops at that sentence: no claim about a transfer mechanism the demo has not had reviewed. The list is
   // what is checked — names and abbreviations of the GDPR's transfer tools — not every possible wording of one.
-  const TRANSFER_TERMS = /safeguard|contractual clause|\bSCCs?\b|adequa(cy|te)|Data Privacy Framework|\bDPF\b|Privacy Shield|binding corporate|\bBCRs?\b|Art(icle)?\.?\s*4[5-9]\b|never leaves the EU|stays in the EU/i;
-  for (const [name, text] of [['page', PAGE], ['notice', PANEL], ['footer', FOOTER]]) {
+  // `safeguard` and `adequate` match in any sense ("a safeguard against spam"): that fails LOUD, and the fix is a
+  // rewording, not a wider pattern. The services' `use` texts render on the page too, so privacy.ts is scanned.
+  const TRANSFER_TERMS = /safeguard|contractual clause|\bSCCs?\b|\badequa(cy|te)|Data Privacy Framework|\bDPF\b|Privacy Shield|binding corporate|\bBCRs?\b|\bArt(icle)?\.?\s*4[5-9]\b|never leaves the EU\b|stays in the EU\b/i;
+  assert.ok(!TRANSFER_TERMS.test('Bookings start 48 hours ahead, part 45; the price stays in the EUR currency.'),
+    'the term list does not fire on ordinary text (negative control)');
+  for (const [name, text] of [['page', PAGE], ['notice', PANEL], ['footer', FOOTER], ['services', PRIVACY]]) {
     assert.ok(!TRANSFER_TERMS.test(text), `${name}: no transfer-mechanism term`);
   }
 });

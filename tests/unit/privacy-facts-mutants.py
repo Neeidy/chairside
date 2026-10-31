@@ -80,6 +80,12 @@ MUTANTS = {
     'an adequacy claim added': (PAGE, 'described in its own privacy policy.', 'described in its own privacy policy, with adequate protection.'),
     'a Privacy Shield claim added': (PAGE, 'described in its own privacy policy.', 'described in its own privacy policy under Privacy Shield.'),
     'the footer saying data never leaves the EU': ('web/site/components/site/SiteFooter.tsx', '</footer>', 'Your data never leaves the EU.</footer>'),
+    # R2i, security-auditor LOW-C: a service's own text renders on the page
+    'a DPF claim in a service text': (PRIVACY, "{ name: 'Vercel', use: 'hosts this website' }", "{ name: 'Vercel', use: 'hosts this website (EU-U.S. DPF certified)' }"),
+    'Article 46 in the notice': ('web/site/components/site/LiveChatPanel.tsx', '{config.demoMode === true && (', '{/* Art. 46 */ config.demoMode === true && ('),
+    # ... and the negative control proves the word boundaries are there ("start 48", "EUR")
+    'the boundary before Art dropped': ('tests/unit/privacy-facts.test.cjs', '|\\bArt(icle)?', '|Art(icle)?'),
+    'the boundary after stays in the EU dropped': ('tests/unit/privacy-facts.test.cjs', 'stays in the EU\\b/i', 'stays in the EU/i'),
 }
 
 
