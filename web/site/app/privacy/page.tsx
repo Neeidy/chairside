@@ -102,8 +102,8 @@ export default function PrivacyPage() {
           {PROCESSORS.map((p) => <li key={p.name}><strong>{p.name}</strong> — {p.use}</li>)}
         </ul>
         <p>
-          Some of these services process data outside the EU/EEA, including in the United States; where each one
-          processes data is described in its own privacy policy.
+          Some of these services process data outside the EU/EEA, including in the United States; where each
+          third-party service processes data is described in its own privacy policy.
         </p>
         <p>
           The bot check is Cloudflare Turnstile; Cloudflare describes what it collects in its{' '}

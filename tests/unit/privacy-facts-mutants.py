@@ -68,11 +68,13 @@ MUTANTS = {
         'DELETE FROM\\nsalon.appointments WHERE false; UPDATE salon.conversations SET last_alert_class'),
     # R2i: restriction of processing, and the one sentence on processing outside the EU/EEA
     'restriction of processing left out': (PAGE, ', or for\n          restriction of processing,', ','),
-    'the non-EU sentence left out': (PAGE, '        <p>\n          Some of these services process data outside the EU/EEA, including in the United States; where each one\n          processes data is described in its own privacy policy.\n        </p>\n', ''),
+    'the non-EU sentence left out': (PAGE, '        <p>\n          Some of these services process data outside the EU/EEA, including in the United States; where each\n          third-party service processes data is described in its own privacy policy.\n        </p>\n', ''),
     'the United States left out': (PAGE, ', including in the United States;', ';'),
-    'each service\'s own policy left unsaid': (PAGE, 'where each one\n          processes data is described in its own privacy policy.', 'data stays there.'),
-    'the non-EU sentence moved above the services list': (PAGE, '        <ul>\n          {PROCESSORS.map((p) => <li key={p.name}><strong>{p.name}</strong> — {p.use}</li>)}\n        </ul>\n        <p>\n          Some of these services process data outside the EU/EEA, including in the United States; where each one\n          processes data is described in its own privacy policy.\n        </p>\n',
-        '        <p>\n          Some of these services process data outside the EU/EEA, including in the United States; where each one\n          processes data is described in its own privacy policy.\n        </p>\n        <ul>\n          {PROCESSORS.map((p) => <li key={p.name}><strong>{p.name}</strong> — {p.use}</li>)}\n        </ul>\n'),
+    'each service\'s own policy left unsaid': (PAGE, 'where each\n          third-party service processes data is described in its own privacy policy.', 'data stays there.'),
+    # go-live ruling (1): the author's own server has no privacy policy, so the sentence names third parties only
+    'the old "each one" wording back': (PAGE, 'where each\n          third-party service processes data', 'where each one\n          processes data'),
+    'the non-EU sentence moved above the services list': (PAGE, '        <ul>\n          {PROCESSORS.map((p) => <li key={p.name}><strong>{p.name}</strong> — {p.use}</li>)}\n        </ul>\n        <p>\n          Some of these services process data outside the EU/EEA, including in the United States; where each\n          third-party service processes data is described in its own privacy policy.\n        </p>\n',
+        '        <p>\n          Some of these services process data outside the EU/EEA, including in the United States; where each\n          third-party service processes data is described in its own privacy policy.\n        </p>\n        <ul>\n          {PROCESSORS.map((p) => <li key={p.name}><strong>{p.name}</strong> — {p.use}</li>)}\n        </ul>\n'),
     'a safeguard claim added': (PAGE, 'described in its own privacy policy.', 'described in its own privacy policy, under standard contractual clauses.'),
     # R2i, security-auditor LOW-1 / INFO-2: the abbreviations, and the two other surfaces
     'a DPF claim added': (PAGE, 'described in its own privacy policy.', 'described in its own privacy policy; transfers rely on the EU-U.S. DPF.'),
