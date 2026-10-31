@@ -48,7 +48,7 @@ MUTANTS = {
     'an address typed into the page': (PAGE, 'Write to ${PRIVACY_CONTACT} to ask', 'Write to privacy@example.com to ask'),
     # R2h: the GDPR basics and the measured retention of the two kept records
     'the legal basis left out': (PAGE, 'legitimate interest (GDPR Art. 6(1)(f))', 'our interest'),
-    'the complaint right left out': (PAGE, 'You also have the right to lodge a complaint with a data-protection\n          supervisory authority.', ''),
+    'the complaint right left out': (PAGE, ' You also have the\n          right to lodge a complaint with a data-protection supervisory authority.', ''),
     'the conversation record said to be deleted automatically': (PAGE, 'not deleted automatically; it is deleted on request.</li>',
         'deleted with the messages.</li>'),
     'the kept last reply left unsaid': (PAGE, "the assistant&apos;s last reply and ", ''),
@@ -66,6 +66,14 @@ MUTANTS = {
     'Main deleting bookings across a line break': ('n8n/workflow.main.sanitized.json',
         'UPDATE salon.conversations SET last_alert_class',
         'DELETE FROM\\nsalon.appointments WHERE false; UPDATE salon.conversations SET last_alert_class'),
+    # R2i: restriction of processing, and the one sentence on processing outside the EU/EEA
+    'restriction of processing left out': (PAGE, ', or for\n          restriction of processing,', ','),
+    'the non-EU sentence left out': (PAGE, '        <p>\n          Some of these services process data outside the EU/EEA, including in the United States; where each one\n          processes data is described in its own privacy policy.\n        </p>\n', ''),
+    'the United States left out': (PAGE, ', including in the United States;', ';'),
+    'each service\'s own policy left unsaid': (PAGE, 'where each one\n          processes data is described in its own privacy policy.', 'data stays there.'),
+    'the non-EU sentence moved above the services list': (PAGE, '        <ul>\n          {PROCESSORS.map((p) => <li key={p.name}><strong>{p.name}</strong> — {p.use}</li>)}\n        </ul>\n        <p>\n          Some of these services process data outside the EU/EEA, including in the United States; where each one\n          processes data is described in its own privacy policy.\n        </p>\n',
+        '        <p>\n          Some of these services process data outside the EU/EEA, including in the United States; where each one\n          processes data is described in its own privacy policy.\n        </p>\n        <ul>\n          {PROCESSORS.map((p) => <li key={p.name}><strong>{p.name}</strong> — {p.use}</li>)}\n        </ul>\n'),
+    'a safeguard claim added': (PAGE, 'described in its own privacy policy.', 'described in its own privacy policy, under standard contractual clauses.'),
 }
 
 

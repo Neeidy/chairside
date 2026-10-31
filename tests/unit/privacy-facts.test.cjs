@@ -20,7 +20,9 @@
  *     from salon.conversations or salon.appointments, and Purge's only write to a conversation empties recent_messages
  *     and no workflow empties computed_reply (so the last reply is kept, as the page says); every Postgres node is a
  *     plain query, so no native delete operation hides from that search;
- *   · legal basis, rights and the complaint right (R2h-3) → text anchors;
+ *   · legal basis, rights (restriction of processing added at R2i-a) and the complaint right (R2h-3) → text anchors;
+ *   · some services process data outside the EU/EEA (R2i-b) → one sentence, placed right after the services list, and
+ *     nothing about safeguards on the page (the ruling stops at that sentence);
  *   · the services list → every outside host a workflow calls maps to a listed service (comment-only hosts allowlisted);
  *   · "nothing is sent over WhatsApp" → Main's `Should Send?` (the gate in front of `Send WhatsApp (Zernio)`) is fed only
  *     by the WhatsApp ACK responder, and Reminders' literal holds `whatsappSendDisabled: true`;
@@ -152,10 +154,22 @@ test('conversation and booking records: no committed workflow deletes either, so
   }
 });
 
-test('legal basis, rights and the complaint right are stated (R2h-3, the same text for every client)', () => {
+test('legal basis, rights and the complaint right are stated (R2h-3, R2i-a; the same text for every client)', () => {
   for (const anchor of ['legitimate interest (GDPR Art. 6(1)(f))', 'access to what the demo holds about you',
-    'rectification or erasure', 'object to its', 'lodge a complaint with a data-protection',
-    'supervisory authority']) assert.ok(PAGE.includes(anchor), `page: ${anchor}`);
+    'rectification or erasure', 'restriction of processing', 'object to its',
+    'lodge a complaint with a data-protection supervisory authority']) assert.ok(PAGE.includes(anchor), `page: ${anchor}`);
+});
+
+test('processing outside the EU/EEA: one sentence, right after the services list, nothing about safeguards (R2i-b)', () => {
+  const line = 'Some of these services process data outside the EU/EEA, including in the United States; where each one';
+  assert.ok(PAGE.includes(line), 'page: the non-EU sentence');
+  assert.ok(PAGE.includes('processes data is described in its own privacy policy.'), 'page: each policy says where');
+  const list = PAGE.indexOf('{PROCESSORS.map(');
+  const at = PAGE.indexOf(line);
+  assert.ok(list !== -1 && at > list && PAGE.slice(list, at).split('</ul>').length === 2 && !/<h2|<\/p>|<li/.test(PAGE.slice(list, at).split('</ul>')[1]),
+    'the sentence follows the services list, before anything else');
+  // The ruling stops at that sentence: no claim about a transfer mechanism the demo has not had reviewed.
+  assert.ok(!/safeguard|contractual clause|adequacy|Data Privacy Framework/i.test(PAGE), 'page: nothing about safeguards');
 });
 
 test('cancelling: the calendar event is deleted and the booking row is kept, marked cancelled (as the page says)', () => {

@@ -102,6 +102,10 @@ export default function PrivacyPage() {
           {PROCESSORS.map((p) => <li key={p.name}><strong>{p.name}</strong> — {p.use}</li>)}
         </ul>
         <p>
+          Some of these services process data outside the EU/EEA, including in the United States; where each one
+          processes data is described in its own privacy policy.
+        </p>
+        <p>
           The bot check is Cloudflare Turnstile; Cloudflare describes what it collects in its{' '}
           <a href={TURNSTILE_PRIVACY_URL} rel="noreferrer">Turnstile privacy addendum</a>. Nothing is sent over
           WhatsApp: replies come back in this chat, and the demo&apos;s WhatsApp reminders are switched off.
@@ -119,9 +123,9 @@ export default function PrivacyPage() {
           booking assistant.
         </p>
         <p>
-          You can ask for access to what the demo holds about you, for its rectification or erasure, and object to its
-          processing — write to the contact below. You also have the right to lodge a complaint with a data-protection
-          supervisory authority.
+          You can ask for access to what the demo holds about you, for its rectification or erasure, or for
+          restriction of processing, and object to its processing — write to the contact below. You also have the
+          right to lodge a complaint with a data-protection supervisory authority.
         </p>
 
         <h2>Questions about your data</h2>
