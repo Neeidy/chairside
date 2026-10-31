@@ -390,9 +390,10 @@ the GENERIC target, not a project-specific one as the dashboard steps below expe
 Build settings (install from the `web/` workspace root) are not measured until the first deployment.
 
 ### Go-live checks — every one true BEFORE the first public deployment (R2a, `code-reviewer` MEDIUM-1)
-**State after R2h:** true — 2, 3, 5, 7, 8, 9 (and the `engines` cap, committed with 9) · open before go-live — 1 (the
-contact env is set; the controller's value has not reached CC, and the DEPLOYED page could not be read without a
-protection change) and 4 (every row filled in an isolated build with fake values; the deployed page is unread) · after
+**State after R2i:** true — 2, 3, 5, 7, 8, 9 (and the `engines` cap, committed with 9) · open before go-live — 1 and 4,
+waiting on one read: both env values are set (the controller by Cowork in R2i), the R2i deployment is READY, and **the
+method is ruled — Cowork reads the DEPLOYED `/privacy` through an authenticated browser session** (see "R2i"); CC does
+not read it · after
 go-live (rulings) — 6 (the alias cannot mint) and #15, then #13's read, #19, #21 · **at
 the phase close: the Vercel token is revoked.**
 A check that lives only in a sentence does not stop a deploy, so they are listed here, by number, and the deploy step
@@ -408,7 +409,12 @@ reads this list:
    ruling (see "R2g"). **R2h: open** — the mechanism is built (build-time env, rulings R2h-1/2); `NEXT_PUBLIC_PRIVACY_CONTACT`
    is set in Vercel production (read back by name); `NEXT_PUBLIC_PRIVACY_CONTROLLER` is NOT set — its value is in neither
    the brief nor anything CC can read, and CC does not guess a person's name; and the deployed page was not read, because
-   every route to a protected page is a protection change (see "R2h").
+   every route to a protected page is a protection change (see "R2h"). **R2i: open, one read left** — Cowork read the R2h
+   deployment in an authenticated browser session (contact rendered, controller the placeholder: its env was set after
+   that build); Cowork then set `NEXT_PUBLIC_PRIVACY_CONTROLLER` (read back by name by CC: `encrypted`, production);
+   the R2i deployment is READY. **Method before go-live (R2i): Cowork reads the deployed page through an authenticated
+   browser session** — no protection change, no share link; its reading is recorded as Cowork's, not as CC's
+   measurement.
 2. **The Main put and the Purge put are live and promoted** (parity green against the promoted exports).
 3. **Widget step B is done and #11 is measured by behaviour** (another hostname → `110200`). **R2b: true** (`127.0.0.1`
    → `110200`, with a control; see "R2b").
@@ -418,7 +424,11 @@ reads this list:
    path runs only through the contact, which is still the placeholder (see "R2g"). **R2h: open** — legal basis, rights,
    the complaint right and the two kept records (measured: "not deleted automatically; deleted on request", with the
    procedure in RUNBOOK §8) are on the page; in an isolated build with fake values every row R2g found empty is filled.
-   Still open: the same read on the DEPLOYED page (with check 1), and the counsel note below.
+   Still open: the same read on the DEPLOYED page (with check 1), and the counsel note below. **R2i: open, the same
+   read** — Cowork's read of the R2h deployment found legal basis, rights, complaint, retention and the services list,
+   and two gaps (restriction of processing; nothing on processing outside the EU/EEA); both added by rulings R2i-a/b,
+   pinned by `privacy-facts`, built in an isolated copy, deployed. Closes on Cowork's read of the R2i deployment, by the
+   method in check 1.
 5. **The first real pause records Vercel's actual paused body** — `measure` counts only `DEPLOYMENT_PAUSED` in a 503
    body, the documented form; if the real body differs, `pause` exits 1 and `measure` exits 5 (the safe direction),
    and the script is corrected before go-live. **R2f: true** — the real answer is a 503 with `x-vercel-error:
@@ -442,6 +452,60 @@ reads this list:
    committed lockfile: 0 advisories of any severity; Vercel's install of the deploy set: "found 0 vulnerabilities"
    *(terminal-measured, not committed)*.
 
+### R2i — `/privacy`: restriction of processing and one sentence on processing outside the EU/EEA; redeployed, protected (2026-10-31 → 11-01; no go-live)
+**Preconditions — Cowork's statements, not CC's measurements.** Cowork set `NEXT_PUBLIC_PRIVACY_CONTROLLER` in Vercel
+production from the Vercel dashboard (value per Yigitcan's ruling; written `<controller>` everywhere). Cowork read the
+DEPLOYED `/privacy` of the R2h deployment through Yigitcan's authenticated browser session — no protection change, no
+share link: the contact renders; legal basis, rights, complaint, retention and the services list are present; the
+controller is the placeholder (its env was set after that build). Gaps: restriction of processing; nothing saying that
+some services process data outside the EU/EEA.
+**Rulings (Yigitcan, 2026-10-31), verbatim:** "add (a) "restriction of processing" to the rights sentence; (b) one
+sentence after the services list: some of these services process data outside the EU/EEA, including in the United
+States; where each one processes data is described in its own privacy policy. Nothing beyond that sentence about
+safeguards. (c) delete the auditor scratch copies …/scratchpad/mut and …/scratchpad/mut2 — approved."
+**Method for go-live checks 1 and 4 before go-live (R2i):** the deployed page is read by **Cowork through an
+authenticated browser session** — no protection change, no share link. CC does not read the protected page; the
+reading is recorded as Cowork's.
+
+**Start gates (23:39 Vienna, 2026-10-31): FIRST and outside the Reminders window** — all green *(terminal-measured, as is
+everything in B below)*: dummy token 403, exports parity and live parity (191/191), listeners, host leak, hook drift,
+dashboard active; secret scan "NOT MEASURED" on a clean tree, by design.
+
+**A — the content (`aa3457f`), then two test commits after review (`7731914`, `7050012`).** (a) "or for restriction of
+processing" in the rights sentence; (b) the ruling's sentence as a paragraph directly after the services list.
+`privacy-facts` (13 tests) pins both: the anchors, the sentence's place (after the `PROCESSORS` list, before anything
+else), and no transfer-mechanism term — a named list (`TRANSFER_TERMS`: safeguard, contractual clause, SCC, adequacy,
+Data Privacy Framework/DPF, Privacy Shield, binding corporate rules/BCR, Art. 45–49, "never leaves / stays in the EU")
+on the page, the chat notice, the footer and the services' own texts, with a negative control on ordinary text.
+Mutants 42/42. **Built in an isolated copy, never in `web/` (OPS-10)**: env unset → both placeholders, both new lines
+present; fake values → controller and contact rendered, both new lines present. `check-all` 0.
+**Review — `security-auditor` before every push (the R2h deviation not repeated):** `aa3457f` GO; `aa3457f` + `7731914`
+GO, then pushed; `7050012` and this record are audited before their own push.
+- **LOW-1:** the test's name and comment said "nothing about safeguards"; it checked four terms (DPF, SCCs, "adequate",
+  "Privacy Shield" survived). Fixed in `7731914`: the list widened, the comment now says it is a term list.
+- **INFO-2:** the footer and the notice were not checked. Fixed in `7731914`.
+- **LOW-A/B:** `Art 4x` matched inside "start 48"; "adequate" and "stays in the EU" matched inside other words. Word
+  boundaries and a negative control in `7050012`, with mutants that drop each boundary.
+- **LOW-C:** the services' `use` texts render on the page but were not scanned. Fixed in `7050012`.
+- **Recorded as bounds, not chased:** *(LOW-2)* the anchors are source text, not render — a sentence wrapped in
+  `{false && …}`, or a rights line followed by "(not offered)", still passes, as every anchor in this test always has;
+  a wording the list does not name passes (e.g. "remains in the EU"); "safeguard" and "adequate" fire in any sense,
+  which fails loud. *(LOW-3, for Yigitcan)* "where each one processes data is described in its own privacy policy"
+  also covers "The demo author's own server", which has no privacy policy of its own — the ruling's own sentence,
+  recorded here rather than reworded. *(unverified)* that each listed service's policy does describe where it
+  processes data was not checked offline.
+
+**B — redeployed.** Env read back BY NAME before and after (key, type, target; no value printed): all four names, among
+them `NEXT_PUBLIC_PRIVACY_CONTROLLER` · `encrypted` · production and `NEXT_PUBLIC_PRIVACY_CONTACT` · `encrypted` ·
+production. Redeploy of the 56-file set (0 under `web/dashboard`; archived from `7050012`, whose deploy set is identical
+to the pushed `7731914` — 0 files differ): **`READY`, production**, Node 24.x. **The deployed page NOT read by CC — by the
+brief: Cowork reads it next.** **Unauthenticated, 6 names — R2h's five (`demo.<apex>`, the two project aliases, the R2f
+and R2h deployment URLs) and the NEW R2i deployment URL — × the 9 paths: 54 of 54 → `302` to `vercel.com/sso-api`, the
+page nowhere.** The token value: 0 files outside its 0600 file.
+
+**C — (c) and records.** `…/scratchpad/mut` (448 files) and `…/scratchpad/mut2` (947 files) deleted with literal paths,
+read back absent; nothing else in the scratchpad touched. **End gates (00:06 Vienna, 11-01)** — all green, as at the start.
+
 ### R2h — `/privacy`: controller and contact from build-time env, GDPR basics, the kept records stated as measured; redeployed, protected (2026-10-30; no go-live)
 **Rulings (Yigitcan, 2026-10-30), verbatim except the two values:** "(0) dashboard 16.4.1 deviation ACCEPTED; OPS-10's
 state kept (no rollback). (1) contact enters at build time as a Vercel env value (same path as NEXT_PUBLIC_WEBHOOK_URL),
@@ -455,8 +519,10 @@ committed workflows/config — no deletion run on real data); the page states wh
 "deleted on request" + the manual deletion procedure written into RUNBOOK. No new purge. (5) delete the R2g scratch repo
 — approved."
 **Plan note (ruling 3): a client deployment's `/privacy` must be reviewed by that client's own counsel** — the text here
-is the demo's, and `security-auditor` noted what it does not cover (the restriction right, Art. 18; transfers to
-services outside the EU, Art. 13(1)(f)). Those were not added: ruling (3) names the list.
+is the demo's, and `security-auditor` noted what it did not cover (the restriction right, Art. 18; transfers to
+services outside the EU, Art. 13(1)(f)). Not added in R2h — ruling (3) names the list; **both added in R2i** by rulings
+R2i-a/b (restriction of processing; one sentence that some services process data outside the EU/EEA — nothing on
+safeguards, by that ruling). *(This line said "Those were not added" until R2i; corrected in place.)*
 
 **Start gates (23:24 Vienna): FIRST and outside the Reminders window** — all green *(terminal-measured, as is everything in C below)* (dummy token 403, both parity guards,
 listeners, host leak, hook drift; secret scan "NOT MEASURED" on a clean tree, by design). **(5):** the R2g scratch repo
