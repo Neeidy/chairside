@@ -362,8 +362,10 @@ case and a mutant it kills; not re-run through Codex (no HIGH):
   (vercel.com/docs/errors/DEPLOYMENT_PAUSED; no header is documented, so none is relied on) — is "offline" (exit 3); a
   401, 404, redirect or bare 503 is "unexpected" (exit 5); `pause` succeeds only on the paused answer. demo-offline
   mutants 15/15.
-- **The privacy contact:** pending Yigitcan — the page shows a visible PLACEHOLDER while the value is absent. **A go-live
-  blocker.** *(Until R2h this read "`PRIVACY_CONTACT = null`, pinned by the test"; since R2h the value is the build-time env
+- **The privacy contact:** the build-time env `NEXT_PUBLIC_PRIVACY_CONTACT` (set since R2h; the controller's env beside
+  it since R2i) — an unset value still shows a visible PLACEHOLDER, and the deployed page is what go-live check 1 reads.
+  *(Until R2i this line said "pending Yigitcan … A go-live blocker", stale since R2h; corrected in place,
+  `security-auditor` R2i LOW-3.)* *(Until R2h this read "`PRIVACY_CONTACT = null`, pinned by the test"; since R2h the value is the build-time env
   `NEXT_PUBLIC_PRIVACY_CONTACT` and the test pins the env read, never a literal — corrected in place, `security-auditor`
   M2.)*
 
@@ -459,7 +461,7 @@ DEPLOYED `/privacy` of the R2h deployment through Yigitcan's authenticated brows
 share link: the contact renders; legal basis, rights, complaint, retention and the services list are present; the
 controller is the placeholder (its env was set after that build). Gaps: restriction of processing; nothing saying that
 some services process data outside the EU/EEA.
-**Rulings (Yigitcan, 2026-10-31), verbatim:** "add (a) "restriction of processing" to the rights sentence; (b) one
+**Rulings (Yigitcan, 2026-10-31), verbatim except the two scratch paths, shortened:** "add (a) "restriction of processing" to the rights sentence; (b) one
 sentence after the services list: some of these services process data outside the EU/EEA, including in the United
 States; where each one processes data is described in its own privacy policy. Nothing beyond that sentence about
 safeguards. (c) delete the auditor scratch copies …/scratchpad/mut and …/scratchpad/mut2 — approved."
@@ -478,14 +480,18 @@ else), and no transfer-mechanism term — a named list (`TRANSFER_TERMS`: safegu
 Data Privacy Framework/DPF, Privacy Shield, binding corporate rules/BCR, Art. 45–49, "never leaves / stays in the EU")
 on the page, the chat notice, the footer and the services' own texts, with a negative control on ordinary text.
 Mutants 42/42. **Built in an isolated copy, never in `web/` (OPS-10)**: env unset → both placeholders, both new lines
-present; fake values → controller and contact rendered, both new lines present. `check-all` 0.
+present; fake values → controller and contact rendered, both new lines present. `check-all` 0. *(Both
+terminal-measured, not committed.)*
 **Review — `security-auditor` before every push (the R2h deviation not repeated):** `aa3457f` GO; `aa3457f` + `7731914`
-GO, then pushed; `7050012` and this record are audited before their own push.
-- **LOW-1:** the test's name and comment said "nothing about safeguards"; it checked four terms (DPF, SCCs, "adequate",
-  "Privacy Shield" survived). Fixed in `7731914`: the list widened, the comment now says it is a term list.
+GO, then pushed; `7050012` + this record GO (one MEDIUM and three wording items, fixed in the next commit), then
+pushed with that fix after its own run.
+- **LOW-1:** the test's name and comment said "nothing about safeguards"; it checked four terms (safeguard, contractual
+  clause, adequacy, Data Privacy Framework), and probes with DPF, SCCs, "adequate" and "Privacy Shield" survived. Fixed in `7731914`: the list widened, the comment now says it is a term list.
 - **INFO-2:** the footer and the notice were not checked. Fixed in `7731914`.
 - **LOW-A/B:** `Art 4x` matched inside "start 48"; "adequate" and "stays in the EU" matched inside other words. Word
-  boundaries and a negative control in `7050012`, with mutants that drop each boundary.
+  boundaries and a negative control in `7050012`. Mutants drop two of the four boundaries (before `Art`, after "stays
+  in the EU") and die; the other two (before "adequa", after "never leaves the EU") have no mutant and the auditor's
+  probes dropping them survived — recorded, not chased (`security-auditor` R2i MEDIUM-1: this line first said "each").
 - **LOW-C:** the services' `use` texts render on the page but were not scanned. Fixed in `7050012`.
 - **Recorded as bounds, not chased:** *(LOW-2)* the anchors are source text, not render — a sentence wrapped in
   `{false && …}`, or a rights line followed by "(not offered)", still passes, as every anchor in this test always has;
