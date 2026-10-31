@@ -940,6 +940,7 @@
   - ### R2 — measured before any write
   - ### R2a — measured, then fixed (2026-10-30; rulings of 2026-10-29 in the R2a brief)
   - ### Go-live checks — every one true BEFORE the first public deployment (R2a, `code-reviewer` MEDIUM-1)
+  - ### GO-LIVE — the wording fix, every go-live check true, protection off, the public measure (2026-11-01)
   - ### R2i — `/privacy`: restriction of processing and one sentence on processing outside the EU/EEA; redeployed, protected (2026-10-31 → 11-01; no go-live)
   - ### R2h — `/privacy`: controller and contact from build-time env, GDPR basics, the kept records stated as measured; redeployed, protected (2026-10-30; no go-live)
   - ### R2g — `next` 16.4.1 committed and deployed, protected; the privacy contact STOPPED at the host-leak guard (2026-10-30; no go-live)

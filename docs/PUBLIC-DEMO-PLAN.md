@@ -392,12 +392,12 @@ the GENERIC target, not a project-specific one as the dashboard steps below expe
 Build settings (install from the `web/` workspace root) are not measured until the first deployment.
 
 ### Go-live checks — every one true BEFORE the first public deployment (R2a, `code-reviewer` MEDIUM-1)
-**State after R2i:** true — 2, 3, 5, 7, 8, 9 (and the `engines` cap, committed with 9) · open before go-live — 1 and 4,
-waiting on one read: both env values are set (the controller by Cowork in R2i), the R2i deployment is READY, and **the
-method is ruled — Cowork reads the DEPLOYED `/privacy` through an authenticated browser session** (see "R2i"); CC does
-not read it · after
-go-live (rulings) — 6 (the alias cannot mint) and #15, then #13's read, #19, #21 · **at
-the phase close: the Vercel token is revoked.**
+**State at GO-LIVE (2026-11-01, protection off 00:28:53 Vienna):** every pre-go-live check true — 1 and 4 by Cowork's
+authenticated read of the R2i deployment, then re-measured on the PUBLIC page by CC; 2, 3, 5, 7, 8, 9 as recorded below
+— and 6 true right after go-live, by behaviour (see "GO-LIVE") · **left for the owner** — #15 (see "GO-LIVE": not
+runnable from this machine), #19 (the dashboard by phone), #21 (a real booking through Turnstile — the first real
+conversation is the owner's), #13 (Purge read after a 04:00 Vienna run) · **at the phase close: the Vercel token is
+revoked.** *(Until go-live this line read "State after R2i … open before go-live — 1 and 4"; replaced in place.)*
 A check that lives only in a sentence does not stop a deploy, so they are listed here, by number, and the deploy step
 reads this list:
 1. **The privacy contact and the controller are published** *(R2c: pending — a Zoho address from Yigitcan; Cloudflare
@@ -440,6 +440,10 @@ reads this list:
    behaviour on the deployed alias, the way #11 was measured on `127.0.0.1`), or the alias is switched off
    (`security-auditor` L2, R2a). **R2c ruling: measured right AFTER go-live** — while protection is on, the alias shows
    Vercel's protection, not the widget, so there is nothing to mint against before then; #15 moves after go-live too.
+   **GO-LIVE: true by behaviour** — six `*.vercel.app` names (the two project aliases and four deployment URLs) each
+   served the page, and on each the opened chat panel's Turnstile reported `110200` with no token and no request to a
+   `/webhook/` path; the control — the same harness on `demo.<apex>` — gave no `110200` *(terminal-measured; see
+   "GO-LIVE")*.
 7. **#12 is GREEN by behaviour** — the edge rate limit actually blocks above its threshold. **R2c: true** (blocked from
    the 31st of 40 requests in 2.4 s; the rule: 30 requests per 10 s per IP and Cloudflare data centre, Block for 10 s). R2b's "RED" was its probe, see R2b.
 8. **#16 is read back on the real deployment** — (a) platform, (b) root `web/site`, (c) no `web/dashboard` path in the
@@ -453,6 +457,71 @@ reads this list:
    version is 16.4.1, a minor jump; waiting on a ruling.)* **R2g: true** — `next` 16.4.1 in `6a19a06`; `npm audit` on the
    committed lockfile: 0 advisories of any severity; Vercel's install of the deploy set: "found 0 vulnerabilities"
    *(terminal-measured, not committed)*.
+
+### GO-LIVE — the wording fix, every go-live check true, protection off, the public measure (2026-11-01)
+**Preconditions — Cowork's statements, not CC's measurements.** Cowork read the R2i deployment's `/privacy` through
+Yigitcan's authenticated browser session (no protection change): controller (`<controller>`) and contact render; legal
+basis, rights including restriction, the complaint right, the non-EU sentence directly under the services list,
+retention and the services are present. The env type: Cowork chose "Config" in the dashboard; the API reports
+`encrypted` (recorded as observed).
+**Rulings (Yigitcan, 2026-10-31), verbatim:** "(1) non-EU sentence wording fix: "where each third-party service
+processes data is described in its own privacy policy" (your R2i finding — the author's own server has no such policy).
+(2) GO-LIVE APPROVED: turn Vercel protection off for the production deployment once every go-live check is true."
+
+**Start gates (00:20 Vienna): FIRST, outside the Reminders window** — all green *(terminal-measured, as is everything
+below)*: dummy token 403, exports parity and live parity (191/191), listeners, host leak, hook drift, dashboard active;
+secret scan "NOT MEASURED" on a clean tree, by design.
+
+**A — `58ceb82`, then `408aaaf`.** Ruling (1)'s wording on the page; `privacy-facts` pins the whole sentence with
+whitespace collapsed (`408aaaf`, after `security-auditor` LOW-1: the first pin checked two anchors and a word could sit
+between them); a mutant bringing back "each one" and one slipping a word between the source lines both die — mutants
+44/44, `check-all` 0. Built in an isolated copy (unset → placeholders; fake values → rendered). `security-auditor` GO
+before the push. Redeployed protected: **`READY`**, production, Node 24.x; env names read back before and after (all
+four, both privacy values `encrypted`, production); **7 names × 9 paths = 63 of 63 → `302`** to Vercel's login.
+
+**B — the go-live gate, read from this file at HEAD before protection was touched:**
+
+| # | check | evidence | state |
+|---|---|---|---|
+| 1 | contact and controller published | Cowork's authenticated read of the R2i deployment (precondition); both env names read back by CC; re-measured on the public page in C | true |
+| 2 | Main and Purge puts live and promoted | live parity 191/191 and exports parity 5/5 at the start gates | true |
+| 3 | widget step B, #11 by behaviour | R2b: `127.0.0.1` → `110200`, the test key → a token (control) | true |
+| 4 | the `/privacy` text final | Cowork's read (all rows present); ruling (1) in `58ceb82`, pinned and built; re-measured on the public page in C | true |
+| 5 | the real paused body | R2f: `503` + `DEPLOYMENT_PAUSED`, `measure` exit 3 | true |
+| 6 | the alias cannot mint | by ruling (R2c) measured right after go-live — see C | after go-live |
+| 7 | #12 blocks | R2c: blocked from the 31st of 40 requests | true |
+| 8 | #16 read back | (a) Vercel; (b) root `web/site` (R2f); (c) the deploy set: 56 files, 0 under `web/dashboard`; (d) 63/63 → `302` in A | true |
+| 9 | `next` past its advisories | `npm audit` on the committed lockfile, run in the isolated copy at go-live: 0 of any severity; the lockfile unchanged since `6a19a06` | true |
+
+**C — protection off at 00:28:53 Vienna** (the Vercel connection, `ssoProtection: null`; read back with a separate call:
+`ssoProtection.enabled: false`; password protection and trusted IPs stayed off). Then, unauthenticated:
+- **`demo.<apex>`**: `/` 200 with the page and the chat launcher; **`/privacy` 200 — no placeholder, the controller
+  sentence and a contact sentence with an address present (values not recorded), the fixed sentence present, the old
+  "each one" wording absent, restriction of processing and the non-EU sentence present**; `/barber-widget.js`,
+  `/install`, the font and the page's first `/_next/static` script 200; `/robots.txt`, `/favicon.ico` and an unknown
+  path 404 (Next's not-found page); `/_next/image` with and without parameters **400** (the optimizer refuses — no
+  image is served). No 5xx anywhere.
+- **The six `*.vercel.app` names** (two project aliases, four deployment URLs): each serves the page (200). **Chat not
+  usable on any of them — go-live check 6 true by behaviour:** a headless Chromium opened the chat panel on each, and
+  Turnstile reported `110200` with no token and no request to a `/webhook/` path; no message was typed or sent. The
+  control: the same harness on `demo.<apex>` gave no `110200` (the widget stayed loading — this machine's headless
+  browser does not pass Cloudflare's bot check with the real key, 600010 class, `remote-operator.md`).
+- ⚠ **FINDING — the older deployment URLs are public too, with older builds.** Protection off applies to every
+  deployment, so three earlier deployment URLs now serve their own builds: two show `/privacy` with a PLACEHOLDER (the
+  R2f and R2h builds), one the R2i wording. They are not linked from anywhere and their chat cannot mint (above), but a
+  stale `/privacy` is publicly reachable at those names. Not a stop condition (the public page is correct); **for the
+  owner to rule**: delete the older deployments, or protection `all_except_custom_domains` (which also protects the
+  project aliases).
+- **#15 — NOT run, left for the owner.** Its definition is "the existing harness, headless, against the deployed page"
+  — re-running the hidden-container control (SP4a) in Managed. The harness is not in the repository, and this
+  machine's headless browser cannot get a token with the real key (the control above), so a run here could not show
+  either answer. It needs a real browser.
+- **Turnstile dummy token → 403** at the end (00:31). No chat message and no LLM call by CC; Main's only execution in
+  the window was the probe's own.
+
+**Left for the owner:** #21 (the first real conversation and a real booking through Turnstile), #19 (the dashboard by
+phone), #15 (above), #13 (Purge's read after a 04:00 Vienna run), the older deployments (above). **At the phase close:**
+the Vercel token is revoked.
 
 ### R2i — `/privacy`: restriction of processing and one sentence on processing outside the EU/EEA; redeployed, protected (2026-10-31 → 11-01; no go-live)
 **Preconditions — Cowork's statements, not CC's measurements.** Cowork set `NEXT_PUBLIC_PRIVACY_CONTROLLER` in Vercel
@@ -497,8 +566,9 @@ pushed with that fix after its own run.
   `{false && …}`, or a rights line followed by "(not offered)", still passes, as every anchor in this test always has;
   a wording the list does not name passes (e.g. "remains in the EU"); "safeguard" and "adequate" fire in any sense,
   which fails loud. *(LOW-3, for Yigitcan)* "where each one processes data is described in its own privacy policy"
-  also covers "The demo author's own server", which has no privacy policy of its own — the ruling's own sentence,
-  recorded here rather than reworded. *(unverified)* that each listed service's policy does describe where it
+  also covered "The demo author's own server", which has no privacy policy of its own — the ruling's own sentence,
+  recorded here rather than reworded; **reworded at go-live by ruling (1) to "each third-party service" (`58ceb82`)**.
+  *(This line said "covers … recorded rather than reworded" until go-live; corrected in place.)* *(unverified)* that each listed service's policy does describe where it
   processes data was not checked offline.
 
 **B — redeployed.** Env read back BY NAME before and after (key, type, target; no value printed): all four names, among
