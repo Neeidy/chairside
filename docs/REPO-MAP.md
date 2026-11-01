@@ -957,7 +957,7 @@
   - ### R2 — measured before any write
   - ### R2a — measured, then fixed (2026-10-30; rulings of 2026-10-29 in the R2a brief)
   - ### Go-live checks — every one true BEFORE the first public deployment (R2a, `code-reviewer` MEDIUM-1)
-  - ### DOMAIN + INTERACTION-ONLY — the project's own `.vercel.app` domain removed (A); Turnstile interaction-only ruled (R), not built (2026-11-01)
+  - ### DOMAIN + INTERACTION-ONLY — the project's own `.vercel.app` domain removed (A); Turnstile interaction-only (B) (2026-11-01)
   - ### RENAME — `barber-demo.<apex>` and `barber-dashboard.<apex>`; protection Standard (STOPPED: two project aliases stay public); owner-run reads (2026-11-01)
   - ### GO-LIVE — the wording fix, every go-live check true, protection off, the public measure (2026-11-01)
   - ### R2i — `/privacy`: restriction of processing and one sentence on processing outside the EU/EEA; redeployed, protected (2026-10-31 → 11-01; no go-live)

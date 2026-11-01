@@ -465,7 +465,7 @@ reads this list:
    committed lockfile: 0 advisories of any severity; Vercel's install of the deploy set: "found 0 vulnerabilities"
    *(terminal-measured, not committed)*.
 
-### DOMAIN + INTERACTION-ONLY — the project's own `.vercel.app` domain removed (A); Turnstile interaction-only ruled (R), not built (2026-11-01)
+### DOMAIN + INTERACTION-ONLY — the project's own `.vercel.app` domain removed (A); Turnstile interaction-only (B) (2026-11-01)
 **Preconditions — Cowork's statements, not CC's measurements.** The RENAME's Cloudflare side is closed: the DNS records
 of `demo.<apex>` and the old dashboard name are deleted, the old dashboard ingress removed, the dashboard's Access
 application holds `barber-dashboard.<apex>` only, and the widget's hostname list is `barber-demo.<apex>` alone (mode
@@ -496,6 +496,39 @@ unchanged, `all_except_custom_domains`.** Unauthenticated: `barber-demo.<apex>` 
 `*.vercel.app` names on record — the team alias and the deployment URLs — `/` and `/privacy` → `302` to Vercel's login;
 `demo.<apex>` no longer resolves (no record on 1.1.1.1). None of the six `*.vercel.app` names on record serves the
 page.
+
+**B — Turnstile interaction-only (ruling R), `b1dc022`, deployed.** Both render sites (`web/snippet/src/turnstile.ts`,
+`web/site/components/site/TurnstileWidget.tsx`) pass `appearance: 'interaction-only'`; the other render options are
+unchanged. The slot is never `display:none`: it is zero-height with no spacing while no challenge is shown, and gets
+`10px 18px` between Turnstile's `before-interactive-callback` and `after-interactive-callback` (snippet: an
+`is-interactive` class in `styles.ts`; site: an inline style, because `globals.css` is a locked contract); `whenVisible`
+is unchanged.
+**Tested headless, both directions, on an isolated build (OPS-10) with Cloudflare's public test sitekeys, against a
+fake engine host whose requests were answered or failed inside the browser** *(terminal-measured; screenshots in the
+session scratchpad, not committed)*:
+- *always-pass key*, site panel and snippet (on the hostile host page, a second origin): token issued before any
+  click, **slot 0 px high, no Turnstile box in the panel** (screenshot), and the send carries it — the request body has
+  `sessionId, messageId, text, turnstileToken` with a 21-character token.
+- *forced-interactive key*: `before-interactive` fired, the slot took its spacing, **the challenge drew inside the panel
+  at 352×73 px** (screenshot, both surfaces) — and at a 390 px viewport **328×73 (site) / 313×73 (snippet)**; an
+  input-level click on the checkbox minted a token on both surfaces and at both widths, and the send carried it. The
+  click sometimes needed a second try right after the box drew (the harness retries up to three times; the site took
+  one, the snippet one or two).
+- **Observed, reported rather than changed:** after the challenge is solved Cloudflare keeps its "Success!" box on screen
+  (still there 8 s later), and because `after-interactive` collapses the spacing as ruled, that box sits flush against
+  the panel's edge. Cosmetic; a ruling decides whether the spacing should stay after interaction.
+- Builds green (site + snippet, isolated copy); `npm --prefix scripts run check-all` 0 (which runs the web checks and the
+  snippet's byte-for-byte freshness check against a rebuild).
+**Deployed:** a protected production deploy of `b1dc022` (git archive; no `web/dashboard` file in the set) → `READY`,
+target `production`. Unauthenticated: `barber-demo.<apex>` `/` and `/privacy` 200; its `/barber-widget.js` is
+**byte-identical to the local build of the same commit** and carries `interaction-only`; the new deployment URL and the
+five older `*.vercel.app` names → `302`; `<project>-<suffix>.vercel.app` → `404`. None of the seven serves the page.
+**For the owner (a real Turnstile token, which this machine's headless browser cannot mint):** on
+`barber-demo.<apex>`, open the chat — expected: no Turnstile box, the composer opens, a message is answered; if Cloudflare
+does challenge, the box appears inside the panel and is solvable.
+**Open (`security-auditor` LOW-A, not changed — the brief kept the other callbacks unchanged):** if a challenge is reset,
+expires or errors while interactive and Turnstile does not fire `after-interactive`, the spacing stays (extra padding,
+never hidden — the safe direction); unmeasured.
 
 ### RENAME — `barber-demo.<apex>` and `barber-dashboard.<apex>`; protection Standard (STOPPED: two project aliases stay public); owner-run reads (2026-11-01)
 **Preconditions — Cowork's statements, not CC's measurements.** Cowork added the DNS for `barber-demo.<apex>` (DNS only,
