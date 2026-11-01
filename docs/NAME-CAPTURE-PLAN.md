@@ -487,3 +487,48 @@ after a cancel, the widget's message time in the visitor's zone) → v2 (`docs/P
   would. **What cannot be measured:** the time of the press. Owner Actions keeps no successful execution
   (`saveDataSuccessExecution: none`) and lists none, and none in error; the same executions call lists Main, Purge,
   Reminders and Drill State, so the empty list is the setting, not the instrument.
+
+### A2/A3 — the puts (⚠ ONAY 1/2 and 2/2, Yigitcan 2026-11-01) *(terminal-measured, 20:27–20:29 Vienna)*
+Through `scripts/workflow-step.py`, every step read back; both pre-PUT snapshots kept outside the repository (mode
+0600) until the edit is closed (promotion, then both parity guards green against the committed exports).
+- **Purge (A2), 20:27:35–20:27:38:** deactivate → `put --delta-file n8n/staged/workflow.purge.delta.json` (3 nodes,
+  parameters only: `Find Stale Conversations`, `Scrub Recent Messages`, the PII sticky) → read back == the staged export
+  and == the body sent, settings unchanged → activate, published == draft.
+- **Main (A3):** `rehearse-rollback` first (20:28:40–45): a scratch from the live draft, the edit put, the rollback read
+  back == its snapshot (191 nodes, 31 credential ids, connections, settings), the scratch deleted and read back 404.
+  Then 20:28:56–20:29:06: deactivate → `put --delta-file n8n/staged/workflow.main.delta.json` (18 allowed nodes incl.
+  the D-4 gate edit of `Load Config`, the approved delta's 4 graph items, 19 stored contents changed) → read back == the
+  staged export and == the body sent, settings and webhook ids unchanged → activate, published == draft → probe: a
+  dummy Turnstile token → 403 `turnstile_failed`, executed by Main, the path's only active holder. **Main was inactive
+  for about 2 seconds.**
+- **Parity against the STAGED exports** (the repo's own `check-content-parity.py`, byte-identical, run from a scratch
+  mirror whose `n8n/workflow.<key>.sanitized.json` is the staged file, because the guard refuses a staged path): Main
+  169 executable nodes and its settings (the allowlisted live-only `binaryMode` apart) · Purge 24 nodes and settings —
+  both OK. Structural (`check-live-parity.py`, the PUBLISHED graph): 192/192 nodes, 274/274 connections. Negative
+  control: the same mirror run against Main BEFORE its put was red on the staged nodes.
+- **Declared — the parity guards against the COMMITTED exports are red on Main and Purge, by construction:** the live
+  workflows now run the staged edit, and promotion (staged → committed) is the next round, after the owner's run. They
+  name exactly the staged nodes; Owner Actions, Reminders and Drill State are green; the active set is exactly the five
+  listed workflows. The brief's "both parity guards 0" is read as live == the intended (staged) edit, and is green.
+- **The window:** one Main execution (the probe; success, 10 nodes, no alert node, no run error — the same shape as the
+  start-gate probes before the put), none on the other four workflows; no 5xx, no spend or alert class.
+- **Rollback, if the owner's run goes wrong:** deactivate → `rollback` Main to its snapshot → activate → probe; then the
+  same for Purge (`workflow-step.py`'s R3 ORDER).
+
+### A4 — the owner's live run (barber-demo, a real Turnstile token) and what CC reads afterwards
+A private/incognito window, so the run starts as a new conversation. Synthetic name; the demo calendar.
+| # | He types | He should see |
+|---|---|---|
+| 1 | `I'd like a haircut on Wednesday 4 November at 11:00` | no Turnstile box; then the name ask: "What name should I put the booking under? (Any name is fine for this demo.)" (if 11:00 is taken: other times — pick one, then the name ask) |
+| 2 | `Mara O'Test` — the bare name; a phone may type ’, which is fine (R3-1) | "Haircut, Wednesday 4 Nov 11:00 for Mara O'Test — shall I book it? (yes / no)" |
+| 3 | `yes` | "You're booked: Haircut, … 11:00. See you then!" |
+| 4 | `Can I move it to Thursday 5 November at 15:00?` | "Move your Haircut from … to Thursday 5 Nov 15:00? Reply "yes" to move it, or anything else to keep it." |
+| 5 | `yes` | "Moved — your Haircut is now …" |
+| 6 | `Please cancel my appointment` | "Cancel your Haircut on …? Reply "yes" to cancel, or anything else to keep it." |
+| 7 | `yes` | "Done — your Haircut on … is cancelled." |
+Anything else at any step (a re-ask, a handoff message, an error) → stop there and say which step.
+**CC reads afterwards** (read-only): the Main executions of the run (statuses; step 2 through `Fill Name From Reply`
+filling the name; no error, no alert class); `salon.appointments.customer_name` for the booking (`Mara O'Test`, kept
+after the move); the calendar event title on the insert and on the move, from n8n's record of the Calendar request
+(`Haircut — Mara O'Test (bot)`; CC's Calendar connection cannot see that calendar); the conversation's `slot_name`;
+the cancel's `status = cancelled`. Then promotion, `PENDING_KEYS` emptied and the site redeploy (R3-3) — the next round.
