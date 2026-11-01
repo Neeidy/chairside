@@ -35,7 +35,9 @@ const { DateTime } = require(path.join(__dirname, '../../scripts/node_modules/lu
 // The committed export of the live Main (D6c; until then the copy export, beside a parked Airtable original). A
 // test reading any other file would go on passing while the node that actually runs drifted away from it.
 // argv[2] points it at another export, for mutation runs.
-const WF = process.argv[2] || path.join(__dirname, '../../n8n/workflow.main.sanitized.json');
+// A staged Main (an engine edit not yet promoted) is the one under test when it exists, as in name-capture.test.cjs.
+const STAGED = path.join(__dirname, '../../n8n/staged/workflow.main.sanitized.json');
+const WF = process.argv[2] || (fs.existsSync(STAGED) ? STAGED : path.join(__dirname, '../../n8n/workflow.main.sanitized.json'));
 const src = JSON.parse(fs.readFileSync(WF, 'utf8')).nodes.find(n => n.name === 'Resolve Date').parameters.jsCode;
 
 const TZ = 'Europe/Vienna';
@@ -130,9 +132,11 @@ const CASES = [
   ['unresolvable wording asks', 'haircut in two weeks at 11',
     {dateExpr:'in two weeks',date:'2026-09-21',time:'11:00'},
     {date:null,dropped:true,cls:'date_unresolved',outcome:'unresolved_expr'}],
-  ['"11 september" asks (date PARSING is still out of scope)', 'haircut 11 september at 11',
+  // DATE-PHRASING (2026-11-01) brought day+month into scope; this row said "asks (date PARSING is still out of
+  // scope)" until then. The full rule table is tests/unit/date-phrasing.test.cjs.
+  ['"11 september" resolves (DATE-PHRASING: a day + month is parsed)', 'haircut 11 september at 11',
     {dateExpr:'11 september',date:'2026-09-11',time:'11:00'},
-    {date:null,dropped:true,cls:'date_unresolved',outcome:'unresolved_expr'}],
+    {date:'2026-09-11',dropped:false,cls:null,outcome:'resolved_by_code'}],
   ['a prototype key is not a weekday', 'constructor',
     {dateExpr:'constructor',date:'2026-09-11',time:null},
     {date:null,dropped:true,cls:'date_unresolved',outcome:'unresolved_expr'}],

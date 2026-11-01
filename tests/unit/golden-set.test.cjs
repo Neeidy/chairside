@@ -60,8 +60,8 @@ if (ok) console.log('✓ 5 negative controls red (missing dateExpr, intent outsi
 
 const ids = Object.keys(cases);
 const missing = Object.keys(rows).filter((id) => !(id in cases)).concat(ids.filter((id) => !(id in rows)));
-// 23 since NAME-CAPTURE R1 added G16–G23 (2026-11-01); it was 15.
-if (ids.length !== 23 || missing.length) { console.log(`✗ ${ids.length} JSON cases, ${Object.keys(rows).length} table rows; unmatched ${missing}`); ok = false; }
+// 27 since DATE-PHRASING R1 added G24–G27 (2026-11-01); 23 after NAME-CAPTURE R1 (G16–G23); it was 15.
+if (ids.length !== 27 || missing.length) { console.log(`✗ ${ids.length} JSON cases, ${Object.keys(rows).length} table rows; unmatched ${missing}`); ok = false; }
 for (const id of ids) {
   const e = errs(id, cases[id], rows[id]);
   if (e.length) { console.log(`✗ ${id}: ${e.join('; ')}`); ok = false; }

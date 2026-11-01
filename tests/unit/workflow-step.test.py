@@ -889,9 +889,13 @@ try:
         en, dn = json.load(open(os.path.join(ROOT, SNC), encoding='utf-8')), json.load(open(os.path.join(ROOT, DNC), encoding='utf-8'))
         foo = copy.deepcopy(en)
         lc = next(n for n in foo['nodes'] if n['name'] == 'Load Config')['parameters']
-        lc['jsCode'] = lc['jsCode'].replace('    askName: ', '    askFoo: ', 1)
-        dfoo = dict(dn, gate_edits={'Load Config': {'messageTemplates.askFoo': dn['gate_edits']['Load Config']['messageTemplates.askName']}})
-        for label, ex, dl, want in (('the staged NAME-CAPTURE Main + its approved delta → OK', SNC, DNC, 0),
+        # whichever staged edit is prepared: its first gate-edit key that sits on its own line (a messageTemplates key)
+        # is renamed askFoo in the staged literal AND in the delta — every other item stays the approved one
+        gk = sorted(k for k in dn['gate_edits']['Load Config'] if k.startswith('messageTemplates.'))[0]
+        lc['jsCode'] = lc['jsCode'].replace(f'    {gk.split(".")[1]}: ', '    askFoo: ', 1)
+        dfoo = dict(dn, gate_edits={'Load Config': {**{k: v for k, v in dn['gate_edits']['Load Config'].items() if k != gk},
+                                                    'messageTemplates.askFoo': dn['gate_edits']['Load Config'][gk]}})
+        for label, ex, dl, want in (('the staged Main + its approved delta → OK', SNC, DNC, 0),
                                     ('a self-declared unapproved Load Config key (askFoo), every other item approved → exit 1',
                                      repo_file(foo), repo_file(dfoo), 1)):
             dcli = __import__('subprocess').run([sys.executable, DIFF_SRC, os.path.join(ROOT, 'n8n', 'workflow.main.sanitized.json'),

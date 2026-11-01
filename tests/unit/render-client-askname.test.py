@@ -10,7 +10,8 @@ the staged one (the render's --exports seam). Cases:
   3 a config WITHOUT askName is refused, naming the key, and nothing is written;
   4 control: the same config renders against the COMMITTED exports (today's literal has no askName) — so case 3's
     refusal is the staged edit's doing, not something else in that config.
-After promotion the staged file is gone: the committed exports ARE the edit, and case 4 no longer applies (skipped).
+After NAME-CAPTURE's promotion (2026-11-01) the committed exports ARE the edit, and case 4 no longer applies (skipped,
+by checking the committed literal — not by the absence of a staged file, which a later staged edit brings back).
 Run: python3 tests/unit/render-client-askname.test.py
 """
 import importlib.util
@@ -74,7 +75,11 @@ def main():
         rc, txt = render(noname, exp_next, out)
         case('a config WITHOUT askName is refused against the staged Main, by name, and nothing is written',
              rc == 1 and 'messageTemplates.askName' in txt and not os.path.exists(out), f'rc {rc} {txt[-200:]}')
-        if os.path.exists(STAGED):
+        # Only while the COMMITTED literal does not hold askName yet (NAME-CAPTURE unpromoted). Since its promotion on
+        # 2026-11-01 the committed exports ARE that edit, so the control no longer applies — whatever staged edit exists.
+        committed_lc = next(n for n in json.load(open(os.path.join(ROOT, 'n8n', 'workflow.main.sanitized.json'), encoding='utf-8'))['nodes']
+                            if n['name'] == 'Load Config')['parameters']['jsCode']
+        if os.path.exists(STAGED) and 'askName' not in RC.js_literal(RC.split_literal(committed_lc, 'main')[1]).get('messageTemplates', {}):
             out = os.path.join(d, 'out-noname-now')
             rc, txt = render(noname, exp_now, out)
             case('control: the same config renders against the COMMITTED exports (their literal has no askName yet)', rc == 0, f'rc {rc} {txt[-200:]}')

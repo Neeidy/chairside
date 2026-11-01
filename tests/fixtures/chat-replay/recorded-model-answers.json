@@ -1,0 +1,169 @@
+{
+  "_doc": "The model's RECORDED answers (n8n executions, production Main, 2026-11-01; read by GET — only the model's JSON is kept, never a sender key, a message id or the raw inbound message). `text` is the customer line the owner typed from the script he was given (the owner run 1 phrase, quoted in docs/NAME-CAPTURE-PLAN.md; owner run 2 = the R3 A4 script), used by tests/unit/chat-replay.test.cjs as the replay's inbound text. The model JSON is verbatim.",
+  "owner_run_1": [
+    {
+      "execution": 4807,
+      "text": "I'd like a haircut on Wednesday 4 November at 11:00",
+      "model": {
+        "intent": "book",
+        "confidence": 0.95,
+        "slots": {
+          "serviceId": "haircut",
+          "date": "2026-11-04",
+          "dateExpr": "wednesday 4 november",
+          "time": "11:00",
+          "customerName": null,
+          "notes": null,
+          "faqTopic": null
+        },
+        "reply": null
+      }
+    },
+    {
+      "execution": 4808,
+      "text": "I'd like a haircut on Wednesday 4 November at 11:00",
+      "model": {
+        "intent": "book",
+        "confidence": 0.95,
+        "slots": {
+          "serviceId": "haircut",
+          "date": "2026-11-04",
+          "dateExpr": "wednesday 4 november",
+          "time": "11:00",
+          "customerName": null,
+          "notes": null,
+          "faqTopic": null
+        },
+        "reply": null
+      }
+    }
+  ],
+  "owner_run_2": [
+    {
+      "execution": 4812,
+      "text": "I'd like a haircut on Wednesday at 11:00",
+      "model": {
+        "intent": "book",
+        "confidence": 0.92,
+        "slots": {
+          "serviceId": "haircut",
+          "date": "2026-11-05",
+          "dateExpr": "wednesday",
+          "time": "11:00",
+          "customerName": null,
+          "notes": null,
+          "faqTopic": null
+        },
+        "reply": null
+      }
+    },
+    {
+      "execution": 4813,
+      "text": "Mara O'Test",
+      "model": {
+        "intent": "book",
+        "confidence": 0.92,
+        "slots": {
+          "serviceId": null,
+          "date": null,
+          "dateExpr": null,
+          "time": null,
+          "customerName": "Mara O'Test",
+          "notes": null,
+          "faqTopic": null
+        },
+        "reply": null
+      }
+    },
+    {
+      "execution": 4814,
+      "text": "Yes",
+      "model": {
+        "intent": "confirm",
+        "confidence": 0.92,
+        "slots": {
+          "serviceId": "haircut",
+          "date": "2026-11-04",
+          "dateExpr": null,
+          "time": "11:00",
+          "customerName": null,
+          "notes": null,
+          "faqTopic": null
+        },
+        "reply": null
+      }
+    },
+    {
+      "execution": 4815,
+      "text": "Can I move it to Thursday at 15:00?",
+      "model": {
+        "intent": "reschedule",
+        "confidence": 0.88,
+        "slots": {
+          "serviceId": null,
+          "date": "2026-11-05",
+          "dateExpr": "thursday",
+          "time": "15:00",
+          "customerName": null,
+          "notes": null,
+          "faqTopic": null
+        },
+        "reply": null
+      }
+    },
+    {
+      "execution": 4816,
+      "text": "yes",
+      "model": {
+        "intent": "confirm",
+        "confidence": 0.92,
+        "slots": {
+          "serviceId": null,
+          "date": null,
+          "dateExpr": null,
+          "time": null,
+          "customerName": null,
+          "notes": null,
+          "faqTopic": null
+        },
+        "reply": null
+      }
+    },
+    {
+      "execution": 4817,
+      "text": "Please cancel my appointment",
+      "model": {
+        "intent": "cancel",
+        "confidence": 0.95,
+        "slots": {
+          "serviceId": null,
+          "date": null,
+          "dateExpr": null,
+          "time": null,
+          "customerName": null,
+          "notes": null,
+          "faqTopic": null
+        },
+        "reply": null
+      }
+    },
+    {
+      "execution": 4818,
+      "text": "yes",
+      "model": {
+        "intent": "confirm",
+        "confidence": 0.92,
+        "slots": {
+          "serviceId": null,
+          "date": null,
+          "dateExpr": null,
+          "time": null,
+          "customerName": null,
+          "notes": null,
+          "faqTopic": null
+        },
+        "reply": null
+      }
+    }
+  ]
+}
