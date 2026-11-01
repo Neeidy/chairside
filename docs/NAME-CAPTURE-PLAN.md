@@ -594,3 +594,69 @@ path — the one check that would have shown it. The harness that did it here (a
 from the export, IF/Switch/Set evaluated from their parameters, stores and Calendar stubbed, the model's answer given)
 lives in the session scratchpad; committing it as a test is part of the date plan.
 
+
+## R4 — the owner's run read, promotion, site redeploy, close (2026-11-01)
+**Owner run 2** (2026-11-01 ~21:08–21:09 Vienna, a fresh incognito session on barber-demo, the replayed A4 script; every
+reply as expected — the owner's paste, via Cowork). *(The widget showed the times in the visitor's device zone — the
+recorded v2 display item.)*
+
+### Step 1 — the run, read *(terminal-measured; n8n executions 4812–4818 by GET, the store as `salon_ro`)*
+| Turn | Execution | Measured |
+|---|---|---|
+| 1 booking ask | 4812 | `book`; `Resolve Date` resolved Wednesday by code (`next_occurrence`; the model's own date differed and was ignored, `llm_date_ignored`); reply = the name ask |
+| 2 bare name | 4813 | `Fill Name From Reply` filled it (`_name_filled`); reply = "Haircut, Wednesday 4 Nov 11:00 for Mara O'Test — shall I book it? (yes / no)" |
+| 3 yes | 4814 | the Calendar insert's request and response summary "Haircut — Mara O'Test (bot)", status confirmed; `Write Appointment` stored `customer_name` "Mara O'Test", booked |
+| 4 move | 4815 | `reschedule`, Thursday resolved by code; reply = the move confirm |
+| 5 yes | 4816 | the new event's summary "Haircut — Mara O'Test (bot)"; the old event deleted (204); `Update Appointment (Reschedule)` kept `customer_name` "Mara O'Test", start 5 Nov 14:00 UTC |
+| 6 cancel | 4817 | reply = the cancel confirm |
+| 7 yes | 4818 | the event deleted (204); the row `status = cancelled`, `customer_name` kept |
+- **No error branch, no alert class:** in all seven, no node with an error output (`continueErrorOutput`) put an item on
+  it, no run error; `Build Owner Alert` produced no class and the Telegram node never ran. *The error-output check was
+  shown able to fail first (a synthetic item on `Book Appointment`'s error output turned it red).*
+- **The store:** one appointment with the test name — Haircut, `cancelled`, 5 Nov 14:00 UTC, a calendar id stored,
+  channel widget; its conversation — `stage` cancelled, `slot_name` "Mara O'Test", the slots of the move.
+- **Every item matched the script's expectation; nothing stopped step 2.**
+- **The owner's test rows stay** (ruling in the R4 brief): the cancelled appointment and its conversation are demo data;
+  §6's clean-up is NOT done. The conversation's `slot_name` is emptied by the 30-day Purge like any other.
+
+### Step 2 — promotion (`ee6af49`, `ce08ea0`)
+- The staged Main and Purge exports became the committed ones (byte-identical to the staged files, `security-auditor`
+  measured it); `n8n/staged/` is empty; `render-client`'s `PENDING_KEYS` is empty.
+- **Tests that had to follow, declared:** the Build Event Request fixtures of `validate-intent.test.cjs` and
+  `main-tur2.test.cjs` got a synthetic stored name (a nameless confirm is now refused — M1 — before the property those
+  tests check); `diff-workflow-copy`'s gate-edit selftest is based on the committed literal WITHOUT the askName line;
+  `tests/db/slot-name.test.sh`'s W/P mutants read the exports before NAME-CAPTURE from git (`8f197e7^`) instead of "the
+  committed export" (19/19). Nine checks of `check-all` ran only while a staged edit existed (the staged-sanitise rows,
+  `workflow-step`'s 11b NAME-CAPTURE put cases and their CLI pair) and no longer run — by their own condition.
+- `check-all` 0 at `ee6af49` and at `ce08ea0`; **`check-exports-parity` 5/5 and `check-live-parity` 192/192 nodes,
+  274/274 connections against the COMMITTED exports**. The §8 status table above.
+- ⚠ `ee6af49`'s subject says "WIP — tests being adapted": the commit was not rewritten (a history rewrite is a gated
+  action); `ce08ea0`'s message says what it completed.
+
+### Step 3 — site redeploy (⚠ ONAY 1 of the R4 brief) *(terminal-measured, ~21:26 Vienna)*
+A protected production deploy of `ce08ea0` (git archive; no `web/dashboard` file in the set) → `READY`, target
+production. Unauthenticated: the new deployment URL → `302` to Vercel's login; `barber-demo.<apex>` `/` and `/privacy`
+→ `200` (public by the go-live ruling); `/privacy` carries "the name you give for a booking" and "erased by a nightly
+job"; the served `/barber-widget.js` is byte-identical to the local build from the real inputs and carries no
+`after-interactive` callback — **R3-3 (the spacing kept after a challenge) is live**. Turnstile dummy token → 403. The
+token appears in no file outside its 0600 file.
+
+### Step 4 — clean-up (⚠ ONAY 2 of the R4 brief)
+The two pre-PUT snapshots and the scratch parity mirror (which held a copy of the local redaction-target file) deleted
+by literal path; their absence read back.
+
+### Definition of Done — NAME-CAPTURE
+| Item | Status |
+|---|---|
+| Built | ✅ R1–R3 (Main: `Fill Name From Reply`, the name as the fourth slot, the BER refusal; Purge; migration 004; the deploy tool's gate edit; config; /privacy) |
+| Tested — happy path | ✅ LIVE: owner run 2 (booking with a bare name → move → cancel), read back from executions and the store |
+| Tested — key edge cases | ✅ OFFLINE: name-capture 34/34, mutants 50/50, throwaway Postgres 19/19, the §8 table; not live: the D-3 re-ask/handoff, the `name_missing` refusal |
+| Codex | ✅ R1 (2 MEDIUM fixed), R2 recheck (1 LOW fixed), R3 recheck of R3-1 (1 LOW fixed); CRT #16 |
+| Cleaned | ✅ snapshots and mirror deleted; the owner's test rows kept by ruling |
+| Sanitized (secrets and PII) | ✅ `security-auditor` before every push; synthetic names only |
+| README / case study | ✅ checked: neither describes what a booking stores, so no sentence was wrong; `docs/DATA-MODEL.md` (which does) corrected in place — `customer_name`, the new `slot_name` row, the scrub |
+| Pushed | ✅ |
+| Resume-point memory written and read back | ✅ (R4 close) |
+**Open, carried:** the date phrasing (`docs/DATE-PHRASING-PLAN.md`, awaiting approval) · the `\p{M}`/ZWNJ bound (v2) ·
+the three display findings (v2) · the one conversation still `confirming` without a name (its "yes" hands off) · the
+Vercel token's revocation at the phase close.
