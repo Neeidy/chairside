@@ -198,6 +198,11 @@
 - `docs/codex/7-2-r2b/containment.md`
 - `docs/codex/7-2-r2b/deploy.md`
 
+### docs/codex/date-phrasing
+
+- `docs/codex/date-phrasing/prompt.md`
+- `docs/codex/date-phrasing/run.sh`
+
 ### docs/codex/name-capture
 
 - `docs/codex/name-capture/containment.md`
@@ -1059,6 +1064,7 @@
   - ### docs/codex/7-2
   - ### docs/codex/7-2-r2
   - ### docs/codex/7-2-r2b
+  - ### docs/codex/date-phrasing
   - ### docs/codex/name-capture
   - ### docs/codex/phase-8
   - ### docs/codex/public-demo
@@ -1400,6 +1406,9 @@
   - ## Flag 2 — run 9
   - ## Flag 3 — run 9
   - ## Tur 1b — containment by isolation (runs 1b, 2, 5, 6, 12, 4, 11)
+
+### `docs/codex/date-phrasing/prompt.md`
+  - _(no `##` headings — flat file)_
 
 ### `docs/codex/name-capture/containment.md`
   - ## R2 — the recheck run
