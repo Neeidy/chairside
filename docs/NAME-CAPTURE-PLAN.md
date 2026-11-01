@@ -516,19 +516,67 @@ Through `scripts/workflow-step.py`, every step read back; both pre-PUT snapshots
   same for Purge (`workflow-step.py`'s R3 ORDER).
 
 ### A4 — the owner's live run (barber-demo, a real Turnstile token) and what CC reads afterwards
-A private/incognito window, so the run starts as a new conversation. Synthetic name; the demo calendar.
-| # | He types | He should see |
+**Corrected after the first owner run (below):** the first version of this script asked for "Wednesday 4 November",
+a phrasing `Resolve Date` does not accept, and it was handed out without being replayed. Every line below HAS been
+replayed offline through the STAGED Main (see "The owner run of 2026-11-01"), on 2026-11-01, to the reply shown.
+A NEW private/incognito window, so the run starts as a new conversation; run it before Wednesday 4 November. Synthetic
+name; the demo calendar.
+| # | He types | He should see (replayed) |
 |---|---|---|
-| 1 | `I'd like a haircut on Wednesday 4 November at 11:00` | no Turnstile box; then the name ask: "What name should I put the booking under? (Any name is fine for this demo.)" (if 11:00 is taken: other times — pick one, then the name ask) |
+| 1 | `I'd like a haircut on Wednesday at 11:00` | no Turnstile box; "What name should I put the booking under? (Any name is fine for this demo.)" |
 | 2 | `Mara O'Test` — the bare name; a phone may type ’, which is fine (R3-1) | "Haircut, Wednesday 4 Nov 11:00 for Mara O'Test — shall I book it? (yes / no)" |
-| 3 | `yes` | "You're booked: Haircut, … 11:00. See you then!" |
-| 4 | `Can I move it to Thursday 5 November at 15:00?` | "Move your Haircut from … to Thursday 5 Nov 15:00? Reply "yes" to move it, or anything else to keep it." |
-| 5 | `yes` | "Moved — your Haircut is now …" |
-| 6 | `Please cancel my appointment` | "Cancel your Haircut on …? Reply "yes" to cancel, or anything else to keep it." |
-| 7 | `yes` | "Done — your Haircut on … is cancelled." |
+| 3 | `yes` | "You're booked: Haircut, Wednesday 4 Nov 11:00. See you then!" |
+| 4 | `Can I move it to Thursday at 15:00?` | "Move your Haircut from Wednesday 4 Nov 11:00 to Thursday 5 Nov 15:00? Reply "yes" to move it, or anything else to keep it." |
+| 5 | `yes` | "Moved — your Haircut is now Thursday 5 Nov 15:00." |
+| 6 | `Please cancel my appointment` | "Cancel your Haircut on Thursday 5 Nov 15:00? Reply "yes" to cancel, or anything else to keep it." |
+| 7 | `yes` | "Done — your Haircut on Thursday 5 Nov 15:00 is cancelled." |
+Do NOT write "this Wednesday", "next Wednesday" or a date with a month — today those are refused (table below).
 Anything else at any step (a re-ask, a handoff message, an error) → stop there and say which step.
+**What the replay assumes, stated:** the model's answer per turn is GIVEN, not called — step 1 as `book` with
+`dateExpr` "wednesday", "on wednesday" or "Wednesday" (all three replayed; "this wednesday" would be refused); step 2
+as `unknown` or as `book` with the name (both replayed, and with ’); steps 3/5/7 `confirm`; step 4 `reschedule` with
+`dateExpr` "thursday"; step 6 `cancel`. The calendar, the store and the LLM are stubs (an empty calendar, so 11:00 and
+15:00 are free — if they are not, the bot offers other times). The replay's store ends with the appointment
+`customer_name` "Mara O'Test" (kept after the move), both calendar titles "Haircut — Mara O'Test (bot)", `slot_name` set,
+status cancelled, no owner alert.
 **CC reads afterwards** (read-only): the Main executions of the run (statuses; step 2 through `Fill Name From Reply`
 filling the name; no error, no alert class); `salon.appointments.customer_name` for the booking (`Mara O'Test`, kept
 after the move); the calendar event title on the insert and on the move, from n8n's record of the Calendar request
 (`Haircut — Mara O'Test (bot)`; CC's Calendar connection cannot see that calendar); the conversation's `slot_name`;
 the cancel's `status = cancelled`. Then promotion, `PENDING_KEYS` emptied and the site redeploy (R3-3) — the next round.
+
+### The owner run of 2026-11-01 — the bot re-asked the date; diagnosed as a PRE-EXISTING defect, no rollback
+**What happened** (owner's screenshot, via Cowork): in a fresh incognito session he sent "I'd like a haircut on
+Wednesday 4 November at 11:00" twice; both times the bot answered "What day and time works for you?". No error.
+**Measured** (n8n executions 4807 and 4808, read by GET; slot fields only): the model extracted it correctly both times —
+`intent` book, `serviceId` haircut, `date` 2026-11-04, `dateExpr` "wednesday 4 november", `time` 11:00. `Fill Name From
+Reply` changed nothing (`_name_pending` false). **`Resolve Date` dropped the date** — reason `unparsed`, outcome
+`unresolved_expr` — so `Slot Gate` re-asked the day and time. Each turn also raised the owner alert class
+`date_unresolved`: on the first turn the Telegram node ran; on the second `Build Owner Alert` ran and the Telegram node did
+not (the alert throttle is the likely reason; not read further).
+**Replayed offline** (the recorded model answer of 4807 through `Validate Intent` → `Fill Name From Reply` (staged only)
+→ `Resolve Date` → `Merge Slots` → `Slot Gate`, from the COMMITTED and the STAGED export): both lose the date in
+`Resolve Date` with reason `unparsed`; `Resolve Date` is byte-equal in the two exports. The staged replay reproduces
+the live reply exactly (the harness's control). **So this is case (a) of the brief: pre-existing, not a NAME-CAPTURE
+regression — no rollback; NAME-CAPTURE stays live.**
+**What `Resolve Date` accepts today** (both exports identical; replayed with each phrase inside the customer's text,
+2026-11-01, a Sunday):
+| `dateExpr` | Result |
+|---|---|
+| `wednesday`, `on wednesday`, `coming wednesday` | resolved (next occurrence) |
+| `tomorrow`, `today` | resolved |
+| `2026-11-04` typed verbatim | resolved |
+| `this wednesday` | refused `anchored_past` — "this" means the current ISO week (Monday–Sunday), so on a Sunday it points back |
+| `next wednesday` | refused `ambiguous_next` (by design) |
+| `wednesday 4 november`, `4 november`, `november 4`, `4.11`, `4/11` | refused `unparsed` |
+Every refusal re-asks "What day and time works for you?" without naming a form that would work, so a customer can
+loop. The plan for explicit calendar dates: `docs/DATE-PHRASING-PLAN.md` (plan only, awaiting approval).
+**Why the tests did not catch it — the gap, stated:** `name-capture.test.cjs` (34/34) and its mutants (50/50) execute the
+NAME-CAPTURE nodes with dates already stored as ISO; no case sends a date PHRASE through `Resolve Date`. The golden set
+(G16–G23) validates each case's expected model output against the schema and never executes a node — and its date cases
+say "tomorrow", which is accepted. `resolve-date.test.cjs` asserts the node's rule table, in which a month name was
+never a case. And the A4 script was written from the plan's design and handed out without a replay through the staged
+path — the one check that would have shown it. The harness that did it here (an offline multi-turn walker: Code nodes
+from the export, IF/Switch/Set evaluated from their parameters, stores and Calendar stubbed, the model's answer given)
+lives in the session scratchpad; committing it as a test is part of the date plan.
+
