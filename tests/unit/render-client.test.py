@@ -175,13 +175,20 @@ def all_leaves(o, p=''):
         yield p, o
 
 
+# NAME-CAPTURE R1 (docs/NAME-CAPTURE-PLAN.md 3.8): config keys the STAGED Main literal adds and the committed literal does
+# not hold yet. A render against the committed exports cannot carry them, so they are no A-leak probe until the edit is
+# promoted; tests/unit/render-client-askname.test.py renders them against the staged exports instead. main() asserts each
+# is still ABSENT from the committed literal — after the promotion that case goes red, and this set is emptied.
+PENDING_KEYS = {'messageTemplates.askName'}
+
+
 def a_probes():
     """Every string of client A (5+ characters) that B's config does not hold anywhere. `site.*` is left out: it is the
-    site's page copy, and no workflow literal carries it (asserted in main())."""
+    site's page copy, and no workflow literal carries it (asserted in main()); so are PENDING_KEYS (above)."""
     A, B = json.load(open(A_CFG, encoding='utf-8')), json.load(open(B_CFG, encoding='utf-8'))
     bvals, btext = dict(all_leaves(B)), json.dumps(B, ensure_ascii=False)
     return sorted({v for p, v in all_leaves(A) if isinstance(v, str) and len(v) >= 5 and not p.startswith('site.')
-                   and bvals.get(p) != v and v not in btext})
+                   and p not in PENDING_KEYS and bvals.get(p) != v and v not in btext})
 
 
 def scan(wfs, probes):
@@ -465,6 +472,9 @@ def main():
              and all(oct(os.stat(os.path.join(outBS, f)).st_mode & 0o777) == '0o600' for f in os.listdir(outBS)))
 
         # ── 3. the A-leak scan, with its controls ─────────────────────────────────────────────────────────────
+        lc = code_of(C['main'], 'Load Config')
+        case(f'PENDING_KEYS are still absent from the committed Main literal (stale after promotion: empty the set) {sorted(PENDING_KEYS)}',
+             all(not re.search(r'\b' + re.escape(k.split('.')[-1]) + r'\s*:', lc) for k in PENDING_KEYS))
         probes = a_probes()
         case("no workflow literal carries the site's page copy (why the probes leave `site.*` out)",
              not any('site' in node_eval({'mode': 'literal', 'code': code_of(C[k], name)}) for k, name in LITERAL_NODES))

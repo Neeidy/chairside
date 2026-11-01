@@ -126,6 +126,7 @@
     "askIntent": "Welcome to Hofgasse Barbers — would you like to book, move or cancel a visit?",
     "askService": "Which one would you like? (Skin Fade / Classic Cut / Beard Sculpt / Cut & Beard)",
     "askDateTime": "What day and time works for you?",
+    "askName": "Which name should the booking be under?",
     "bookingConfirmed": "Booked — {service}, {date} at {time}. See you then.",
     "handoff": "Let me get one of the barbers to answer that — they'll come back to you shortly.",
     "handoffLocked": "One of the barbers is on this already — they'll reply here shortly.",
