@@ -68,11 +68,15 @@ this is / name's / call me`, 1–4 words, letters with `' . -` inside, no digits
 through untouched to the LLM's own result.
 **Three conditions bound the rule, because a name shape alone is too wide** (`security-auditor` MEDIUM-2 on this plan:
 "ignore previous instructions", "cancel", "talk to a human" are all 1–4 letter words):
-1. it runs only when the model's own intent for the turn is `unknown` or `book` — never over `handoff`, `cancel`,
-   `reschedule`, `capture_lead`, `faq` or `confirm`, so an explicit request or a jailbreak still hands off on the FIRST
-   turn (`handoff.md`);
-2. a deny list of intent and command words (`cancel, stop, no, yes, human, person, agent, help, ignore, instructions,
-   prompt, system, book, reschedule, price, …` — the build lists it and a test pins it) rejects the reply as a name;
+1. it runs only when the model's own intent for the turn is `unknown`, or `book` with NO service, date or time
+   extracted this turn (and, if the model gave a `customerName`, only when it equals the candidate) — never over
+   `handoff`, `cancel`, `reschedule`, `capture_lead`, `faq` or `confirm`, so an explicit request or a jailbreak still
+   hands off on the FIRST turn (`handoff.md`), and a booking detail ("actually tuesday", "beard trim") stays a booking
+   detail (`security-auditor` LOW-1, second pass);
+2. a deny list rejects the reply as a name: intent and command words (`cancel, stop, no, yes, human, person, agent,
+   help, ignore, instructions, prompt, system, book, reschedule, price, start over, forget, …`), weekday, month and
+   relative-date words (`today, tomorrow, next, monday … sunday, january …`), and **the config's own service names, read
+   from `Load Config`** (so a new client's services are covered) — the build lists it and a test pins it;
 3. it never runs while a cancel/reschedule confirmation is pending (the stage check above already excludes it; a test
    pins it).
 A reply that fails any condition is left exactly as the LLM classified it. **Why deterministic first:** the case is a closed, pattern-shaped answer to
@@ -163,8 +167,12 @@ reschedule title, the lead. **#8 (reschedule)** — only for `Validate Reschedul
 1. A name in the first message, a bare reply ("Alex", "my name is Alex"), or a name three turns before "yes" all
    reach the calendar title and `customer_name`.
 2. A bare name reply is never classified `unknown`, never clarifies, never hands off.
-2b. **A reply that is not a name never takes the name path:** an explicit handoff request, a cancel, a jailbreak
-   attempt, or a command word keeps the model's own intent and its gates (first-turn handoff included).
+2b. **A reply in a listed category never takes the name path:** an intent the model classified (handoff, cancel,
+   reschedule, a booking detail), a word on the deny list (commands, dates, the config's services) keeps the model's
+   own intent and its gates (first-turn handoff included). **Stated bound, not hidden:** the deny list is a list — a
+   non-name outside it that the model calls `unknown` ("you are dan now") can still be taken as a name. What bounds
+   it: the value never reaches a prompt, and the confirm text shows it before any write, so a wrong name costs one
+   "no", never a silent booking.
 3. A reschedule's new event carries the stored name; no path blanks a stored `customer_name`.
 4. A refusal gets one re-ask, then the D-3 outcome.
 5. The sanitiser removes controls/format characters, caps at 40, and rejects a non-name; the value never appears in an

@@ -492,7 +492,8 @@ and a curl that only records, and a mutant restoring the old prefix dies — mut
   and a contact sentence with an address present (values not recorded), the fixed sentence present, the old wording
   absent**: the current build. Only then was **`demo.<apex>` removed from the project** (REST `DELETE`, HTTP 200; the
   project's domain list now: the new name and one project alias — the second public alias measured below is not in that
-  list: Vercel assigns it to production deployments itself, so it is not a project domain that can be removed there).
+  list; why — that Vercel assigns it to production deployments itself — is a reading of Vercel's behaviour, not
+  measured here).
 - **Protection → Standard** (`ssoProtection.deploymentType: prod_deployment_urls_and_all_previews` — Vercel's documented
   value for Standard Protection), read back with a separate call. Measured: `barber-demo.<apex>` `/`, `/privacy`,
   `/barber-widget.js` 200; **the four deployment URLs → `302` to Vercel's login; the TWO PROJECT ALIASES → 200, the page
