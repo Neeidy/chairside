@@ -62,6 +62,8 @@ MUTANTS = {
     'Slot Gate: the wrong template at the name ask': ('main', [('Slot Gate', ('jsCode',), ": t.askName)", ": t.askDateTime)")]),
     'Build Clarify State: askIntent at the name ask': ('main', [('Build Clarify State', ('jsCode',), '(j._name_pending === true && cfg.messageTemplates.askName)', '(false)')]),
     'Compute Availability: the confirm does not name the person': ('main', [('Compute Availability', ('jsCode',), "${slots.customerName ? ' for ' + slots.customerName : ''}", '')]),
+    'Build Event Request: a confirm with no kept name books anyway (Codex R1 M1)': ('main', [('Build Event Request', ('jsCode',),
+        "if (!(typeof slots.customerName === 'string' && slots.customerName.trim())) {", 'if (false) {')]),
     "Build Event Request: this turn's model name, not the kept one": ('main', [('Build Event Request', ('jsCode',), 'const name = (slots && slots.customerName) || null;',
                                                                                 'const name = (vi.slots && vi.slots.customerName) || null;')]),
     "Build Reschedule Event Request: this turn's model name": ('main', [('Build Reschedule Event Request', ('jsCode',),

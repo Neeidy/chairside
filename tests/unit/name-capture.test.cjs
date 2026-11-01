@@ -196,9 +196,15 @@ test('Build Event Request: the title and booking.customerName carry the KEPT nam
   const v = vi({ serviceId: 'haircut', date: DATE, time: '10:00', customerName: 'Kept' });
   const o = run('Build Event Request', { 'Load Config': { config: CFG }, 'Validate Intent': v }, v);
   assert.equal(o.booking.customerName, 'Kept'); assert.match(o.booking.summary, /^Haircut — Kept \(bot\)$/);
-  const v2 = vi({ serviceId: 'haircut', date: DATE, time: '10:00', customerName: null });
-  const o2 = run('Build Event Request', { 'Load Config': { config: CFG }, 'Validate Intent': v2 }, v2);
-  assert.equal(o2.booking.customerName, null); assert.equal(o2.booking.summary, 'Haircut (bot)');
+});
+test('Build Event Request: a confirm with NO kept name never books — an empty eventId (→ Mark Handoff) tagged name_missing (Codex R1 M1)', () => {
+  // A conversation already `confirming` before the deploy, or one whose name the 30-day Purge emptied, reaches "yes"
+  // without passing Slot Gate. The R1 test EXPECTED a nameless 'Haircut (bot)' here — the gap Codex found.
+  for (const customerName of [null, '', '   ', undefined]) {
+    const v2 = vi({ serviceId: 'haircut', date: DATE, time: '10:00', customerName });
+    const o2 = run('Build Event Request', { 'Load Config': { config: CFG }, 'Validate Intent': v2 }, v2);
+    assert.equal(o2.booking.eventId, '', String(customerName)); assert.equal(o2.error, 'name_missing', String(customerName));
+  }
 });
 test('Write Appointment: a re-write can never blank a stored name, and no name is sent as NULL, not \'\'', () => {
   const p = node('Write Appointment').parameters;
