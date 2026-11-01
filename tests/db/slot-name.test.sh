@@ -59,7 +59,8 @@ as salon_migrator < "$ROOT/db/schema/004_slot_name.sql" >/dev/null
 check 'M2: the real run adds a nullable text column' "$(col)" 1
 if as salon_migrator < "$ROOT/db/schema/004_slot_name.sql" >/dev/null 2>&1; then ok 'M3: a second run passes (idempotent)'; else bad 'M3: a second run failed'; fi
 check 'M4: the column is owned with its table (salon_owner)' "$(su -c "SELECT pg_get_userbyid(relowner) FROM pg_class WHERE oid = 'salon.conversations'::regclass")" salon_owner
-if as salon_ro -c "UPDATE salon.conversations SET slot_name = 'x'" >/dev/null 2>&1; then bad 'M5: salon_ro could write slot_name'; else ok 'M5: salon_ro cannot write slot_name'; fi
+if as salon_ro -c "UPDATE salon.conversations SET slot_name = 'x'" >/dev/null 2>&1; then bad 'M5: salon_ro could UPDATE slot_name'; else ok 'M5: salon_ro cannot UPDATE slot_name'; fi
+if as salon_ro -c "INSERT INTO salon.conversations (sender_key, slot_name) VALUES ('widget:w-fake-ro', 'x')" >/dev/null 2>&1; then bad 'M6: salon_ro could INSERT a slot_name'; else ok 'M6: salon_ro cannot INSERT a slot_name'; fi
 
 # ── S: Save State / Load State, staged SQL verbatim, as salon_app ──
 SAVE_Q="$(q "$MAIN" 'Save State')"; LOAD_Q="$(q "$MAIN" 'Load State')"

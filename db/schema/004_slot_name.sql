@@ -57,7 +57,8 @@ BEGIN
   IF NOT has_column_privilege('salon_ro', 'salon.conversations', 'slot_name', 'SELECT') THEN
     RAISE EXCEPTION '004: salon_ro cannot read slot_name — rolled back';
   END IF;
-  IF has_column_privilege('salon_ro', 'salon.conversations', 'slot_name', 'UPDATE') THEN
+  IF has_column_privilege('salon_ro', 'salon.conversations', 'slot_name', 'UPDATE')
+     OR has_column_privilege('salon_ro', 'salon.conversations', 'slot_name', 'INSERT') THEN
     RAISE EXCEPTION '004: salon_ro can write slot_name — rolled back';
   END IF;
 END $$;
