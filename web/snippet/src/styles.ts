@@ -93,7 +93,8 @@ border-radius:16px 16px 16px 4px;padding:12px 15px}
 
 /* S3 — Cloudflare draws its own widget here, interaction-only: zero-height until a challenge is needed. Only
    the spacing collapses — the slot must never be display:none: a hidden container is not a challenge a
-   visitor could solve. .is-interactive is set between Turnstile's before/after-interactive callbacks. */
+   visitor could solve. .is-interactive is set by Turnstile's before-interactive callback and kept after the
+   challenge ends (ruling R3-3). */
 .turnstile-slot{padding:0}
 .turnstile-slot.is-interactive{padding:10px 18px}
 

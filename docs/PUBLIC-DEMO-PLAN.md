@@ -514,9 +514,10 @@ session scratchpad, not committed)*:
   input-level click on the checkbox minted a token on both surfaces and at both widths, and the send carried it. The
   click sometimes needed a second try right after the box drew (the harness retries up to three times; the site took
   one, the snippet one or two).
-- **Observed, reported rather than changed:** after the challenge is solved Cloudflare keeps its "Success!" box on screen
-  (still there 8 s later), and because `after-interactive` collapses the spacing as ruled, that box sits flush against
-  the panel's edge. Cosmetic; a ruling decides whether the spacing should stay after interaction.
+- **Observed:** after the challenge is solved Cloudflare keeps its "Success!" box on screen (still there 8 s later), and
+  because `after-interactive` collapsed the spacing, that box sat flush against the panel's edge. **Ruled R3-3
+  (2026-11-01): the spacing stays after interaction** — see "R3 amendment" below. *(This item said "a ruling decides"
+  until R3.)*
 - Builds green (site + snippet, isolated copy); `npm --prefix scripts run check-all` 0 (which runs the web checks and the
   snippet's byte-for-byte freshness check against a rebuild).
 **Deployed:** a protected production deploy of `b1dc022` (git archive; no `web/dashboard` file in the set) → `READY`,
@@ -526,9 +527,24 @@ five older `*.vercel.app` names → `302`; `<project>-<suffix>.vercel.app` → `
 **For the owner (a real Turnstile token, which this machine's headless browser cannot mint):** on
 `barber-demo.<apex>`, open the chat — expected: no Turnstile box, the composer opens, a message is answered; if Cloudflare
 does challenge, the box appears inside the panel and is solvable.
-**Open (`security-auditor` LOW-A, not changed — the brief kept the other callbacks unchanged):** if a challenge is reset,
-expires or errors while interactive and Turnstile does not fire `after-interactive`, the spacing stays (extra padding,
-never hidden — the safe direction); unmeasured.
+**`security-auditor` LOW-A — moot since R3-3:** it noted that if Turnstile did not fire `after-interactive` the spacing
+would stay. Since R3-3 the spacing stays after every challenge by design and no `after-interactive` callback is
+registered, so there is no longer a state it could get stuck in.
+
+**R3 amendment — the spacing stays after interaction (ruling R3-3, 2026-11-01; committed, NOT deployed — the site is
+redeployed after the NAME-CAPTURE promotion).** Both render sites drop the `after-interactive-callback`; the
+`before-interactive-callback` still gives the slot its `10px 18px`, and the no-challenge collapse (padding 0, slot never
+`display:none`) is unchanged. **Tested headless on an isolated build (OPS-10), same harness and fake engine host as
+above** *(terminal-measured; screenshots in the session scratchpad, not committed)*:
+- *forced-interactive key*, site and snippet: the challenge drew inside the panel at 352×73 px with the slot 93 px high
+  and padding `10px 18px`; one input-level click minted a token on each surface; **after the click and again 8 s later the
+  slot is still 93 px with `10px 18px`** and the "Success!" box sits inset from the panel's edge (screenshots). The R1
+  screenshots of the same step, taken while the callback was registered, show the box flush, so the callback did fire
+  there: what changed is the source, not a callback that never runs. The send carried a 21-character token.
+- *always-pass key*, site and snippet: token issued before any click, **slot 0 px high, padding 0, no box in the panel**
+  (screenshot), and the send carried the token.
+- The snippet bundle built from the real inputs carries no test key and no `after-interactive`; `check-all` 0, including
+  the snippet's byte-for-byte freshness check.
 
 ### RENAME — `barber-demo.<apex>` and `barber-dashboard.<apex>`; protection Standard (STOPPED: two project aliases stay public); owner-run reads (2026-11-01)
 **Preconditions — Cowork's statements, not CC's measurements.** Cowork added the DNS for `barber-demo.<apex>` (DNS only,

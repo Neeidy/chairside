@@ -58,8 +58,9 @@ export function TurnstileWidget({
   const hostRef = useRef<HTMLDivElement>(null);
   const idRef = useRef<string | null>(null);
   const [mounted, setMounted] = useState(false);
-  // Interaction-only (ruling 2026-11-01): the slot keeps its box but gets spacing only while Cloudflare shows a
-  // challenge. Never display:none — see whenVisible below. Inline style: globals.css is a locked contract.
+  // Interaction-only (ruling 2026-11-01): the slot keeps its box but has no spacing until Cloudflare first shows a
+  // challenge; it keeps the spacing after the challenge ends, so the "Success!" box is not flush against the panel's
+  // edge (ruling R3-3). Never display:none — see whenVisible below. Inline style: globals.css is a locked contract.
   const [interactive, setInteractive] = useState(false);
 
   /**
@@ -127,7 +128,6 @@ export function TurnstileWidget({
           theme: 'light',
           appearance: 'interaction-only',
           'before-interactive-callback': () => setInteractive(true),
-          'after-interactive-callback': () => setInteractive(false),
         });
         setMounted(true);
       })

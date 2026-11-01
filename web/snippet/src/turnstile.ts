@@ -25,8 +25,9 @@
  * A TOKEN IS SINGLE-USE and the engine gates every request, so a fresh one is minted per message.
  *
  * INTERACTION-ONLY (ruling 2026-11-01): the box is drawn only when Cloudflare needs the visitor. The slot
- * itself is never hidden — finding 3 is why — it only loses its spacing while no challenge is shown, and
- * gets it back between the before- and after-interactive callbacks.
+ * itself is never hidden — finding 3 is why — it has no spacing until a challenge is first shown; the
+ * before-interactive callback gives it its spacing, and the slot KEEPS it after the challenge ends, so
+ * Cloudflare's "Success!" box does not sit flush against the panel's edge (ruling R3-3, 2026-11-01).
  */
 
 declare global {
@@ -118,7 +119,6 @@ export function mountTurnstile(
         theme: 'light',
         appearance: 'interaction-only',
         'before-interactive-callback': () => { slot.classList.add('is-interactive'); },
-        'after-interactive-callback': () => { slot.classList.remove('is-interactive'); },
       });
     })
     .catch(() => { token = null; blocked = true; onChange('blocked'); });
