@@ -9,7 +9,9 @@
 > **Renamed 2026-11-01 (ruling 1 of the RENAME brief):** the public site is now **`barber-demo.<apex>`** and the owner
 > dashboard **`barber-dashboard.<apex>`**. Every `demo.<apex>` below — in the rulings D1, the widget's hostname list (#11),
 > Yigitcan's steps and the rounds — is the name at the time; it was removed from the Vercel project, with no redirect
-> (see "RENAME"). *(Added in place rather than rewriting each approved ruling.)*
+> (see "RENAME"). *(Added in place rather than rewriting each approved ruling.)* The widget's hostname list (#11) is no
+> longer "the demo hostname only": since the rename it is `barber-demo.<apex>` + `demo.<apex>` (Cowork's statement) until
+> Cowork removes the old name.
 
 ## Rulings (Yigitcan, 2026-10-29)
 - **D1** — the site on **Vercel Hobby**, public hostname **`demo.<apex>`** (a DNS-only CNAME to Vercel).
@@ -489,7 +491,8 @@ and a curl that only records, and a mutant restoring the old prefix dies — mut
   (Let's Encrypt, the new name only). Unauthenticated: `/` 200 and **`/privacy` 200 — no placeholder, the controller
   and a contact sentence with an address present (values not recorded), the fixed sentence present, the old wording
   absent**: the current build. Only then was **`demo.<apex>` removed from the project** (REST `DELETE`, HTTP 200; the
-  project's domain list now: the new name and one project alias).
+  project's domain list now: the new name and one project alias — the second public alias measured below is not in that
+  list: Vercel assigns it to production deployments itself, so it is not a project domain that can be removed there).
 - **Protection → Standard** (`ssoProtection.deploymentType: prod_deployment_urls_and_all_previews` — Vercel's documented
   value for Standard Protection), read back with a separate call. Measured: `barber-demo.<apex>` `/`, `/privacy`,
   `/barber-widget.js` 200; **the four deployment URLs → `302` to Vercel's login; the TWO PROJECT ALIASES → 200, the page
@@ -501,7 +504,9 @@ and a curl that only records, and a mutant restoring the old prefix dies — mut
   "loading", as on the old name — `remote-operator.md`).
 - **`demo.<apex>` now:** HTTP 404 `DEPLOYMENT_NOT_FOUND`. ⚠ **Its DNS still answers — a CNAME to `cname.vercel-dns.com`**
   (on 1.1.1.1): a record pointing at Vercel with no project behind it is a subdomain-takeover surface until Cowork
-  deletes it (ruling 1: Cowork removes the Cloudflare side after the cutover).
+  deletes it (ruling 1: Cowork removes the Cloudflare side after the cutover). **And the old name is still in the
+  widget's hostname list** (Cowork's statement), so a page served there by whoever claimed the name could mint a valid
+  Turnstile token — the opposite of go-live check 6. Both must go: the DNS record AND the widget list entry.
 - `barber-dashboard.<apex>`: `/`, `/api/health`, `/api` → `302` to Access. The old dashboard name is not in any file CC
   reads, so CC did not measure it (Cowork's statement: `302` to Access).
 - `demo-offline measure` → online (200), on the new name.
@@ -531,9 +536,9 @@ and a curl that only records, and a mutant restoring the old prefix dies — mut
     window is `start_utc > yesterday 00:00 UTC` (`store.ts`) — after the cancel, the 2 Nov row is counted under the
     "Today" heading. That is the most likely reading; not reproduced (no screenshot was read).
   - *(iii)* The widget's message time is `new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })`
-    (`LiveChatPanel.tsx`) — the VISITOR's device locale and time zone, not the shop's. "04:45 PM" at about 00:46
-    Vienna on 1 Nov is 23:45 UTC = 16:45 in UTC−7 (US Pacific daylight time that day) in a 12-hour locale — consistent
-    with a device set to US Pacific / en-US; an inference, not a measurement of the device.
+    (`LiveChatPanel.tsx`) — the VISITOR's device locale and time zone, not the shop's, so a device on another time zone
+    with a 12-hour locale shows a time like "04:45 PM" while it is past midnight in Vienna. Read from the code, not
+    measured; whether the widget should show the shop's time is a product question.
 
 **E — the name-capture plan:** `docs/NAME-CAPTURE-PLAN.md` (plan only; awaiting Yigitcan's written "approved").
 

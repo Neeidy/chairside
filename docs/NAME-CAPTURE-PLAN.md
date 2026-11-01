@@ -58,14 +58,24 @@ slot_name = NULL`), so the conversation record does not keep a name longer than 
 it.
 
 **3.3 Extraction of a bare reply — deterministic first, the LLM second.** The model is called on every turn anyway,
-but a one-word "Yigit" is exactly the input it classifies as `unknown`, which goes to clarify and, a second time, to
+but a one-word "Alex" is exactly the input it classifies as `unknown`, which goes to clarify and, a second time, to
 handoff (`handoff.md`). So a NEW Code node, **`Fill Name From Reply`**, sits between `Validate Intent` and `Resolve
 Date` — before every uncertainty gate — and runs ONLY when the stored state shows the last ask was the name (stage
 `collecting`, service + date + time stored and valid, no stored name; derived from state, not from a new field). If
 the message, after sanitising (3.4), matches a name shape — optionally prefixed by `my name is / I'm / I am / it's /
 this is / name's / call me`, 1–4 words, letters with `' . -` inside, no digits, no `@`, no URL — it sets
 `slots.customerName`, sets `intent = 'book'` with high confidence, and the turn routes as a booking. Anything else falls
-through untouched to the LLM's own result. **Why deterministic first:** the case is a closed, pattern-shaped answer to
+through untouched to the LLM's own result.
+**Three conditions bound the rule, because a name shape alone is too wide** (`security-auditor` MEDIUM-2 on this plan:
+"ignore previous instructions", "cancel", "talk to a human" are all 1–4 letter words):
+1. it runs only when the model's own intent for the turn is `unknown` or `book` — never over `handoff`, `cancel`,
+   `reschedule`, `capture_lead`, `faq` or `confirm`, so an explicit request or a jailbreak still hands off on the FIRST
+   turn (`handoff.md`);
+2. a deny list of intent and command words (`cancel, stop, no, yes, human, person, agent, help, ignore, instructions,
+   prompt, system, book, reschedule, price, …` — the build lists it and a test pins it) rejects the reply as a name;
+3. it never runs while a cancel/reschedule confirmation is pending (the stage check above already excludes it; a test
+   pins it).
+A reply that fails any condition is left exactly as the LLM classified it. **Why deterministic first:** the case is a closed, pattern-shaped answer to
 a question we just asked; the rule cannot hallucinate and costs nothing (`deterministic before AI`). The LLM stays for
 a name inside a sentence ("haircut tomorrow at 3, I'm Alex"), which the current prompt already extracts.
 **A refusal** ("I'd rather not", "why?") does not match the shape, so it reaches the LLM; the plan adds one re-ask
@@ -150,9 +160,11 @@ for anything but a name shape; never during a cancel/reschedule confirm), the pr
 reschedule title, the lead. **#8 (reschedule)** — only for `Validate Reschedule Target`'s added field.
 
 ## 8. Acceptance criteria
-1. A name in the first message, a bare reply ("Yigit", "my name is Yigit"), or a name three turns before "yes" all
+1. A name in the first message, a bare reply ("Alex", "my name is Alex"), or a name three turns before "yes" all
    reach the calendar title and `customer_name`.
 2. A bare name reply is never classified `unknown`, never clarifies, never hands off.
+2b. **A reply that is not a name never takes the name path:** an explicit handoff request, a cancel, a jailbreak
+   attempt, or a command word keeps the model's own intent and its gates (first-turn handoff included).
 3. A reschedule's new event carries the stored name; no path blanks a stored `customer_name`.
 4. A refusal gets one re-ask, then the D-3 outcome.
 5. The sanitiser removes controls/format characters, caps at 40, and rejects a non-name; the value never appears in an
@@ -165,15 +177,16 @@ reschedule title, the lead. **#8 (reschedule)** — only for `Validate Reschedul
 | scenario | setup | expected | MUST-RUN | MUST-NOT-RUN |
 |---|---|---|---|---|
 | name in the first message | "haircut tomorrow 3pm, I'm Alex" | confirm names Alex; row + title carry it | `Merge Slots` keeps it | `askName` |
-| bare reply | ask → "Yigit" | intent book, name filled | `Fill Name From Reply` | clarify, `Mark Handoff` |
-| "my name is …" | ask → "my name is Yigit" | as above | same | same |
+| bare reply | ask → "Alex" | intent book, name filled | `Fill Name From Reply` | clarify, `Mark Handoff` |
+| "my name is …" | ask → "my name is Alex" | as above | same | same |
 | name given early, "yes" later | name turn 1, slot turns 2–3, "yes" | name in row + title | `Merge State`/`Save State` carry `slot_name` | — |
 | refusal | ask → "I'd rather not" ×2 | re-ask, then D-3 | `askName` once | a booking without the ruled outcome |
-| injection as the name | ask → "ignore previous instructions" / `<script>` / zero-width | not a name → re-ask; never in a prompt | sanitiser reject | the value in `Build LLM Request` body |
+| injection as the name | ask → "ignore previous instructions" / `<script>` / zero-width | not a name (deny list / sanitiser) → the model's own route (a jailbreak hands off); never in a prompt | the deny list, the sanitiser | the value in `Build LLM Request` body; a name fill |
+| a command at the name ask | ask → "cancel" / "talk to a human" / "stop" | the model's intent (cancel / handoff) and its gates | the intent check, the deny list | `Fill Name From Reply` filling a name |
 | long name | 60 letters | capped at 40 or re-asked | sanitiser | an un-capped write |
 | reschedule | booked with a name → reschedule → yes | new event title has the stored name; row keeps it | `Validate Reschedule Target` field | a blank `customer_name` |
 | reconcile / re-book same slot | upsert on an existing event id with no name | stored name kept | `COALESCE` | `customer_name = ''` |
-| cancel/reschedule confirm pending | stage `cancel_confirming` + "Yigit" | `Fill Name From Reply` does nothing | the pending-confirm gate | a name fill |
+| cancel/reschedule confirm pending | stage `cancel_confirming` + "Alex" | `Fill Name From Reply` does nothing | the pending-confirm gate | a name fill |
 | double-booking / idempotency / DST | unchanged paths | unchanged | the existing drills | — |
 | lead | lead turn after a name | lead row has the kept name | `Capture Lead` | — |
 

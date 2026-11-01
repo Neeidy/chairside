@@ -138,6 +138,7 @@
 - `docs/FLOW-DIAGRAM.md`
 - `docs/LOOM-SCRIPT.md`
 - `docs/MIGRATION-PLAN.md`
+- `docs/NAME-CAPTURE-PLAN.md`
 - `docs/OPERATIONAL-INCIDENTS.md`
 - `docs/PHASE-6-BACKLOG.md`
 - `docs/PHASE-7-PLAN.md`
@@ -835,6 +836,22 @@
   - ## 10 · Budget and emergency exit
   - ## 11 · Rulings (Yigitcan, 2026-10-19: "onaylıyorum", with Cowork's recommendations)
 
+### `docs/NAME-CAPTURE-PLAN.md`
+  - ## 0. The defect, verified against `n8n/workflow.main.sanitized.json`
+  - ## 1. Goal
+  - ## 2. Scope / NOT-build
+  - ## 3. Design
+  - ## 4. Skeleton (node level)
+  - ## 5. Integrations
+  - ## 6. Mock data
+  - ## 7. Critical-Review Targets (Codex)
+  - ## 8. Acceptance criteria
+  - ## 9. ⚙ Drill matrix
+  - ## 10. Tests
+  - ## 11. Deploy route, rollback, rounds
+  - ## 12. Automation-fit
+  - ## 13. Decisions for the approver
+
 ### `docs/OPERATIONAL-INCIDENTS.md`
   - ## OPS-10 · 2026-10-30 · A local `next build` in the repo broke the LIVE owner dashboard, which runs from the same directory
   - ## OPS-9 · 2026-10-26 · A commit landed after a RED `check-all`, because the command chain did not gate on it
@@ -1057,6 +1074,7 @@
   - ### `docs/FLOW-DIAGRAM.md`
   - ### `docs/LOOM-SCRIPT.md`
   - ### `docs/MIGRATION-PLAN.md`
+  - ### `docs/NAME-CAPTURE-PLAN.md`
   - ### `docs/OPERATIONAL-INCIDENTS.md`
   - ### `docs/PHASE-6-BACKLOG.md`
   - ### `docs/PHASE-7-PLAN.md`
