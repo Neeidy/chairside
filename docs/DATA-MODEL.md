@@ -59,7 +59,7 @@ key is absent (deletes nothing and alerts) — `Compute Leads Cutoff` in the Pur
 | gcal_event_id | text | `NOT NULL`, **`UNIQUE`** (`appointments_gcal_event_id_key`) — `Write Appointment`'s upsert key (`ON CONFLICT (gcal_event_id) DO UPDATE`). Re-verify · cancel/reschedule delete. ⚠ It reverses to the `sender_key` (`security-secrets.md`) — treat a full one like a full `sender_key` |
 | calendar_id | text | the GCal calendar the event lives on, stored at booking (CP3/Codex#8) — cancel/reschedule delete uses the STORED calendar+event pair, so a later config-calendar change can't delete on the wrong calendar |
 | channel | text | origin channel — whatsapp \| widget \| instagram (no CHECK) |
-| customer_name | text | nullable (PII) |
+| customer_name | text | nullable (PII) — the name the customer gave for the booking (NAME-CAPTURE, live since 2026-11-01): written by `Write Appointment`, whose upsert never blanks a stored name (`COALESCE(NULLIF(EXCLUDED.customer_name, ''), salon.appointments.customer_name)`), and kept when the booking is rescheduled. A booking written before NAME-CAPTURE has it empty. Not touched by the 30-day scrub (the appointment row is not purged) |
 | status | text | `NOT NULL`, `CHECK (status IN ('booked', 'cancelled'))` |
 | **reminded** | boolean | `NOT NULL DEFAULT false` — **CONTROL**, the reminder dedupe flag (CP5). Reminders selects the not-reminded rows; Stamp sets `true`; **reschedule sets `false`** so a moved appointment re-reminds. *(It became a boolean on Airtable, where native n8n could not clear a dateTime; the column kept that shape.)* |
 | reminder_sent | timestamptz | **INFO** (nullable) — when the last reminder fired. NOT the dedupe key (`reminded` is); reschedule does **not** touch it, so it honestly records the last send (CP5). |
@@ -96,6 +96,7 @@ at Round 3c's cleanup by ruling).
 | slot_service | text | nullable |
 | slot_date | text | nullable |
 | slot_time | text | nullable |
+| slot_name | text | nullable (PII) — the name given for the booking in progress, the fourth slot (NAME-CAPTURE, `db/schema/004_slot_name.sql`, live since 2026-11-01). Written as `$14` by both Save States (NULL when there is none), read by `Load State`/`Merge State`; emptied by the 30-day scrub together with `recent_messages` |
 | last_updated | timestamptz | `NOT NULL DEFAULT now()` — UTC; session-gap calculation (`Build Reply Payload`) and the 30-day PII-scrub cutoff. **It does not expire the row** (no job deletes `conversations` rows). |
 | turn_count | integer | `NOT NULL DEFAULT 0` — +1 on every inbound message; compared with config `bot.maxTurnsPerConversation` for the max-turns guard (CP3) |
 | last_intent | text | last classified intent. ⚠ **NOT a debug field** — two escalation ladders READ it as a carried-in strike (see `stage`). It also carries two non-enum control values (`'invalid'`, `'clarify'`) that are not intents at all. |
@@ -116,7 +117,10 @@ at Round 3c's cleanup by ruling).
 > before `Save State` has created the row, so that alert is not recorded either (PHASE-7-PLAN named item (4)).
 
 > ### PII expiry — what is and is NOT solved (FIX-1)
-> The 30-day scrub covers **message content** (`recent_messages`). It does **NOT** make the row anonymous:
+> The 30-day scrub covers **message content** (`recent_messages`) and, since NAME-CAPTURE (2026-11-01), the kept name:
+> it empties `slot_name` and replaces that name in `computed_reply` with `…` (a plain substring replace — a name that
+> is also part of another word in the reply, e.g. "Jan", is replaced there too; `docs/NAME-CAPTURE-PLAN.md` R2). It
+> does **NOT** touch `appointments.customer_name`, and it does **NOT** make the row anonymous:
 > **`sender_key` contains a phone number on the whatsapp channel and stays for the row's lifetime**, because the row
 > is deliberately kept rather than deleted. Deleting the row would silently release a `stage='handoff'` lock and drop
 > `cancel_target_id`/`confirm_turn`, so row deletion is a **separate** decision (UX-ARCHITECTURE §9 K2). Do not
