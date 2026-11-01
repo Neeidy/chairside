@@ -79,7 +79,7 @@ test('the sanitiser caps at 40 characters and refuses anything that is not a let
 test('ruling R3-1: a typographic apostrophe ’ (U+2019) is accepted and stored as \' (U+0027); nothing else in the set changes', () => {
   assert.equal(sanitiseName('O’Neil'), "O'Neil");
   assert.equal(sanitiseName('D’Angelo Ünal'), "D'Angelo Ünal");
-  for (const bad of ['O‘Neil', 'O`Neil', 'O´Neil', 'O＇Neil'])   // U+2018, backtick, acute, fullwidth: still refused
+  for (const bad of ['O‘Neil', 'O\u201bNeil', 'O\u2032Neil', 'O`Neil', 'O´Neil', 'O＇Neil'])   // U+2018, U+201B, prime, backtick, acute, fullwidth: still refused
     assert.equal(sanitiseName(bad), null, bad);
 });
 test('the RECORDED BOUND (plan A2 note): a name needing combining marks is refused; a ZWNJ is stripped, not refused', () => {

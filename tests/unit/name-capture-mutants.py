@@ -50,6 +50,7 @@ MUTANTS = {
     'sanitiser: no 40-character cap (both)': ('main', [(MS, ('jsCode',), 'if (chars.length > 40)', 'if (false)'), (FN, ('jsCode',), 'if (chars.length > 40)', 'if (false)')]),
     'sanitiser: no NFC (both)': ('main', [(MS, ('jsCode',), "v.normalize('NFC')", 'v'), (FN, ('jsCode',), "v.normalize('NFC')", 'v')]),
     'sanitiser: U+2019 not normalised to \' (R3-1 broken; both)': ('main', [(MS, ('jsCode',), ".replace(/\\u2019/g, \"'\")", ''), (FN, ('jsCode',), ".replace(/\\u2019/g, \"'\")", '')]),
+    'sanitiser: the U+2019 mapping widened to U+201B (R3-1 says nothing else; both; Codex R3 LOW)': ('main', [(MS, ('jsCode',), ".replace(/\\u2019/g, \"'\")", ".replace(/[\\u2019\\u201b]/g, \"'\")"), (FN, ('jsCode',), ".replace(/\\u2019/g, \"'\")", ".replace(/[\\u2019\\u201b]/g, \"'\")")]),
     'sanitiser: ASCII letters only (A2 broken; both)': ('main', [(MS, ('jsCode',), "/^[\\p{L}' .-]+$/u", "/^[A-Za-z' .-]+$/u"), (FN, ('jsCode',), "/^[\\p{L}' .-]+$/u", "/^[A-Za-z' .-]+$/u")]),
     'sanitiser: digits allowed (both)': ('main', [(MS, ('jsCode',), "/^[\\p{L}' .-]+$/u", "/^[\\p{L}\\d' .-]+$/u"), (FN, ('jsCode',), "/^[\\p{L}' .-]+$/u", "/^[\\p{L}\\d' .-]+$/u")]),
     'Merge Slots: the kept name wins over a fresh one': ('main', [(MS, ('jsCode',), 'customerName: sanitiseName(fresh.customerName) ?? sanitiseName(stored.customerName) ?? null',
