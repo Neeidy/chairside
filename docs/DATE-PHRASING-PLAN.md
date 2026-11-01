@@ -229,3 +229,43 @@ booking case end to end (2 of 6 red on the pre-edit export, the four NAME-CAPTUR
 `resolve-date` 150/150 on the staged export · NAME-CAPTURE on the staged export: `name-capture` 34/34, its mutants 50/50,
 `validate-intent` 37/37, `main-tur2` 38/38 · golden 27 (G24–G27 added) · `diff-workflow-copy` selftest OK (9 inline cases)
 · the staged export + its delta through `diff-workflow-copy --phase edit` OK.
+
+## R2 — Codex and the fixes (2026-11-01; NOT live)
+**Codex R1** (contained, pin `120ee52`; prompt `docs/codex/date-phrasing/prompt.md`, answer verbatim `r1.md`,
+containment `containment.md`): **2 HIGH, 3 MEDIUM, no LOW; no bypass of the extended gate-edit check** (it tried another
+inline value, the value's type, a duplicate key, a comment, the wrong object — all red), the approved entry exactly the
+eight keys; A1 and D-5 as declared. Every finding triaged **real** and fixed inside the approved design (the plan's §7
+asks exactly whether the model can steer the date):
+- **HIGH-1 — a weekday-only extraction bypassed the explicit date.** "haircut thursday 4 november" with `dateExpr`
+  "thursday" booked 5 November (the conflict never seen); "wednesday 4 november 2027" as "wednesday" lost the year; a
+  weekday not right before the date ("thursday on 4 november") was not seen either. **Fixed:** when the customer's text
+  carries an explicit calendar date (`CAL_IN_TEXT`: a month name with a day; a slash pair; a dot pair only with a
+  trailing dot, a year or a weekday right before it), an expression that is not a calendar date — a weekday,
+  today/tomorrow, an ISO date — is refused (`calendar_clipped`); a weekday ANYWHERE in the message counts against the
+  date. **Stated costs:** "may 2 people come friday" re-asks once ("<month> N of" is exempt, so the recorded case
+  "may 2 of us come friday" (resolve-date N1-d) stays a Friday — the first version of this fix broke it and the
+  existing suite caught it); another weekday mentioned for another reason ("I can't do thursday, 4 november") re-asks;
+  a time written right after a weekday ("friday 9.10") counts as a dot date and re-asks once (measured). **Bound:** a bare
+  dot pair NOT directly after a weekday ("thursday at 4.11", "thursday, the 4.11") is not detected — a bare "9.10" is
+  too often a time — so there the weekday alone resolves (measured: "friday at 9.10" → the Friday).
+- **HIGH-2 — an empty extraction inherited the stored date.** "5 november instead at 11:00" with `dateExpr`/`date` null
+  kept the stored 4 November. **Fixed:** the empty-extraction backstop (`day_named_not_extracted`) now sees a calendar
+  date too, so the date is dropped and the hint re-asks (and D-4 counts it).
+- **MEDIUM-3 — year "0000" was read as no year** (a truthiness check). **Fixed:** a year given is `!== null`.
+- **MEDIUM-4 — a compact time ("4 november 1100") was taken for a trimmed year.** **Fixed:** only a 19xx/20xx number
+  that is not a time counts as a year.
+- **MEDIUM-5 — three properties no test could fail:** the shop clock read in UTC, the horizon skipped for relative
+  days, the handoff route cut. **Fixed:** a test at 23:30Z on Sunday (already Monday in Vienna: "this sunday" is the
+  current week, 1 November is past); a 1-day horizon refusing a weekday and D-5's date; D-4 end to end in the replay
+  (the hint, then the existing handoff reply through `Mark Handoff`, the `date_handoff` alert); a mutant for each.
+- **Codex's note under question 4, acted on:** a booking with no known service asked the SERVICE while recording a date
+  strike, so a second drop could hand off a customer who never saw the date hint. **Fixed:** D-4 counts on a booking turn
+  only when its service is known (the date re-ask is what the customer sees), or on a reschedule turn.
+- **Codex's note on question 6:** the R1 sentence "the test gap … closed" was stronger than the suites then were; the
+  three surviving mutants above are now killed.
+
+**Re-run after the fixes** *(terminal-measured)*: `date-phrasing` 27/27 (25 of 27 red on the committed export) ·
+`chat-replay` 8/8 (4 of 8 red on the pre-edit export; the four green are the CONTROL and NAME-CAPTURE's flows) · mutants
+36/36 (Codex's three survivors among them) · `resolve-date` 150/150 on the staged export (N1-d included) · NAME-CAPTURE on
+the staged export: `name-capture` 34/34, mutants 50/50, `validate-intent` 37/37, `main-tur2` 38/38 · the staged export +
+delta through `diff-workflow-copy --phase edit` OK.

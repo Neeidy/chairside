@@ -200,7 +200,11 @@
 
 ### docs/codex/date-phrasing
 
+- `docs/codex/date-phrasing/containment.md`
+- `docs/codex/date-phrasing/prompt-r2.md`
 - `docs/codex/date-phrasing/prompt.md`
+- `docs/codex/date-phrasing/r1.md`
+- `docs/codex/date-phrasing/run-r2.sh`
 - `docs/codex/date-phrasing/run.sh`
 
 ### docs/codex/name-capture
@@ -829,6 +833,7 @@
   - ## 12. Automation-fit
   - ## 13. Decisions for Yigitcan
   - ## R1 — built offline (2026-11-01; NOT live)
+  - ## R2 — Codex and the fixes (2026-11-01; NOT live)
 
 ### `docs/FLOW-DIAGRAM.md`
   - ## Overview — the lanes
@@ -1407,8 +1412,19 @@
   - ## Flag 3 — run 9
   - ## Tur 1b — containment by isolation (runs 1b, 2, 5, 6, 12, 4, 11)
 
+### `docs/codex/date-phrasing/containment.md`
+  - ## R1 — the audit of the R1 head
+
+### `docs/codex/date-phrasing/prompt-r2.md`
+  - _(no `##` headings — flat file)_
+
 ### `docs/codex/date-phrasing/prompt.md`
   - _(no `##` headings — flat file)_
+
+### `docs/codex/date-phrasing/r1.md`
+  - ### Findings
+  - ### Answers to the six questions
+  - ### Short summary
 
 ### `docs/codex/name-capture/containment.md`
   - ## R2 — the recheck run
