@@ -153,8 +153,11 @@ test('conversation and booking records: no committed workflow deletes either, so
       && /^\s*(UPDATE|DELETE|INSERT)/i.test(q));
     // The newest Purge (staged if any) empties the name with the text; an older committed one beside a staged edit
     // still holds the pre-NAME-CAPTURE statement until the promotion.
-    const want = p === purges[purges.length - 1] ? ["recent_messages = '', slot_name = NULL"] : ["recent_messages = ''"];
-    assert.deepEqual(convWrites.map((q) => q.match(/SET ([^W]+)WHERE/)[1].trim()), want,
+    const want = p === purges[purges.length - 1]
+      ? ["recent_messages = '', computed_reply = CASE WHEN COALESCE(slot_name, '') = '' THEN computed_reply ELSE replace(computed_reply, slot_name, '…') END, slot_name = NULL"]
+      : ["recent_messages = ''"];
+    // non-greedy up to WHERE: a CASE WHEN inside the SET list is fine (the old [^W]+ stopped at its W)
+    assert.deepEqual(convWrites.map((q) => q.match(/\bSET (.+?) WHERE\b/s)[1].trim()), want,
       'Purge only empties the message text (and, newest, the name with it)');
   }
   for (const anchor of ['the assistant&apos;s last reply', 'not deleted automatically; it is deleted on request.</li>',
@@ -258,7 +261,8 @@ test('the name given for a booking: stored with the messages and erased with the
   const q = (w, name) => w.nodes.find((n) => n.name === name).parameters.query;
   assert.match(q(newestPurge, 'Find Stale Conversations'), /WHERE \(recent_messages <> '' OR slot_name IS NOT NULL\) AND last_updated < \$1::timestamptz/,
     'a row whose messages are already erased but whose name is set is still found');
-  assert.match(q(newestPurge, 'Scrub Recent Messages'), /SET recent_messages = '', slot_name = NULL WHERE/);
+  assert.match(q(newestPurge, 'Scrub Recent Messages'), /SET recent_messages = '', computed_reply = CASE WHEN COALESCE\(slot_name, ''\) = '' THEN computed_reply ELSE replace\(computed_reply, slot_name, '…'\) END, slot_name = NULL WHERE/,
+    'the name the confirm question carried is taken out of the stored reply too (Codex R1 M2)');
   for (const n of ['Save State', 'Save State (Post-Write)']) assert.match(q(main, n), /recent_messages, slot_name\) VALUES/, n);
   const ber = main.nodes.find((n) => n.name === 'Build Event Request').parameters.jsCode;
   assert.match(ber, /const name = \(slots && slots\.customerName\) \|\| null;/, 'the event is built from the KEPT name');

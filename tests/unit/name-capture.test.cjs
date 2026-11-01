@@ -284,7 +284,8 @@ test('Purge (D-2): the 30-day scrub empties slot_name with recent_messages, take
   const find = node('Find Stale Conversations', pwf).parameters.query;
   const scrub = node('Scrub Recent Messages', pwf).parameters.query;
   assert.match(find, /WHERE \(recent_messages <> '' OR slot_name IS NOT NULL\) AND last_updated < \$1::timestamptz/);
-  assert.match(scrub, /SET recent_messages = '', slot_name = NULL WHERE id = \$1/);
+  assert.match(scrub, /SET recent_messages = '', computed_reply = CASE WHEN COALESCE\(slot_name, ''\) = '' THEN computed_reply ELSE replace\(computed_reply, slot_name, '…'\) END, slot_name = NULL WHERE id = \$1/,
+    'the kept name is also taken out of the stored confirm question (Codex R1 M2)');
   assert.ok(!/'slot_name'/.test(find + scrub), 'the name is never read into the run');
 });
 

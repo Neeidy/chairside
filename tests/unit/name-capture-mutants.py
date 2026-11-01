@@ -82,6 +82,8 @@ MUTANTS = {
         "[(($json.state || {}).slots || {}).customerName || ($json.slots || {}).customerName || '',", "[($json.slots || {}).customerName || (($json.state || {}).slots || {}).customerName || '',")]),
     'Load Config: another askName text': ('main', [('Load Config', ('jsCode',), '(Any name is fine for this demo.)', '(Any name.)')]),
     'Purge: the scrub keeps slot_name': ('purge', [('Scrub Recent Messages', ('query',), ", slot_name = NULL WHERE", ' WHERE')]),
+    'Purge: the stored confirm question keeps the name (Codex R1 M2)': ('purge', [('Scrub Recent Messages', ('query',),
+        "computed_reply = CASE WHEN COALESCE(slot_name, '') = '' THEN computed_reply ELSE replace(computed_reply, slot_name, '…') END, ", '')]),
     'Purge: a row with only a name never found': ('purge', [('Find Stale Conversations', ('query',), "(recent_messages <> '' OR slot_name IS NOT NULL)", "recent_messages <> ''")]),
 }
 

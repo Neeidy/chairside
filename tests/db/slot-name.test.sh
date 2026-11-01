@@ -8,8 +8,9 @@
 #   W  the STAGED Write Appointment upsert: a re-write with NULL or '' never blanks a stored customer_name; a new name
 #      replaces it. Mutant: the COMMITTED upsert (customer_name = EXCLUDED.customer_name) must blank it — or this
 #      check measures nothing.
-#   P  the STAGED Purge: a 31-day-old row whose messages were already erased but whose name is set is FOUND, and the
-#      scrub empties both. Mutant: the COMMITTED Purge does not find it.
+#   P  the STAGED Purge: a 31-day-old row whose messages were already erased but whose name is set is FOUND, the
+#      scrub empties both, and takes the name out of the stored confirm question (Codex R1 M2). Mutant: the COMMITTED
+#      Purge does not find it.
 # Not in check-all: it needs Docker. Run: bash tests/db/slot-name.test.sh [IMAGE]
 # The container is throwaway: labelled, no network, local-socket `trust` auth, removed on exit. The role passwords 002
 # requires are generated at run time and passed by name; nothing connects over a network. Synthetic names only.
@@ -94,13 +95,15 @@ upsert "$OLD_WA_Q" "''"
 check "W-mutant: the COMMITTED upsert blanks it (the check above can go red)" "$(name_of)" ''
 
 # ── P: Purge ──
-su -c "INSERT INTO salon.conversations (sender_key, stage, recent_messages, slot_name, last_updated) VALUES ('widget:w-fake-sn3','collecting','', 'Oldname', now() - interval '31 days')" >/dev/null
+su -c "INSERT INTO salon.conversations (sender_key, stage, recent_messages, slot_name, computed_reply, last_updated) VALUES ('widget:w-fake-sn3','confirming','', 'Oldname', 'Haircut, Monday 7 Jan 11:00 for Oldname — shall I book it? (yes / no)', now() - interval '31 days')" >/dev/null
 FIND_Q="$(q "$PURGE" 'Find Stale Conversations')"; SCRUB_Q="$(q "$PURGE" 'Scrub Recent Messages')"
 found() { as salon_app -c "PREPARE f(timestamptz) AS $1;" -c "EXECUTE f(now() - interval '30 days');" | wc -l; }
 check 'P1: a 31-day-old row with erased messages but a name set is found' "$(found "$FIND_Q")" 1
 ID="$(su -c "SELECT id FROM salon.conversations WHERE sender_key = 'widget:w-fake-sn3'")"
 as salon_app -c "PREPARE x(text) AS $SCRUB_Q;" -c "EXECUTE x('$ID');" >/dev/null
 check 'P2: the scrub empties the name with the messages' "$(su -c "SELECT coalesce(slot_name,'<null>') || '|' || recent_messages FROM salon.conversations WHERE id = '$ID'")" '<null>|'
+check 'P3: …and takes the name out of the stored confirm question, keeping the reply (Codex R1 M2)' \
+  "$(su -c "SELECT computed_reply FROM salon.conversations WHERE id = '$ID'")" 'Haircut, Monday 7 Jan 11:00 for … — shall I book it? (yes / no)'
 su -c "UPDATE salon.conversations SET slot_name = 'Oldname' WHERE id = '$ID'" >/dev/null
 check 'P-mutant: the COMMITTED Purge does not find that row (the check above can go red)' "$(found "$(q "$ROOT/n8n/workflow.purge.sanitized.json" 'Find Stale Conversations')")" 0
 
