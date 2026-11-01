@@ -16,8 +16,13 @@
  *   · the controller and the contact → read from build-time env only, never a literal (rulings R2h-1/2: the real values
  *     carry a redaction target and a person's name); unset → a visible placeholder each (a go-live blocker);
  *   · "bookings are not deleted automatically" → no Purge statement touches salon.appointments;
+ *   · the name given for a booking is stored with the messages and erased with them (NAME-CAPTURE, D-2) → the NEWEST Purge
+ *     (staged if any, else committed) empties slot_name in the same statement as recent_messages and its scan also takes
+ *     a row whose name is set; the newest Main writes slot_name; "a booking … with … the name you give" → the newest Main
+ *     builds the event from the KEPT name and writes it as the appointment's customer_name;
  *   · the conversation record and the booking record are kept until a request (R2h-4) → no committed workflow deletes
  *     from salon.conversations or salon.appointments, and Purge's only write to a conversation empties recent_messages
+ *     (and, from NAME-CAPTURE on, slot_name with it)
  *     and no workflow empties computed_reply (so the last reply is kept, as the page says); every Postgres node is a
  *     plain query, so no native delete operation hides from that search;
  *   · legal basis, rights (restriction of processing added at R2i-a) and the complaint right (R2h-3) → text anchors;
@@ -146,8 +151,11 @@ test('conversation and booking records: no committed workflow deletes either, so
   for (const p of purges) {
     const convWrites = p.nodes.map((n) => (n.parameters || {}).query || '').filter((q) => /salon\.conversations/.test(q)
       && /^\s*(UPDATE|DELETE|INSERT)/i.test(q));
-    assert.deepEqual(convWrites.map((q) => q.match(/SET ([^W]+)WHERE/)[1].trim()), ["recent_messages = ''"],
-      'Purge only empties the message text');
+    // The newest Purge (staged if any) empties the name with the text; an older committed one beside a staged edit
+    // still holds the pre-NAME-CAPTURE statement until the promotion.
+    const want = p === purges[purges.length - 1] ? ["recent_messages = '', slot_name = NULL"] : ["recent_messages = ''"];
+    assert.deepEqual(convWrites.map((q) => q.match(/SET ([^W]+)WHERE/)[1].trim()), want,
+      'Purge only empties the message text (and, newest, the name with it)');
   }
   for (const anchor of ['the assistant&apos;s last reply', 'not deleted automatically; it is deleted on request.</li>',
     'deleted on request, from the calendar and the database', 'A record deleted on request is removed from the database',
@@ -241,4 +249,21 @@ test('the page, the notice and the footer say it', () => {
     assert.ok(PANEL.includes(anchor), `notice: ${anchor}`);
   }
   assert.match(FOOTER, /\{isDemo && <span>[^\n]*<a href="\/privacy">Privacy<\/a><\/span>\}/);
+});
+
+test('the name given for a booking: stored with the messages and erased with them; written to the booking (NAME-CAPTURE)', () => {
+  const newestPurge = purges[purges.length - 1];
+  const stagedMain = join(ROOT, 'n8n', 'staged', 'workflow.main.sanitized.json');
+  const main = existsSync(stagedMain) ? wf('main', true) : wf('main');
+  const q = (w, name) => w.nodes.find((n) => n.name === name).parameters.query;
+  assert.match(q(newestPurge, 'Find Stale Conversations'), /WHERE \(recent_messages <> '' OR slot_name IS NOT NULL\) AND last_updated < \$1::timestamptz/,
+    'a row whose messages are already erased but whose name is set is still found');
+  assert.match(q(newestPurge, 'Scrub Recent Messages'), /SET recent_messages = '', slot_name = NULL WHERE/);
+  for (const n of ['Save State', 'Save State (Post-Write)']) assert.match(q(main, n), /recent_messages, slot_name\) VALUES/, n);
+  const ber = main.nodes.find((n) => n.name === 'Build Event Request').parameters.jsCode;
+  assert.match(ber, /const name = \(slots && slots\.customerName\) \|\| null;/, 'the event is built from the KEPT name');
+  assert.match(q(main, 'Write Appointment'), /^INSERT INTO salon\.appointments \([^)]*customer_name/);
+  assert.match(main.nodes.find((n) => n.name === 'Write Appointment').parameters.options.queryReplacement, /booking\.customerName \|\| null/);
+  for (const anchor of ['The last few messages of a conversation, and the name you give for a booking, are stored in the demo&apos;s',
+    'the service, the time, the name you give and the random session id']) assert.ok(PAGE.includes(anchor), `page: ${anchor}`);
 });

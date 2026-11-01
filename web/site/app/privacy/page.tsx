@@ -54,8 +54,9 @@ export default function PrivacyPage() {
         <ul>
           <li>Your messages are sent to an AI model (Anthropic&apos;s Claude API) to work out what you want. Prices,
             opening hours and free slots come from fixed rules, not from the AI.</li>
-          <li>The last few messages of a conversation are stored in the demo&apos;s database and erased by a nightly job
-            {' '}{MESSAGE_TEXT_DAYS} days after the conversation&apos;s last activity. The conversation record itself — its
+          <li>The last few messages of a conversation, and the name you give for a booking, are stored in the demo&apos;s
+            database and erased by a nightly job {MESSAGE_TEXT_DAYS} days after the conversation&apos;s last activity. The
+            conversation record itself — its
             booking step, the chosen slot, the assistant&apos;s last reply and a random session id from your browser — is
             not deleted automatically; it is deleted on request.</li>
           <li>Message ids, kept only to ignore a message delivered twice, are deleted after {MESSAGE_TEXT_DAYS} days.</li>
