@@ -76,6 +76,12 @@ test('the sanitiser caps at 40 characters and refuses anything that is not a let
   for (const bad of ['<script>', 'Alex1', 'a@b', 'http://x', '', '   ', '...', null, 42, '​'])
     assert.equal(sanitiseName(bad), null, String(bad));
 });
+test('ruling R3-1: a typographic apostrophe ’ (U+2019) is accepted and stored as \' (U+0027); nothing else in the set changes', () => {
+  assert.equal(sanitiseName('O’Neil'), "O'Neil");
+  assert.equal(sanitiseName('D’Angelo Ünal'), "D'Angelo Ünal");
+  for (const bad of ['O‘Neil', 'O`Neil', 'O´Neil', 'O＇Neil'])   // U+2018, backtick, acute, fullwidth: still refused
+    assert.equal(sanitiseName(bad), null, bad);
+});
 test('the RECORDED BOUND (plan A2 note): a name needing combining marks is refused; a ZWNJ is stripped, not refused', () => {
   assert.equal(sanitiseName('अनिल'), null, 'Devanagari with a vowel sign (\\p{M}) → re-ask');
   assert.equal(sanitiseName('مه‌ناز'), 'مهناز', 'the ZWNJ is removed — the spelling changes');
@@ -93,6 +99,7 @@ test('a bare name at the name ask is filled as a booking turn (the model called 
   assert.ok(filled(fill('Alex'), 'Alex'));
   assert.ok(filled(fill('my name is Alex'), 'Alex'));
   assert.ok(filled(fill('I’m Alex.'), 'Alex'), 'a curly apostrophe in the prefix, a trailing full stop');
+  assert.ok(filled(fill('I’m O’Neil'), "O'Neil"), 'R3-1: a curly apostrophe in the prefix AND in the name; the name is stored with \'');
   assert.ok(filled(fill("It's Çağla Ünal"), 'Çağla Ünal'));
   assert.ok(filled(fill('Müller'), 'Müller'));
   assert.ok(filled(fill('Ольга'), 'Ольга'));

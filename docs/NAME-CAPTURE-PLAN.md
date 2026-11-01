@@ -10,11 +10,11 @@
 >   sanitiser keeps them (`\p{L}`) — never rejects or strips them. ⚠ **Declared deviation:** the ruling's own example
 >   for the first case cannot be committed — a redaction collision (`security-auditor` HIGH-1) — so no tracked file
 >   carries it; the synthetic "Çağla Ünal" tests the same letters (`ğ`, `Ü`, two words).
->   The non-Latin cases are Cyrillic, Greek and Han — scripts written in `\p{L}` alone. **Bound, for a ruling:** a
->   name that needs combining marks (`\p{M}`, e.g. Devanagari vowel signs) is REJECTED by 3.4 → re-ask; a zero-width
+>   The non-Latin cases are Cyrillic, Greek and Han — scripts written in `\p{L}` alone. **Recorded bound (ruled R3-2,
+>   2026-11-01: stays, v2 — no change):** a name that needs combining marks (`\p{M}`, e.g. Devanagari vowel signs) is REJECTED by 3.4 → re-ask; a zero-width
 >   non-joiner (U+200C, category `Cf`, used in Persian) is not rejected but STRIPPED by 3.4's `\p{C}` rule, so the
 >   name is kept with its spelling silently changed. Changing either is a design change (a mark cap against "zalgo"
->   text; a ZWNJ exception), not taken here.
+>   text; a ZWNJ exception), not taken here. *(Said "Bound, for a ruling" until R3; the ruling keeps it as a bound.)*
 > - **The demo's `askName` text:** "What name should I put the booking under? (Any name is fine for this demo.)"
 >
 > **Why it lives here:** Main change plans live in their own file under `docs/` (`CP4-RESCHEDULE-EXECUTE-PLAN.md`,
@@ -104,8 +104,9 @@ handoff, or book without a name).
 
 **3.4 The name as untrusted input.** One sanitiser, used by `Fill Name From Reply` and `Merge Slots` (the LLM path):
 Unicode NFC; strip every `\p{C}` character (controls, format characters, zero-width, bidi overrides); collapse
-whitespace; trim; cap at 40 characters; reject (→ null → re-ask) if anything is left that is not a letter, a space or
-`' . -`. The value never reaches a later LLM prompt as text: `Build LLM Request`'s `collected` list says only
+whitespace; trim; cap at 40 characters; a typographic apostrophe `’` (U+2019) becomes `'` (U+0027) before the check
+(ruling R3-1, 2026-11-01 — phones type `O’Neil`); reject (→ null → re-ask) if anything is left that is not a letter, a
+space or `' . -`. No other character joins the set (U+2018, a backtick, an acute accent stay refused). The value never reaches a later LLM prompt as text: `Build LLM Request`'s `collected` list says only
 `name: provided` / `name: missing`, never the value (`prompt-injection.md` — data, never instructions). It reaches the
 customer only in the confirm text and the booked reply (their own input, sanitised), the calendar title, the row, and
 the owner alert where alerts already carry slot facts (masked by the existing alert masking). The dashboard masks it
@@ -357,8 +358,10 @@ What some of those prove:
    - the prefix matches a curly apostrophe (`I’m`);
    - the name itself keeps what was typed and goes through the sanitiser.
 
-   ⚠ So **a name typed with a curly apostrophe (`O’Neil`, which phones produce) is refused** by 3.4's character set.
-   That leads to a re-ask, then D-3. Allowing it is a sanitiser change — open, for a ruling.
+   **A name typed with a curly apostrophe is accepted** — corrected at R3: ruling R3-1 (2026-11-01) made the
+   sanitiser turn `’` into `'` before its character check, so `O’Neil` is accepted and stored as `O'Neil`
+   (`name-capture.test.cjs`; the mutant that removes the normalisation is killed). Until R3 this item said such a name
+   was refused (re-ask, then D-3) and that allowing it was open for a ruling.
 10. **The example configs changed in R1** (the brief). The render cannot carry `askName` until the Main literal holds it,
     so `render-client.test.py` lists it in `PENDING_KEYS`. That list is excluded from the A-leak probes, and one case
     turns red the day the committed literal holds the key, forcing the list to be emptied at promotion.
