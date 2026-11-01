@@ -92,7 +92,17 @@ def bypass(wf):   # the graph: Validate Intent straight to Resolve Date, the new
     wf['connections']['Validate Intent'] = {'main': [[{'node': 'Resolve Date', 'type': 'main', 'index': 0}]]}
 
 
-GRAPH = {'graph: Validate Intent → Resolve Date directly (Fill Name From Reply bypassed)': ('main', bypass)}
+def no_refusal_route(wf):   # Codex R2 LOW: the name_missing refusal stops dead — no handoff, no reply, no alert
+    wf['connections']['Event ID Valid?']['main'][1] = []
+
+
+def no_handoff_alert(wf):   # the handoff saves state but never alerts the owner
+    wf['connections']['Mark Handoff']['main'][0] = [e for e in wf['connections']['Mark Handoff']['main'][0] if e['node'] != 'Build Owner Alert']
+
+
+GRAPH = {'graph: Validate Intent → Resolve Date directly (Fill Name From Reply bypassed)': ('main', bypass),
+         "graph: Event ID Valid?'s false output removed (Codex R2 LOW)": ('main', no_refusal_route),
+         'graph: Mark Handoff no longer alerts the owner': ('main', no_handoff_alert)}
 
 
 def apply(wf, edits, label):

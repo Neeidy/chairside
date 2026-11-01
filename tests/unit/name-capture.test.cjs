@@ -216,6 +216,18 @@ test('Write Appointment: a re-write can never blank a stored name, and no name i
   assert.equal(evalExpr(p.options.queryReplacement, refs, { gcal_event_id: 'g' })[6], 'Kept');
 });
 
+test('the name_missing refusal reaches a VISIBLE handoff: Event ID Valid? false → Mark Handoff → Save State + Build Owner Alert (Codex R2 LOW)', () => {
+  const outs = (n) => (wf.connections[n]?.main || []).map((l) => (l || []).map((e) => e.node));
+  const into = (t) => Object.entries(wf.connections).flatMap(([s, c]) => (c.main || []).flat().filter((e) => e && e.node === t).map(() => s));
+  assert.deepEqual(into('Event ID Valid?'), ['Build Event Request'], 'the builder feeds the gate');
+  const cond = node('Event ID Valid?').parameters.conditions.conditions;
+  assert.equal(cond.length, 1); assert.equal(cond[0].leftValue, '={{ $json.booking.eventId }}');
+  assert.equal(cond[0].operator.operation, 'regex');
+  assert.ok(!new RegExp(cond[0].rightValue).test(''), 'the empty eventId the refusal emits fails the gate');
+  assert.deepEqual(outs('Event ID Valid?')[1], ['Mark Handoff'], 'the gate\'s false output is the handoff');
+  assert.deepEqual([...outs('Mark Handoff')[0]].sort(), ['Build Owner Alert', 'Save State'], 'the handoff writes state and alerts the owner');
+});
+
 // ── reschedule keeps the stored name (3.6) ────────────────────────────────────────────────────────────────────
 const ROW = (over = {}) => ({ id: 'recOLD', fields: { status: 'booked', start_utc: '2030-01-08T09:00:00.000Z', gcal_event_id: 'abcdefgh',
   calendar_id: 'cal', service: 'Haircut', customer_name: 'Stored', ...over } });
