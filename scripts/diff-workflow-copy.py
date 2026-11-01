@@ -31,9 +31,11 @@ sends them: its `settings` command applies them as the last step.
 GATE (Yigitcan, 2026-10-26; widened to every security-gate node by the R1c ruling): the GATE_NODES (Main's and Owner
 Actions' admission path, listed below) and every trigger (type webhook, *Trigger, or a LEGACY_TRIGGER_TYPES type) are red
 in --allow (even unchanged) and in remove_nodes — with ONE kind of exception, a GATE EDIT (ruling D-4 of the NAME-CAPTURE
-plan, 2026-11-01): a delta's `gate_edits` {NODE: {"a.b.key": "text"}} lets that gate node's config literal GAIN exactly
-those keys with exactly those text values and nothing else (gate_edit_errs: the code around the literal byte-equal, the
-literal's text equal once the added lines are taken out, its object equal once the added keys are taken out, every other
+plan, 2026-11-01): a delta's `gate_edits` {NODE: {"a.b.key": value}} lets that gate node's config literal GAIN exactly
+those keys with exactly those values (a non-empty text, or an integer — DATE-PHRASING's bot.bookingHorizonDays) and
+nothing else (gate_edit_errs: the code around the literal byte-equal, the literal's text equal once the added lines —
+or, for a key whose parent object is written on ONE line, the added `, key: value` segment before that line's closing
+` }` (DATE-PHRASING ruling, 2026-11-01) — are taken out, its object equal once the added keys are taken out, every other
 node key and parameter equal); it must equal the approved entry like any other delta item. A DECLARED edge (added or removed) that touches a gate node, as source or
 target, is red unless it is one of RULED_GATE_EDGES (ruling R-Q2: the two Tag Turnstile Unavailable edges). An UNDECLARED
 change of a gate node's connections is red like any other: an untouched source compares exactly, and a gate source
@@ -90,10 +92,22 @@ EDGE_RE = re.compile(r'[^|]+\|\d+\|[^|]+\|\d+')
 # identity (node name · "SRC|OUT|DST|IN" · settings key=value). The tool guards against OUR mistakes: a delta file that
 # differs from this in any item is refused before any call. A copy with no entry here takes no delta at all.
 NAME_CAPTURE_ASK = 'What name should I put the booking under? (Any name is fine for this demo.)'
+# DATE-PHRASING R1 (docs/DATE-PHRASING-PLAN.md §4; rulings D-1, D-2, D-3): the plan's two config keys and six templates.
+DATE_PHRASING_GATE_EDITS = {
+    'business.dateOrder': 'DMY',
+    'bot.bookingHorizonDays': 90,
+    'messageTemplates.askDateTimeHint': 'Which day and time? You can write e.g. "Wednesday at 11:00", "tomorrow at 15:00" or "4 November at 11:00".',
+    'messageTemplates.dateWeekdayMismatch': '{date} is a {actual} — did you mean {actual} {date}, or a {said}?',
+    'messageTemplates.dateAmbiguous': 'Did you mean {a} or {b}?',
+    'messageTemplates.datePast': 'That date has passed — which date did you mean?',
+    'messageTemplates.dateInvalid': 'That date is not on the calendar — which date did you mean?',
+    'messageTemplates.dateTooFar': 'We take bookings up to {days} days ahead — which date did you mean?',
+}
 APPROVED_DELTAS = {
     # A key may hold a LIST of approved deltas: a file is approved when it is exactly ONE of them. Main holds the 7-2 Tur 2
     # edit (live since 7-2 R3; kept because its fixtures exercise this tool — applying it again cannot pass `compare`,
-    # whose committed side no longer has those nodes) and the NAME-CAPTURE R1 edit (docs/NAME-CAPTURE-PLAN.md §11).
+    # whose committed side no longer has those nodes), the NAME-CAPTURE R1 edit (docs/NAME-CAPTURE-PLAN.md §11; promoted
+    # 2026-11-01, kept for the same reason) and the DATE-PHRASING R1 edit (parameters only + Load Config's gate edits).
     'main': [{
         'add_nodes': {'Tag Turnstile Unavailable', 'Sticky — Tag Turnstile Unavailable'},
         'remove_nodes': {'Record Processed', 'Build Dedupe-Marker Alert'},
@@ -109,6 +123,9 @@ APPROVED_DELTAS = {
         'remove_edges': {'Validate Intent|0|Resolve Date|0'},
         'settings': {},
         'gate_edits': {'Load Config': {'messageTemplates.askName': NAME_CAPTURE_ASK}},   # ruling D-4
+    }, {
+        'add_nodes': set(), 'remove_nodes': set(), 'add_edges': set(), 'remove_edges': set(), 'settings': {},
+        'gate_edits': {'Load Config': DATE_PHRASING_GATE_EDITS},
     }],
     'owner-actions': {
         'add_nodes': set(),
@@ -222,12 +239,21 @@ def gate_edit_errs(o, c, keys):
         errs.append('the code around the config literal changed')
     lines = lc.split('\n')
     for path, text in sorted(keys.items()):
-        want = f'{path.rsplit(".", 1)[1]}: {json.dumps(text, ensure_ascii=False)},'
+        leaf, val = path.rsplit(".", 1)[1], json.dumps(text, ensure_ascii=False)
+        want = f'{leaf}: {val},'
         hits = [i for i, ln in enumerate(lines) if ln.strip() == want]
-        if len(hits) != 1:
-            errs.append(f"'{path}': its line ({want[:40]}…) is not in the staged literal exactly once ({len(hits)})")
-        else:
+        # A key whose parent object is written on ONE line (`bot: { …, llmCostCapUsd: 10.00 },`) is added INLINE: the
+        # segment `, key: value` immediately before that line's closing ` }`, exactly once in the literal. Taking the
+        # segment out must give back a line of the committed literal (the text check below), and the object check
+        # pins it to its dotted path — the same key inline in ANOTHER object is red there.
+        seg = f', {leaf}: {val} }}'
+        inl = [i for i, ln in enumerate(lines) if seg in ln]
+        if len(hits) == 1 and not inl:
             del lines[hits[0]]
+        elif not hits and len(inl) == 1 and lines[inl[0]].count(seg) == 1:
+            lines[inl[0]] = lines[inl[0]].replace(seg, ' }', 1)
+        else:
+            errs.append(f"'{path}': its line ({want[:40]}…) is not in the staged literal exactly once ({len(hits)} lines, {len(inl)} inline)")
     if '\n'.join(lines) != lo:
         errs.append('the literal text differs beyond the added line(s)')
     rest = json.loads(json.dumps(obj_c))
@@ -293,8 +319,9 @@ def parse_delta(d):
     if 'gate_edits' in d and not (isinstance(ge, dict) and ge and all(
             isinstance(n, str) and n and isinstance(m, dict) and m and all(
                 isinstance(k, str) and re.fullmatch(r'[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)+', k)
-                and isinstance(v, str) and v for k, v in m.items()) for n, m in ge.items())):
-        raise ValueError("the delta file's 'gate_edits' is not {NODE: {\"a.b.key\": \"non-empty text\"}}")
+                and ((isinstance(v, str) and v) or (isinstance(v, int) and not isinstance(v, bool)))
+                for k, v in m.items()) for n, m in ge.items())):
+        raise ValueError("the delta file's 'gate_edits' is not {NODE: {\"a.b.key\": non-empty text or an integer}}")
     out = dict({k: set(d.get(k, [])) for k in DELTA_KEYS}, settings=dict(st))
     if 'gate_edits' in d:
         out['gate_edits'] = {n: dict(m) for n, m in ge.items()}
@@ -775,6 +802,38 @@ def selftest():
         good = (not errs) == expect_pass
         ok &= good
         print(f"{'✓' if good else '✗'} {label}: {'pass' if not errs else 'RED — ' + errs[0][:120]}")
+    # INLINE GATE EDIT (DATE-PHRASING ruling, 2026-11-01): a key whose parent object sits on ONE line is added as
+    # `, key: value` before that line's closing ` }`. Built from the committed Main export as it is (askName included).
+    dbase = json.load(open(os.path.join(ROOT, 'n8n', 'workflow.main.sanitized.json')))
+    icases = []
+    if 'dateOrder' not in node(dbase, GN)['parameters']['jsCode']:
+        DGE = {'gate_edits': {GN: DATE_PHRASING_GATE_EDITS}}
+        TPL = ''.join(f'    {k.split(".")[1]}: {json.dumps(v, ensure_ascii=False)},\n'
+                      for k, v in DATE_PHRASING_GATE_EDITS.items() if k.startswith('messageTemplates.'))
+        ASKN = f'    askName: {json.dumps(GT, ensure_ascii=False)},\n'
+        def dedit(biz=', dateOrder: "DMY" }', bot=', bookingHorizonDays: 90 }', tpl=None, also=None):
+            e = _copy.deepcopy(dbase); n = node(e, GN); c = n['parameters']['jsCode']
+            c = c.replace('locale: "en-AT" }', 'locale: "en-AT"' + biz, 1).replace('llmCostCapUsd: 10.00 }', 'llmCostCapUsd: 10.00' + bot, 1)
+            c = c.replace(ASKN, ASKN + (TPL if tpl is None else tpl), 1)
+            n['parameters']['jsCode'] = also(c) if also else c
+            return e
+        icases = [
+            ('inline gate edit: exactly the eight approved keys (two inline, six on their own lines)', dedit(), True),
+            ('inline gate edit: bookingHorizonDays inline in the WRONG object (business)',
+             dedit(biz=', dateOrder: "DMY", bookingHorizonDays: 90 }', bot=' }'), False),
+            ('inline gate edit: another value (91)', dedit(bot=', bookingHorizonDays: 91 }'), False),
+            ('inline gate edit: the value as TEXT ("90")', dedit(bot=', bookingHorizonDays: "90" }'), False),
+            ('inline gate edit: a second key inline beside it', dedit(bot=', bookingHorizonDays: 90, foo: 1 }'), False),
+            ('inline gate edit: an existing value on the same line changed too', dedit(also=lambda c: c.replace('llmCostCapUsd: 10.00,', 'llmCostCapUsd: 20.00,', 1)), False),
+            ('inline gate edit: the key ALSO on its own line', dedit(tpl=TPL + '    bookingHorizonDays: 90,\n'), False),
+            ('inline gate edit: one template missing', dedit(tpl=TPL.split('\n', 1)[1]), False),
+            ('inline gate edit: dateOrder with another value (MDY)', dedit(biz=', dateOrder: "MDY" }'), False),
+        ]
+        for label, e, expect_pass in icases:
+            errs = compare(dbase, e, {GN}, 'edit', delta=DGE)
+            good = (not errs) == expect_pass
+            ok &= good
+            print(f"{'✓' if good else '✗'} {label}: {'pass' if not errs else 'RED — ' + errs[0][:120]}")
     MAINP = os.path.join(ROOT, 'n8n', 'workflow.main.sanitized.json')
     full = {k: set(v) for k, v in APPROVED_DELTAS['main'][1].items() if k not in ('settings', 'gate_edits')}
     full.update(settings={}, gate_edits={GN: {GK: GT}})
@@ -810,17 +869,23 @@ def selftest():
                   (f'approved {key}: no delta at all (an --allow edit)', {}, True),
                   (f'approved {key}: one extra edge (T HIGH-1, between non-gate nodes)',
                    dict(appr, add_edges=appr['add_edges'] | {'Tag Turnstile Unavailable|0|Check Processed|0'}), False),
-                  (f'approved {key}: one approved removal missing', dict(appr, remove_edges=set(sorted(appr['remove_edges'])[1:])), False),
+                  *([(f'approved {key}: one approved removal missing', dict(appr, remove_edges=set(sorted(appr['remove_edges'])[1:])), False)]
+                    if appr['remove_edges'] else []),
                   (f'approved {key}: an extra node removed', dict(appr, remove_nodes=appr['remove_nodes'] | {'Send Error Response'}), False),
                   (f'approved {key}: a setting added', dict(appr, settings=dict(appr['settings'], availableInMCP=True)), False)]
         acases += [(f"approved {key}: '{k}' with a value of another type", dict(appr, settings=dict(appr['settings'], **{k: 0})), False)
                    for k in appr['settings']]
         if entry.get('gate_edits'):
             g = json.loads(json.dumps(entry['gate_edits'])); n0 = sorted(g)[0]; k0 = sorted(g[n0])[0]
-            acases += [(f'approved {key}: the gate edit with ANOTHER text', dict(appr, gate_edits={n0: {k0: g[n0][k0] + ' '}}), False),
+            other = lambda v: v + ' ' if isinstance(v, str) else v + 1
+            acases += [(f'approved {key}: the gate edit with ANOTHER value ({k0})', dict(appr, gate_edits={n0: dict(g[n0], **{k0: other(g[n0][k0])})}), False),
                        (f'approved {key}: the gate edit with a SECOND key', dict(appr, gate_edits={n0: dict(g[n0], **{'messageTemplates.askFoo': 'x'})}), False),
-                       (f'approved {key}: the same nodes and edges WITHOUT the gate edit', {k: v for k, v in appr.items() if k != 'gate_edits'}, False),
-                       (f'approved {key}: the gate edit ALONE (no node or edge)', {'gate_edits': g}, False)]
+                       (f'approved {key}: the gate edit with one key MISSING', dict(appr, gate_edits={n0: {k: v for k, v in g[n0].items() if k != k0}}), False)]
+            if any(appr.get(k) for k in DELTA_KEYS):   # meaningful only for an entry that also adds or removes nodes/edges
+                acases += [(f'approved {key}: the same nodes and edges WITHOUT the gate edit', {k: v for k, v in appr.items() if k != 'gate_edits'}, False),
+                           (f'approved {key}: the gate edit ALONE (no node or edge)', {'gate_edits': g}, False)]
+            else:
+                acases += [(f'approved {key}: the same gate edits with a node added', dict(appr, add_nodes={'Extra Node'}), False)]
         n_appr += len(acases)
         for label, d, expect in acases:
             errs = approved_errs(key, d)
@@ -885,7 +950,7 @@ def selftest():
     ok &= bool(errs); rcount += 1
     print(f"{'✓' if errs else '✗'} compare: a phase other than edit: {'RED — ' + errs[0] if errs else 'pass'}")
     print('diff-workflow-copy selftest:', 'OK' if ok else 'FAILED',
-          f'({len(ecases) + 1} edit-phase and {len(dcases) + len(ocases) + len(rcases) + 3} declared-delta cases from the Main, '
+          f'({len(ecases) + 1} edit-phase and {len(dcases) + len(ocases) + len(rcases) + 3} declared-delta and {len(icases)} inline gate-edit cases from the Main, '
           f'Owner Actions and Purge exports, {n_appr} approved-delta cases, {rcount} rename cases)')
     return 0 if ok else 1
 
