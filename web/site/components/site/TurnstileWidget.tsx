@@ -58,6 +58,9 @@ export function TurnstileWidget({
   const hostRef = useRef<HTMLDivElement>(null);
   const idRef = useRef<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  // Interaction-only (ruling 2026-11-01): the slot keeps its box but gets spacing only while Cloudflare shows a
+  // challenge. Never display:none — see whenVisible below. Inline style: globals.css is a locked contract.
+  const [interactive, setInteractive] = useState(false);
 
   /**
    * Wait until the slot is actually VISIBLE before rendering.
@@ -122,6 +125,9 @@ export function TurnstileWidget({
           'expired-callback': () => { onToken(null); window.turnstile?.reset(idRef.current ?? undefined); },
           'timeout-callback': () => { onToken(null); window.turnstile?.reset(idRef.current ?? undefined); },
           theme: 'light',
+          appearance: 'interaction-only',
+          'before-interactive-callback': () => setInteractive(true),
+          'after-interactive-callback': () => setInteractive(false),
         });
         setMounted(true);
       })
@@ -143,5 +149,5 @@ export function TurnstileWidget({
   }, [resetSignal]);
 
   // The reserved slot the approved design already carries (S3): Cloudflare draws its own widget here.
-  return <div className="turnstile-slot on" ref={hostRef} />;
+  return <div className="turnstile-slot on" ref={hostRef} style={interactive ? { padding: '10px 18px' } : undefined} />;
 }

@@ -23,6 +23,10 @@
  *    itself the fixed element (a fixed element's offsetParent is null even when visible).
  *
  * A TOKEN IS SINGLE-USE and the engine gates every request, so a fresh one is minted per message.
+ *
+ * INTERACTION-ONLY (ruling 2026-11-01): the box is drawn only when Cloudflare needs the visitor. The slot
+ * itself is never hidden — finding 3 is why — it only loses its spacing while no challenge is shown, and
+ * gets it back between the before- and after-interactive callbacks.
  */
 
 declare global {
@@ -112,6 +116,9 @@ export function mountTurnstile(
         'expired-callback': () => { token = null; onChange('pending'); window.turnstile?.reset(widgetId ?? undefined); },
         'timeout-callback': () => { token = null; onChange('pending'); window.turnstile?.reset(widgetId ?? undefined); },
         theme: 'light',
+        appearance: 'interaction-only',
+        'before-interactive-callback': () => { slot.classList.add('is-interactive'); },
+        'after-interactive-callback': () => { slot.classList.remove('is-interactive'); },
       });
     })
     .catch(() => { token = null; blocked = true; onChange('blocked'); });

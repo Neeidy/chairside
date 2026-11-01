@@ -91,10 +91,11 @@ border-radius:16px 16px 16px 4px;padding:12px 15px}
 .typing i:nth-child(3){animation-delay:.3s}
 @keyframes dotb{0%,60%,100%{transform:translateY(0);opacity:.45}30%{transform:translateY(-4px);opacity:1}}
 
-/* S3 — Cloudflare draws its own widget here. In Invisible mode it stays empty and zero-height, which is
-   why the slot must never be display:none: a hidden container is not a challenge a visitor could solve. */
-.turnstile-slot{padding:0 18px}
-.turnstile-slot:empty{padding:0}
+/* S3 — Cloudflare draws its own widget here, interaction-only: zero-height until a challenge is needed. Only
+   the spacing collapses — the slot must never be display:none: a hidden container is not a challenge a
+   visitor could solve. .is-interactive is set between Turnstile's before/after-interactive callbacks. */
+.turnstile-slot{padding:0}
+.turnstile-slot.is-interactive{padding:10px 18px}
 
 .composer{display:flex;align-items:center;gap:10px;padding:13px 18px;border-top:1px solid var(--frame)}
 .composer-input{flex:1;font-family:var(--font-ui);font-size:14px;color:var(--ink);background:#FFF;
