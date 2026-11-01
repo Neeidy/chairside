@@ -29,7 +29,8 @@
       ["computed_reply", "text"],
       ["last_alert_class", "text"],
       ["last_alert_at", "ts"],
-      ["sender_masked", "text"]
+      ["sender_masked", "text"],
+      ["slot_name", "text"]
     ],
     "appointments": [
       ["sender_key", "text"],
