@@ -395,8 +395,14 @@ M2's fix is held by three checks:
 - the privacy pin.
 
 **Bounds of M2's fix, stated:**
-- `replace` removes every occurrence of the kept name in the stored reply. If the name is also a word of the reply
-  (a month name in the confirm's date, "Thursday 7 May … for May"), both go. Erasure errs to removing more.
+- `replace` removes every occurrence of the kept name in the stored reply as a case-sensitive SUBSTRING, not as a
+  word. A name that also occurs inside the reply loses that text too:
+  - `Jan` takes the month abbreviation out of "Monday 7 Jan";
+  - `Sun` turns "Sunday" into "…day";
+  - `May` takes a May date's month out.
+
+  Erasure errs to removing more, and the stored reply is never shown to the customer again (`security-auditor`
+  LOW-1).
 - It matches the CURRENT kept name only. The last stored reply is the latest turn's, and a confirm question always
   carries the name held at that turn.
 - The scan's own projection (`Find Stale Conversations`, unchanged since before this edit) carries the row's
@@ -404,8 +410,11 @@ M2's fix is held by three checks:
   privacy page names the engine's run records among the copies kept longer.
 
 **M1, for the deploy:** a conversation that is `confirming` when the Main put lands has no kept name. Its "yes" is now
-handed off with an owner alert, not booked. R3 counts such rows read-only before the put, so their number is known in
-advance.
+handed off with an owner alert, not booked. R3's plan includes a read-only count of such rows before the put, so their
+number is known in advance.
+**A related bound, stated (not an M1 case):** a booking written BEFORE this edit has an empty `customer_name`. If it is
+rescheduled, the moved event carries that stored name (3.6), so it stays nameless. The ruling says the name is KEPT on
+reschedule, and there is none to keep; the reschedule lane does not ask for one.
 
 **Re-run after the fixes** *(terminal-measured)*:
 
