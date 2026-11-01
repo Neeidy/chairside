@@ -1,6 +1,8 @@
 # DATE-PHRASING PLAN — explicit calendar dates ("4 November", "Wednesday 4 November", "4.11")
 
-> **Status: PLAN ONLY — awaiting Yigitcan's written "approved" (`.claude/rules/plan-gate.md`).** Nothing below is built.
+> **Status: APPROVED 2026-11-01 (Yigitcan, written: "tarih plani onaylı onerdigin sekilde") with D-1…D-4 as recommended,
+> D-5 in scope (Sunday "this <weekday>" → the coming week) and A1 (the horizon applies to every resolved date). R1 built
+> offline — "R1" at the end; NOT live.** *(This line said "PLAN ONLY — awaiting approval … Nothing below is built" until R1.)*
 > **Trigger:** the NAME-CAPTURE R3 owner run of 2026-11-01 (`docs/NAME-CAPTURE-PLAN.md` → "The owner run of
 > 2026-11-01"). "I'd like a haircut on Wednesday 4 November at 11:00" was extracted correctly by the model
 > (`date` 2026-11-04, `dateExpr` "wednesday 4 november") and dropped by `Resolve Date` (reason `unparsed`), so the bot
@@ -158,3 +160,72 @@ Neither `/loop` nor `/goal`: a gated, single-pass edit with a live window.
 - **D-4 second consecutive dropped date → handoff** (recommended yes).
 - **D-5 "this <weekday>" on a Sunday:** keep the ISO-week reading (refused, as today) or read it as the coming one —
   separate from this plan's scope unless ruled in.
+
+## R1 — built offline (2026-11-01; NOT live)
+**Rulings the build implements:** D-1 `business.dateOrder` (`DMY`; a dot is always day.month; key absent + both parts
+≤ 12 and different → re-ask naming both) · D-2 `bot.bookingHorizonDays` 90 · D-3 the hint text, verbatim · D-4 a second
+consecutive dropped date → handoff with the owner alert · D-5 in scope · A1 · the Load Config gate edit = exactly the
+two config keys and the six templates.
+**A ruling taken DURING the build (Yigitcan, 2026-11-01, answering the build's question):** the deploy tool's gate-edit
+check accepted an added key only on its OWN line, and `business` and `bot` are each written on one line, so D-1/D-2
+could not pass it. Ruled: **extend the check** — an added key may also be an inline `, key: value` segment just before the
+closing ` }` of the one line holding its parent object; every other rule unchanged (the key new, the value exact,
+nothing else in the literal moves). `scripts/diff-workflow-copy.py` `gate_edit_errs`, plus integer values in
+`parse_delta`; nine inline cases in its selftest (one passes, eight red: the wrong object, another value, the value as
+text, a second inline key, another value on the same line changed, the key also on its own line, a template missing,
+another dateOrder).
+
+**Built:**
+- `Resolve Date` (staged Main): `parseCalendarDate` (day + month in the four forms of §2, an optional leading weekday,
+  an optional four-digit year) and `resolveCalendar` (the order of §3: ambiguous slash → `ambiguous_numeric`; impossible
+  day → `invalid_date`; a year given is honoured, past → `date_past`; no year → this year if today or later, else next
+  year only inside the horizon, else `date_past`; a disagreeing weekday → `weekday_mismatch`; else `calendar_date`);
+  `resolveWithin` — A1 on every resolved date → `beyond_horizon`; D-5 (`anchored_sunday`); the alert map gains the five
+  new outcomes; D-4's strike.
+- `Slot Gate`: a dropped date picks its template by outcome (`dateWeekdayMismatch`, `dateAmbiguous`, `datePast`,
+  `dateInvalid`, `dateTooFar`), anything else the D-3 hint; a missing template falls back to `askDateTime`.
+- `Load Config`: the eight keys, through the approved gate edits (`n8n/staged/workflow.main.delta.json`; the third
+  entry of `APPROVED_DELTAS['main']`). No other node, no edge, Purge untouched.
+- Config: `schemas/client.config.schema.json` (`dateOrder` enum, `bookingHorizonDays` integer ≥ 1, both optional as the
+  node reads them), both example configs, `web/shared/src/config/client.config.types.ts` regenerated.
+- **The prompt was checked, not changed:** `Build LLM Request` already says "Copy the customer's OWN wording for the DAY
+  verbatim and lowercased, INCLUDING an absolute date they typed themselves", and the live model did exactly that in
+  executions 4807/4808 (`dateExpr` "wednesday 4 november").
+
+**Declared — choices the plan left open or did not spell out, each for review:**
+1. **The five new template texts** beyond D-3's (only D-3's was ruled verbatim): "{date} is a {actual} — did you mean
+   {actual} {date}, or a {said}?" · "Did you mean {a} or {b}?" · "That date has passed — which date did you mean?" ·
+   "That date is not on the calendar — which date did you mean?" · "We take bookings up to {days} days ahead — which date
+   did you mean?". The values are Resolve Date's own computation, never the model's text.
+2. **D-5's edges:** "this sunday" said on a Sunday is TODAY (today's rule — it does not point back); the suffix form
+   "<weekday> this week" keeps today's rule (it names the week explicitly).
+3. **Two text checks against the model trimming the customer's words** (plan §7's concern, not a listed mechanism): a
+   calendar expression followed in the text by a four-digit year or a numeric continuation the model left out →
+   refused (`calendar_clipped`, outcome `expr_not_from_customer`); a weekday written right before the date counts as
+   given even when the model dropped it (so "thursday 4 november" with `dateExpr` "4 november" still re-asks).
+4. **A horizon or order the node does not recognise is treated as absent** (no horizon → nothing refused for distance,
+   the `llmCostCapUsd` precedent; no order → the ambiguous rule). The committed literal carries both, and render-client
+   refuses a client config without them once promoted.
+5. **D-4's scope:** counted on a `book` or `reschedule` turn outside a pending confirmation; the strike turn's alert class
+   is `date_handoff`. The marker `date_reask` never collides with `name_reask`/`clarify` (tested both ways).
+6. **Observed, by the plan's own rule — for a ruling:** a day + month that passed this year and whose next-year date is
+   beyond the horizon re-asks "That date has passed" — e.g. "31 January" said on 1 November (next year's is day 91).
+   True in the plan's words, misleading to a customer who meant next January.
+7. **The reschedule lane's re-ask is unchanged** (`rescheduleAskSlot`, no hint): the plan scoped the template choice to
+   `Slot Gate`. D-4's strike does count there.
+8. **Test files that assumed the staged Main is NAME-CAPTURE** were generalised: `workflow-step.test.py`'s CLI gate case
+   (any staged edit's first own-line template key), `render-client-askname.test.py`'s control (skipped once the committed
+   literal holds `askName`, not when no staged file exists). `resolve-date.test.cjs` reads the staged export when one
+   exists; its row "11 september asks (date PARSING is still out of scope)" is corrected in place (it now resolves).
+   Golden G15's route is corrected: its ISO date is beyond the horizon until 2027-08-18 (A1).
+
+**Tests** *(terminal-measured)*: `date-phrasing.test.cjs` 19/19 — every case through Resolve Date → Merge Slots → Slot
+Gate from the staged export, the words as input (17 of 19 red on the committed export) · `chat-replay.test.cjs` 6/6 —
+the committed offline replay (`chat-replay.lib.cjs`): its CONTROL reproduces owner run 1's defect on the export before
+this edit; owner run 1's recorded answer now reaches the name ask; owner run 2's seven recorded turns give the replies
+the owner saw on both exports (NAME-CAPTURE unchanged); O’Neil and the move keeping the name; every stage-new golden
+booking case end to end (2 of 6 red on the pre-edit export, the four NAME-CAPTURE/control ones green) · mutants
+`date-phrasing-mutants.py` 25/25 (the first run left one alive — D-4's stage condition — and a test now pins it) ·
+`resolve-date` 150/150 on the staged export · NAME-CAPTURE on the staged export: `name-capture` 34/34, its mutants 50/50,
+`validate-intent` 37/37, `main-tur2` 38/38 · golden 27 (G24–G27 added) · `diff-workflow-copy` selftest OK (9 inline cases)
+· the staged export + its delta through `diff-workflow-copy --phase edit` OK.

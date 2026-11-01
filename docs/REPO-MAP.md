@@ -238,6 +238,11 @@
 
 - `n8n/screenshots/.gitkeep`
 
+### n8n/staged
+
+- `n8n/staged/workflow.main.delta.json`
+- `n8n/staged/workflow.main.sanitized.json`
+
 ### ops/systemd
 
 - `ops/systemd/salon-dashboard.service`
@@ -334,6 +339,10 @@
 - `tests/fixtures/7-2-tur2/workflow.owner-actions.after.json`
 - `tests/fixtures/7-2-tur2/workflow.owner-actions.delta.json`
 
+### tests/fixtures/chat-replay
+
+- `tests/fixtures/chat-replay/recorded-model-answers.json`
+
 ### tests/fixtures/sql-params
 
 - `tests/fixtures/sql-params/bad-expression-in-query.json`
@@ -365,8 +374,12 @@
 
 ### tests/unit
 
+- `tests/unit/chat-replay.lib.cjs`
+- `tests/unit/chat-replay.test.cjs`
 - `tests/unit/codex-containment.test.py`
 - `tests/unit/content-parity-inactive.test.py`
+- `tests/unit/date-phrasing-mutants.py`
+- `tests/unit/date-phrasing.test.cjs`
 - `tests/unit/demo-offline-mutants.py`
 - `tests/unit/demo-offline.test.py`
 - `tests/unit/drill-state-shape.test.cjs`
@@ -810,6 +823,7 @@
   - ## 11. Deploy route
   - ## 12. Automation-fit
   - ## 13. Decisions for Yigitcan
+  - ## R1 — built offline (2026-11-01; NOT live)
 
 ### `docs/FLOW-DIAGRAM.md`
   - ## Overview — the lanes
@@ -1050,6 +1064,7 @@
   - ### docs/codex/public-demo
   - ### n8n
   - ### n8n/screenshots
+  - ### n8n/staged
   - ### ops/systemd
   - ### prompts
   - ### schemas
@@ -1061,6 +1076,7 @@
   - ### tests/db/fixtures
   - ### tests/fixtures/7-2-baseline
   - ### tests/fixtures/7-2-tur2
+  - ### tests/fixtures/chat-replay
   - ### tests/fixtures/sql-params
   - ### tests/ops
   - ### tests/snippet
