@@ -101,7 +101,16 @@ test('premise: Read Spend still carries alwaysOutputData + continueErrorOutput, 
 
 test('the edit changes Eval Spend\'s and Build Spend-Cap Reply\'s code and only TEXT elsewhere: the meter alert\'s comment lines and the sticky', () => {
   const differs = CUR.wf.nodes.filter((n) => JSON.stringify(n) !== JSON.stringify(PRE.byName[n.name])).map((n) => n.name).sort();
-  if (EXPORT === STAGED) assert.deepEqual(differs, ['Build Spend-Cap Reply', 'Build Spend-Meter Alert', 'Eval Spend', 'Spend-cap note']);
+  // While this edit WAS the staged one, exactly its four nodes differed from the pre-fix export. Since its promotion
+  // (2026-10-30) a staged export is a LATER edit (NAME-CAPTURE R1, 2026-11-01): it must leave those four nodes exactly
+  // as committed — the spend brake is not part of any later delta.
+  const EDIT = ['Build Spend-Cap Reply', 'Build Spend-Meter Alert', 'Eval Spend', 'Spend-cap note'];
+  const COMMITTED = load(readFileSync(join(ROOT, 'n8n', 'workflow.main.sanitized.json'), 'utf8'));
+  const promoted = JSON.stringify(COMMITTED.byName['Eval Spend']) !== JSON.stringify(PRE.byName['Eval Spend']);
+  if (EXPORT === STAGED && !promoted) assert.deepEqual(differs, EDIT);
+  if (EXPORT === STAGED && promoted) {
+    for (const n of EDIT) assert.equal(JSON.stringify(CUR.byName[n]), JSON.stringify(COMMITTED.byName[n]), `${n}: a later staged edit changed the promoted spend brake`);
+  }
   const code = (m) => m.byName['Build Spend-Meter Alert'].parameters.jsCode.split('\n').filter((l) => !/^\s*\/\//.test(l)).join('\n');
   assert.equal(code(CUR), code(PRE), 'Build Spend-Meter Alert: everything but its comment lines is unchanged');
   assert.equal(CUR.byName['Spend-cap note'].type, 'n8n-nodes-base.stickyNote');
