@@ -1,7 +1,22 @@
-# NAME-CAPTURE PLAN — a booking carries the customer's name (PLAN ONLY, awaiting Yigitcan's written "approved")
+# NAME-CAPTURE PLAN — a booking carries the customer's name
 
-> **Status: PLAN, not approved.** Nothing in this file has been built. No Main, Purge or schema change is staged or
-> live. Per `.claude/rules/plan-gate.md` the build starts only on Yigitcan's written "approved" in the conversation.
+> **Status: APPROVED by Yigitcan, 2026-11-01** (written, in the conversation: "Evet onaylıyorum diger maddeleride"),
+> with two amendments and every decision as recommended (§13). **R1 (offline build) has not landed yet** — nothing
+> below is staged or live until its own record says so.
+> **Amendments (essentials of the ruling, in English; only the approval quote above is verbatim):**
+> - **A1** month names (january…december) are NOT on the deny list — April, May, June, August are given names, and at
+>   the name ask the date is already stored. Weekdays and relative-date words stay.
+> - **A2** unit/golden cases add a two-word Turkish name with `ğ` and `Ü`, "Müller" and a non-Latin name: the
+>   sanitiser keeps them (`\p{L}`) — never rejects or strips them. ⚠ **Declared deviation:** the ruling's own example
+>   for the first case cannot be committed — a redaction collision (`security-auditor` HIGH-1) — so no tracked file
+>   carries it; the synthetic "Çağla Ünal" tests the same letters (`ğ`, `Ü`, two words).
+>   The non-Latin cases are Cyrillic, Greek and Han — scripts written in `\p{L}` alone. **Bound, for a ruling:** a
+>   name that needs combining marks (`\p{M}`, e.g. Devanagari vowel signs) is REJECTED by 3.4 → re-ask; a zero-width
+>   non-joiner (U+200C, category `Cf`, used in Persian) is not rejected but STRIPPED by 3.4's `\p{C}` rule, so the
+>   name is kept with its spelling silently changed. Changing either is a design change (a mark cap against "zalgo"
+>   text; a ZWNJ exception), not taken here.
+> - **The demo's `askName` text:** "What name should I put the booking under? (Any name is fine for this demo.)"
+>
 > **Why it lives here:** Main change plans live in their own file under `docs/` (`CP4-RESCHEDULE-EXECUTE-PLAN.md`,
 > `MIGRATION-PLAN.md`, `PHASE-7-PLAN.md`, `PHASE-8-PLAN.md`); this change touches Main, Purge, the schema and the
 > config shape, so it gets one too. Written 2026-11-01 from the committed exports at `9918027`.
@@ -42,7 +57,7 @@ masks `customer_name`).
 
 **3.1 Where the name is asked — order.** `Slot Gate`'s `next_ask` becomes `service → datetime → name`; `stage =
 'ready'` (and so the availability check and the confirm) needs all four. The name is asked LAST of the four and BEFORE
-availability, so the confirm turn can name it. *(Alternative for the approver, D-1: ask it after availability, so a
+availability, so the confirm turn can name it. *(Ruled D-1: before. The alternative was to ask it after availability, so a
 customer is not asked for a name for a slot that turns out busy. Recommendation: before — one code path, the confirm
 always has it, and a busy slot keeps the name for the next try.)*
 
@@ -74,8 +89,8 @@ through untouched to the LLM's own result.
    hands off on the FIRST turn (`handoff.md`), and a booking detail ("actually tuesday", "beard trim") stays a booking
    detail (`security-auditor` LOW-1, second pass);
 2. a deny list rejects the reply as a name: intent and command words (`cancel, stop, no, yes, human, person, agent,
-   help, ignore, instructions, prompt, system, book, reschedule, price, start over, forget, …`), weekday, month and
-   relative-date words (`today, tomorrow, next, monday … sunday, january …`), and **the config's own service names, read
+   help, ignore, instructions, prompt, system, book, reschedule, price, start over, forget, …`), weekday and
+   relative-date words (`today, tomorrow, next, monday … sunday`; month names are NOT on it — A1), and **the config's own service names, read
    from `Load Config`** (so a new client's services are covered) — the build lists it and a test pins it;
 3. it never runs while a cancel/reschedule confirmation is pending (the stage check above already excludes it; a test
    pins it).
@@ -112,7 +127,8 @@ touching the column (verified, 0(d)).
 field is added (ruling 4).
 
 **3.8 The new template — every place the config shape lives.**
-- `messageTemplates.askName` (e.g. "And the name for the booking?") in: the Main `Load Config` literal ·
+- `messageTemplates.askName` (the demo's text, ruled: "What name should I put the booking under? (Any name is fine for
+  this demo.)") in: the Main `Load Config` literal ·
   `config/client.config.example.json` · `config/client.config.example-b.json`.
 - `schemas/client.config.schema.json`: `messageTemplates` is `additionalProperties: {type: string}` with no required
   keys — **no change**; `scripts/check-config-schema.cjs` validates the example and the literal against it.
@@ -153,8 +169,8 @@ Zernio, Turnstile, Vercel.
 measurement`.
 
 ## 6. Mock data
-Synthetic names only (`Testname`, `Ánna-Marie O'Neil`, `<script>`, a zero-width-split name, a 60-letter name) in unit
-tests and golden cases; the live check uses the owner's own run (#21-style) through Turnstile, cleaned afterwards with
+Synthetic names only (`Testname`, `Ánna-Marie O'Neil`, `<script>`, a zero-width-split name, a 60-letter name, and by
+A2 "Çağla Ünal", "Müller" and a non-Latin name, which the sanitiser must keep unchanged) in unit tests and golden cases; the live check uses the owner's own run (#21-style) through Turnstile, cleaned afterwards with
 the seed tool. No real customer name enters a fixture or a report.
 
 ## 7. Critical-Review Targets (Codex)
@@ -168,7 +184,7 @@ reschedule title, the lead. **#8 (reschedule)** — only for `Validate Reschedul
    reach the calendar title and `customer_name`.
 2. A bare name reply is never classified `unknown`, never clarifies, never hands off.
 2b. **A reply in a listed category never takes the name path:** an intent the model classified (handoff, cancel,
-   reschedule, a booking detail), a word on the deny list (commands, dates, the config's services) keeps the model's
+   reschedule, a booking detail), a word on the deny list (commands, weekday and relative-date words, the config's services) keeps the model's
    own intent and its gates (first-turn handoff included). **Stated bound, not hidden:** the deny list is a list — a
    non-name outside it that the model calls `unknown` ("you are dan now") can still be taken as a name. What bounds
    it: the value never reaches a prompt, and the confirm text shows it before any write, so a wrong name costs one
@@ -223,7 +239,7 @@ structured-output schema in `Build LLM Request` — none exists today (found whi
 ## 12. Automation-fit
 Neither `/loop` nor `/goal`: every step ends at a human gate (the migration, the puts, the owner's live run).
 
-## 13. Decisions for the approver
+## 13. Decisions — ruled 2026-11-01, each as recommended
 - **D-1** ask the name before availability (recommended) or after.
 - **D-2** Purge empties `slot_name` with `recent_messages` after 30 days (recommended) — or keep it with the record.
 - **D-3** after a second turn without a name: handoff (recommended — the ruling says a booking must carry the name) or

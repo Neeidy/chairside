@@ -465,17 +465,21 @@ reads this list:
    committed lockfile: 0 advisories of any severity; Vercel's install of the deploy set: "found 0 vulnerabilities"
    *(terminal-measured, not committed)*.
 
-### DOMAIN + INTERACTION-ONLY — the project's own `.vercel.app` domain removed; Turnstile shown only on interaction (2026-11-01)
+### DOMAIN + INTERACTION-ONLY — the project's own `.vercel.app` domain removed (A); Turnstile interaction-only ruled (R), not built (2026-11-01)
 **Preconditions — Cowork's statements, not CC's measurements.** The RENAME's Cloudflare side is closed: the DNS records
 of `demo.<apex>` and the old dashboard name are deleted, the old dashboard ingress removed, the dashboard's Access
 application holds `barber-dashboard.<apex>` only, and the widget's hostname list is `barber-demo.<apex>` alone (mode
 Managed). Cowork set the CURRENT Standard Protection in Vercel's dashboard (RENAME had set the legacy value); after it
 the team alias `<project>-<team>.vercel.app` → `302`, while the project's own production domain
 `<project>-<suffix>.vercel.app` (in the project's domain list) still served the page. **`<project>.vercel.app` — the
-project's bare name — serves ANOTHER PARTY's site and is not ours:** CC's measurement scripts and URL lists (the session
-scratchpad, searched with a pattern a control line proved it matches) contain it zero times, so no CC measurement here
-was taken against it; and the R2f record that wrote
-it as one of "two project aliases" is corrected above to `<project>-<suffix>.vercel.app`, the name actually measured.
+project's bare name — serves ANOTHER PARTY's site and is not ours.**
+
+**CC's check of that last point against its own records:** no script or URL list in the session scratchpad names the
+bare name (searched with a pattern a control line proved it matches); `security-auditor`'s separate count over the
+session transcript found it only in control lines and in brief text, never in a request. The R2f record that wrote it
+as one of "two project aliases" is corrected below ("#16 — GREEN") to `<project>-<suffix>.vercel.app`, the name the R2f
+list actually holds.
+
 **Rulings (Yigitcan, 2026-11-01):** (C) remove the project's production `.vercel.app` domain from the project;
 (R) "kutu gizlensin evet" — Turnstile stays, mode Managed, the box shows only when Cloudflare needs interaction.
 
@@ -490,7 +494,8 @@ script refused unless exactly one name matched). After: **the domain list is `ba
 unchanged, `all_except_custom_domains`.** Unauthenticated: `barber-demo.<apex>` `/`, `/privacy`, `/barber-widget.js`
 200; **`<project>-<suffix>.vercel.app` → `404 DEPLOYMENT_NOT_FOUND`** (it no longer serves the project); the other five
 `*.vercel.app` names on record — the team alias and the deployment URLs — `/` and `/privacy` → `302` to Vercel's login;
-`demo.<apex>` no longer resolves (no record on 1.1.1.1). No `*.vercel.app` name serves the page.
+`demo.<apex>` no longer resolves (no record on 1.1.1.1). None of the six `*.vercel.app` names on record serves the
+page.
 
 ### RENAME — `barber-demo.<apex>` and `barber-dashboard.<apex>`; protection Standard (STOPPED: two project aliases stay public); owner-run reads (2026-11-01)
 **Preconditions — Cowork's statements, not CC's measurements.** Cowork added the DNS for `barber-demo.<apex>` (DNS only,
@@ -514,6 +519,8 @@ clean tree, by design.
 and a curl that only records, and a mutant restoring the old prefix dies — mutants 16/16. `security-auditor` GO, pushed.
 
 **B — STOPPED at the protection step (stop condition "any `*.vercel.app` public after the protection change").**
+*(Superseded 2026-11-01 by "DOMAIN + INTERACTION-ONLY": the team alias now `302` under the current Standard, the
+project's own `.vercel.app` domain removed → `404`. The heading keeps the state at the time.)*
 - `barber-demo.<apex>` added to the project: `verified: true`, `misconfigured: false` (CNAME). **Certificate issued**
   (Let's Encrypt, the new name only). Unauthenticated: `/` 200 and **`/privacy` 200 — no placeholder, the controller
   and a contact sentence with an address present (values not recorded), the fixed sentence present, the old wording
@@ -570,7 +577,8 @@ and a curl that only records, and a mutant restoring the old prefix dies — mut
     with a 12-hour locale shows a time like "04:45 PM" while it is past midnight in Vienna. Read from the code, not
     measured; whether the widget should show the shop's time is a product question.
 
-**E — the name-capture plan:** `docs/NAME-CAPTURE-PLAN.md` (plan only; awaiting Yigitcan's written "approved").
+**E — the name-capture plan:** `docs/NAME-CAPTURE-PLAN.md` (plan only at the time; *approved 2026-11-01 with
+amendments A1/A2 — corrected in place, see the plan's status*).
 
 ### GO-LIVE — the wording fix, every go-live check true, protection off, the public measure (2026-11-01)
 **Preconditions — Cowork's statements, not CC's measurements.** Cowork read the R2i deployment's `/privacy` through
@@ -873,7 +881,8 @@ requirement before Vercel had built on 24 — auditor LOW-3; it is now a measure
 **#16 — GREEN on a READY deployment, all four read back** *(terminal-measured; outputs not committed)*: (a) platform
 Vercel · (b) root `web/site` · (c) no `web/dashboard` in the file list (R2d, same 54-file set) · **(d) protection, by
 behaviour: every name the deployment answers to — `demo.<apex>`, two project aliases (`<project>-<suffix>.vercel.app`,
-`<project>-<team>.vercel.app`) and the deployment URL — returned `302` to `vercel.com/sso-api` to an unauthenticated
+`<project>-<team>.vercel.app`; *corrected 2026-11-01: the first was written `<project>.vercel.app`, which is another
+party's site — the name in R2f's list is `<project>-<suffix>.vercel.app`*) and the deployment URL — returned `302` to `vercel.com/sso-api` to an unauthenticated
 request, with no page; so did `/barber-widget.js`, `/privacy`, `/install`, a font, `/_next/static/` and `/robots.txt` on
 the demo hostname and an alias.** The stop condition (page reachable unauthenticated) was never met.
 **Certificate:** issued for `demo.<apex>` by Let's Encrypt, valid 2026-10-30 → 2027-01-28, subject and SAN the demo
