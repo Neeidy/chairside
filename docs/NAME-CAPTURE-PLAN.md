@@ -345,8 +345,8 @@ What some of those prove:
    - With either mark, the next turn without a name becomes `intent = 'handoff'` (`handoff_reason: 'name_not_given'`).
      It goes through the existing route: `Invalid or Handoff Gate` → `Mark Handoff`, owner alert.
 7. **3.4's "the owner alert where alerts already carry slot facts":** the alert's `slots:` line carries
-   service/date/time only, so the KEPT name (the slot value) is in no alert. ⚠ But every alert also carries a `recent:`
-   line — the conversation's last messages as the customer typed them, not masked. A message that gave the name ("…,
+   service/date/time only, so the KEPT name (the slot value) is in no alert. ⚠ But an alert also carries a `recent:`
+   line whenever the conversation holds recent messages — its last messages as the customer typed them, not masked. A message that gave the name ("…,
    I'm Alex") can appear there (`security-auditor` LOW-2). This is an existing data flow, not one this edit adds; it is
    recorded so this sentence is not read as "the name never reaches the owner".
 8. **Purge's scan** takes `recent_messages <> '' OR slot_name IS NOT NULL`. A row whose messages were already erased is

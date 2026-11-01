@@ -775,7 +775,8 @@ def selftest():
     full = {k: set(v) for k, v in APPROVED_DELTAS['main'][1].items() if k not in ('settings', 'gate_edits')}
     full.update(settings={}, gate_edits={GN: {GK: GT}})
     for label, args, want_red in (
-            ('CLI gate check: a self-declared unapproved key (askFoo) is refused (LOW-1)', (MAINP, {'gate_edits': {GN: {'messageTemplates.askFoo': 'x'}}}), True),
+            ('CLI gate check: the approved delta in every item but its gate edit, which names askFoo, is refused (LOW-1)',
+             (MAINP, dict(full, gate_edits={GN: {'messageTemplates.askFoo': GT}})), True),
             ('CLI gate check: the approved delta passes', (MAINP, full), False),
             ('CLI gate check: a committed export named without its workflow key is refused', ('/tmp/x.json', full), True),
             ('CLI gate check: no gate edit, nothing to check', (MAINP, {}), False)):

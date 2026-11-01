@@ -881,6 +881,22 @@ try:
     dcli = __import__('subprocess').run([sys.executable, DIFF_SRC, os.path.join(ROOT, BASELINE['n8n/workflow.main.sanitized.json']),
                                          os.path.join(ROOT, SM), '--phase', 'edit', '--delta-file', os.path.join(ROOT, DM)], capture_output=True, text=True)
     case('diff-workflow-copy CLI: the staged Main export + its delta file → OK', dcli.returncode == 0, f'rc {dcli.returncode} · {dcli.stdout.strip().splitlines()[-1][:80]}')
+    # The CLI's gate-edit check (NAME-CAPTURE R1, security-auditor LOW-1/LOW-A): through the real CLI, a delta that is
+    # the approved one in every item but declares ANOTHER Load Config key — and a staged export that adds exactly that
+    # key — must exit 1. Without the CLI's own approved check, compare alone passes it (the key is declared).
+    SNC, DNC = 'n8n/staged/workflow.main.sanitized.json', 'n8n/staged/workflow.main.delta.json'
+    if os.path.exists(os.path.join(ROOT, SNC)):
+        en, dn = json.load(open(os.path.join(ROOT, SNC), encoding='utf-8')), json.load(open(os.path.join(ROOT, DNC), encoding='utf-8'))
+        foo = copy.deepcopy(en)
+        lc = next(n for n in foo['nodes'] if n['name'] == 'Load Config')['parameters']
+        lc['jsCode'] = lc['jsCode'].replace('    askName: ', '    askFoo: ', 1)
+        dfoo = dict(dn, gate_edits={'Load Config': {'messageTemplates.askFoo': dn['gate_edits']['Load Config']['messageTemplates.askName']}})
+        for label, ex, dl, want in (('the staged NAME-CAPTURE Main + its approved delta → OK', SNC, DNC, 0),
+                                    ('a self-declared unapproved Load Config key (askFoo), every other item approved → exit 1',
+                                     repo_file(foo), repo_file(dfoo), 1)):
+            dcli = __import__('subprocess').run([sys.executable, DIFF_SRC, os.path.join(ROOT, 'n8n', 'workflow.main.sanitized.json'),
+                                                 os.path.join(ROOT, ex), '--delta-file', os.path.join(ROOT, dl)], capture_output=True, text=True)
+            case(f'diff-workflow-copy CLI: {label}', dcli.returncode == want, f'rc {dcli.returncode} · {dcli.stdout.strip().splitlines()[-1:]}')
 
     # 15. SNAPSHOT (ruling SNAPSHOT): put keeps the live workflow taken immediately before its PUT — a new 0600 file outside
     #     the repo — and `rollback` restores it, proven GET == snapshot (nodes, credential ids, connections, settings)
