@@ -471,3 +471,19 @@ after a cancel, the widget's message time in the visitor's zone) → v2 (`docs/P
   refused look-alikes, and a widening mutant dies. Verified internally (`name-capture` 34/34, mutants 50/50
   *(terminal-measured)*), not re-run through Codex: a LOW test-coverage item, as at R2.
 - **(3), `5921594`:** committed, not deployed (the site waits for promotion) — `docs/PUBLIC-DEMO-PLAN.md`.
+
+### A1 — reads (`salon_ro`, read-only; n8n executions by GET) *(terminal-measured, 2026-11-01 ~20:15 Vienna)*
+- **Migration 004 holds its contract:** `salon.conversations.slot_name` is `text`, nullable, no default (column 19);
+  the table's owner is `salon_owner`. Catalog: `salon_app` SELECT/INSERT/UPDATE true; `salon_ro` SELECT true, INSERT and
+  UPDATE false. **Behaviour, not only the catalog:** as `salon_ro`, a zero-row `UPDATE … SET slot_name` and a zero-row
+  `INSERT … slot_name`, each in a transaction rolled back either way, both answer SQLSTATE 42501; the control
+  `SELECT slot_name` succeeds. No row carries a name yet (`slot_name IS NOT NULL`: 0).
+- **Conversations at `confirming` with no kept name: 1** (not a `pd-` seed). After the Main put, that conversation's
+  "yes" takes the `name_missing` refusal (handoff + owner alert), as M1 designed; a new booking turn asks the name.
+  (All conversations by stage: cancelled 1, confirming 1, new 2.)
+- **#19 — TRUE by the store:** the seeded `pd-` conversation (seeded at `stage='handoff'`, `last_intent='handoff'`,
+  `scripts/seed-workflow.py`) now reads `stage='new'`, `last_intent=''` — exactly `Release Handoff Lock`'s `SET` — and
+  its `last_updated` is still the seed's (2026-10-30 05:32 UTC), which that query does not touch and any Main turn
+  would. **What cannot be measured:** the time of the press. Owner Actions keeps no successful execution
+  (`saveDataSuccessExecution: none`) and lists none, and none in error; the same executions call lists Main, Purge,
+  Reminders and Drill State, so the empty list is the setting, not the instrument.
