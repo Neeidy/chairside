@@ -731,6 +731,10 @@ def selftest():
     GN, GK, GT = 'Load Config', 'messageTemplates.askName', NAME_CAPTURE_ASK
     ANCHOR = '    askDateTime: "What day and time works for you?",\n'
     ge = {'gate_edits': {GN: {GK: GT}}}
+    # Since NAME-CAPTURE's promotion (2026-11-01) the committed literal already holds the key: the base is that literal
+    # WITHOUT its line, so every case still measures an edit that GAINS the key (a no-op otherwise, before promotion).
+    _gl = node(gexp, GN)['parameters']
+    _gl['jsCode'] = _gl['jsCode'].replace(f'    askName: {json.dumps(GT, ensure_ascii=False)},\n', '', 1)
 
     def gedit(line=f'    askName: {json.dumps(GT, ensure_ascii=False)},\n', also=None):
         e = _copy.deepcopy(gexp)

@@ -179,7 +179,7 @@ def all_leaves(o, p=''):
 # not hold yet. A render against the committed exports cannot carry them, so they are no A-leak probe until the edit is
 # promoted; tests/unit/render-client-askname.test.py renders them against the staged exports instead. main() asserts each
 # is still ABSENT from the committed literal — after the promotion that case goes red, and this set is emptied.
-PENDING_KEYS = {'messageTemplates.askName'}
+PENDING_KEYS = set()
 
 
 def a_probes():

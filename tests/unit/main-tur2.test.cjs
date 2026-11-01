@@ -151,7 +151,9 @@ test('F4: Confirm Live? is false in dry-run even when the target is live', () =>
 });
 const VI = (over = {}) => ({ sender_key: SENDER, channel: 'widget', intent: 'confirm', slots: {}, state: {
   sender_key: SENDER, channel: 'widget', stage: 'cancel_confirming', cancel_target_id: 'recAAAAAAAAAAAAAA', confirm_turn: '4', turn_count: 4,
-  slots: { serviceId: 'cut', service: 'Testcut', date: '2030-01-08', time: '11:00' }, ...over } });
+  // a kept name since NAME-CAPTURE (promoted 2026-11-01): without one Build Event Request refuses before anything it
+  // tests here (name_missing, Codex R1 M1 — pinned in name-capture.test.cjs)
+  slots: { serviceId: 'cut', service: 'Testcut', date: '2030-01-08', time: '11:00', customerName: 'Testname' }, ...over } });
 test('F4: a confirmed cancel refused by dry-run says nothing was changed', () => {
   const j = fn('Build Cancel-Aborted State', '$', '$json')(stub({ 'Load Config': { config: cfg({ bot: { dryRun: true } }) }, 'Validate Intent': VI() }), {})[0].json;
   assert.match(j.computed_reply, /Test mode: nothing was changed/);
@@ -384,7 +386,7 @@ test('L8: an unknown service, an invalid start, or a non-ASCII key → empty eve
     const stage = b === 'Build Event Request' ? 'confirming' : 'reschedule_confirming';
     const cases = [
       ['unknown service', { config: cfg({ services: [] }) }, /serviceId/],
-      ['invalid start', { vi: VI({ stage, slots: { serviceId: 'cut', date: '2030-02-30', time: '11:00' } }) }, /invalid start 2030-02-30 11:00/],
+      ['invalid start', { vi: VI({ stage, slots: { serviceId: 'cut', date: '2030-02-30', time: '11:00', customerName: 'Testname' } }) }, /invalid start 2030-02-30 11:00/],
       ['non-ASCII key', { vi: { ...VI({ stage }), sender_key: 'widget:w-ü' } }, /non-ASCII/],
     ];
     for (const [label, opts, why] of cases) {

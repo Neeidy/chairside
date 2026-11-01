@@ -443,8 +443,10 @@ for (const [label, raw] of HARD) {
   // `Build Event Request` (which is literally the reschedule bypass this project shipped once) left the suite
   // at 35/35 while the ROADMAP called this row "pinned". Empty turn slots are what the resolver actually
   // produces when it drops, so this is the real shape AND the only one that discriminates.
+  // The stored slots carry a name since NAME-CAPTURE (promoted 2026-11-01): a confirm with no kept name is refused by
+  // Build Event Request (Codex R1 M1, pinned in name-capture.test.cjs), which is a different property from this one.
   const vi = { intent: 'confirm', slots: { serviceId: 'haircut', dateExpr: null, date: null, time: null },
-               state: { stage: 'confirming', slots: { serviceId: 'haircut', date: '2026-09-11', time: '11:00' },
+               state: { stage: 'confirming', slots: { serviceId: 'haircut', date: '2026-09-11', time: '11:00', customerName: 'Testname' },
                         sender_key: 'widget:test', turn_count: 3, confirm_turn: null } };
   const ctx = (n) => ({ first: () => ({ json: n === 'Load Config' ? { config: cfg2 } : vi }) });
   const built = new Function('$json', '$', 'DateTime', nodeOf('Build Event Request').parameters.jsCode)(vi, ctx, DateTime)[0].json;

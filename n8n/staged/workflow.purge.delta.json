@@ -1,8 +1,0 @@
-{
-  "_doc": "NAME-CAPTURE R1: Purge empties slot_name with recent_messages (D-2); parameters only.",
-  "allow": [
-    "Find Stale Conversations",
-    "Scrub Recent Messages",
-    "Sticky — PII scrub"
-  ]
-}
