@@ -1,8 +1,8 @@
 # NAME-CAPTURE PLAN — a booking carries the customer's name
 
 > **Status: APPROVED by Yigitcan, 2026-11-01** (written, in the conversation: "Evet onaylıyorum diger maddeleride"),
-> with two amendments and every decision as recommended (§13). **R1 built offline (2026-11-01, "R1 — built" at the end
-> of this file): staged, NOT live** — no migration run, no Main or Purge put.
+> with two amendments and every decision as recommended (§13). **R1 built offline and R2's fixes made (2026-11-01, "R1 — built" and
+> "R2 — Codex and the fixes" at the end of this file): staged, NOT live** — no migration run, no Main or Purge put.
 > **Amendments (essentials of the ruling, in English; only the approval quote above is verbatim):**
 > - **A1** month names (january…december) are NOT on the deny list — April, May, June, August are given names, and at
 >   the name ask the date is already stored. Weekdays and relative-date words stay.
@@ -64,8 +64,9 @@ always has it, and a busy slot keeps the name for the next try.)*
 **3.2 How it is kept across turns.** A new column `salon.conversations.slot_name text` (additive migration
 `db/schema/003_slot_name.sql`, nullable, no default). Carried exactly like the other three slots: `Load State`
 (projection), `Merge State` (read back into `state.slots.customerName`), `Merge Slots` (fresh non-null wins, else
-stored — the same rule as the others), `Save State` and `Save State (Post-Write)` (insert + `ON CONFLICT` update list +
-RETURNING). The slot is cleared wherever the other slots are cleared today (a completed or rejected booking — the
+stored — the same rule as the others), `Save State` and `Save State (Post-Write)` (insert + `ON CONFLICT` update list).
+*(Corrected at R2: this said "+ RETURNING" too. The build left the RETURNING projection as it was — the next turn reads
+the name back through `Load State`, so nothing reads it there; Codex R1 noted the mismatch.)* The slot is cleared wherever the other slots are cleared today (a completed or rejected booking — the
 build lists each site with a grep, `reporting.md` structural-claim rule).
 **Purge:** `slot_name` is emptied together with `recent_messages` after 30 days (`UPDATE … SET recent_messages = '',
 slot_name = NULL`), so the conversation record does not keep a name longer than the message text it came from (D-2).
@@ -372,3 +373,48 @@ What some of those prove:
       does.
     - Its mutants still run through a temporary file, so that check does not kill them (16/16 killed by the behaviour
       cases).
+
+## R2 — Codex and the fixes (2026-11-01)
+
+**The audit:** one contained run at the pushed R1 head `da164ff` on the §7 targets and the deploy tool's gate edit
+(prompt `docs/codex/name-capture/prompt.md`, answer verbatim `r1.md`, containment `containment.md`).
+- **No HIGH.** Two MEDIUM, both REAL, both fixed. **No gate-edit bypass** in any case the run tried.
+- The A2/sanitiser bounds, the explicit-intent and pending-confirm exclusions and D-3's ordinary path hold.
+- "Dance with dolphins" taken as a name is the accepted deny-list bound (2b). Codex did not report it.
+
+| | finding | triage | fix |
+|---|---|---|---|
+| M1 | A conversation already `confirming` with no kept name — from before the deploy, or emptied by Purge — skips `Slot Gate`, and `Build Event Request` booked it nameless. **The R1 test expected exactly that.** | real: the ruling says a booking must carry the name | `bbc74d9`: no kept name → an EMPTY eventId (→ `Event ID Valid?` false → `Mark Handoff`) tagged `name_missing`, the owner alert's class — D-3's outcome. The test now refuses it for `null` / `''` / spaces / `undefined`; a mutant that drops the check dies. |
+| M2 | The confirm question names the customer, Save State keeps it as `computed_reply`, and the Purge left it — the privacy page's "erased with the messages" was false. | real | `ac2373d`: `Scrub Recent Messages` also sets `computed_reply = CASE WHEN COALESCE(slot_name, '') = '' THEN computed_reply ELSE replace(computed_reply, slot_name, '…') END`, in the same statement, so it uses the name being cleared. The reply itself stays: the page says the last reply is kept, and `privacy-facts` still forbids emptying it. |
+| Q4 note | §3.2 said the Save States' RETURNING would carry `slot_name` | the text was wrong, not the code | corrected in §3.2 |
+| Q4 note | 004 checked only UPDATE for `salon_ro`, while the record said "cannot write" | real (narrower than stated) | `ea1bd44`: the check refuses INSERT too |
+
+M2's fix is held by three checks:
+- the throwaway-Postgres test's P3: the stored confirm question loses the name and keeps the rest;
+- a mutant;
+- the privacy pin.
+
+**Bounds of M2's fix, stated:**
+- `replace` removes every occurrence of the kept name in the stored reply. If the name is also a word of the reply
+  (a month name in the confirm's date, "Thursday 7 May … for May"), both go. Erasure errs to removing more.
+- It matches the CURRENT kept name only. The last stored reply is the latest turn's, and a confirm question always
+  carries the name held at that turn.
+- The scan's own projection (`Find Stale Conversations`, unchanged since before this edit) carries the row's
+  `computed_reply` and `recent_messages` into the Purge's run data. That was so before this edit, for the messages. The
+  privacy page names the engine's run records among the copies kept longer.
+
+**M1, for the deploy:** a conversation that is `confirming` when the Main put lands has no kept name. Its "yes" is now
+handed off with an owner alert, not booked. R3 counts such rows read-only before the put, so their number is known in
+advance.
+
+**Re-run after the fixes** *(terminal-measured)*:
+
+| Test | Result |
+|---|---|
+| `name-capture` | 32/32 |
+| its negative control on the unedited committed export | 30 of 32 red |
+| mutants | 46/46 |
+| throwaway Postgres | 19/19 (M6: `salon_ro` cannot INSERT) |
+| `privacy-facts` | 14/14; 2 red without the staged Purge |
+
+The Codex RECHECK of these fixes runs next (prompt `docs/codex/name-capture/prompt-r2.md`).

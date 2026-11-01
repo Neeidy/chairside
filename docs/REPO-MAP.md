@@ -199,7 +199,11 @@
 
 ### docs/codex/name-capture
 
+- `docs/codex/name-capture/containment.md`
+- `docs/codex/name-capture/prompt-r2.md`
 - `docs/codex/name-capture/prompt.md`
+- `docs/codex/name-capture/r1.md`
+- `docs/codex/name-capture/run-r2.sh`
 - `docs/codex/name-capture/run.sh`
 
 ### docs/codex/phase-8
@@ -870,6 +874,7 @@
   - ## 12. Automation-fit
   - ## 13. Decisions — ruled 2026-11-01, each as recommended
   - ## R1 — built offline (2026-11-01)
+  - ## R2 — Codex and the fixes (2026-11-01)
 
 ### `docs/OPERATIONAL-INCIDENTS.md`
   - ## OPS-10 · 2026-10-30 · A local `next build` in the repo broke the LIVE owner dashboard, which runs from the same directory
@@ -1354,7 +1359,16 @@
   - ## Flag 3 — run 9
   - ## Tur 1b — containment by isolation (runs 1b, 2, 5, 6, 12, 4, 11)
 
+### `docs/codex/name-capture/containment.md`
+  - _(no `##` headings — flat file)_
+
+### `docs/codex/name-capture/prompt-r2.md`
+  - _(no `##` headings — flat file)_
+
 ### `docs/codex/name-capture/prompt.md`
+  - _(no `##` headings — flat file)_
+
+### `docs/codex/name-capture/r1.md`
   - _(no `##` headings — flat file)_
 
 ### `docs/codex/phase-8/containment.md`
