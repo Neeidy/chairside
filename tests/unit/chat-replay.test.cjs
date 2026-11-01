@@ -10,6 +10,8 @@
  *     unchanged by the date edit — and the store ends as it did live (the name kept through the move, cancelled).
  *   4 NAME-CAPTURE: a bare name with a typographic apostrophe; the reschedule keeps the name.
  *   5 the golden set's stage-`new` booking cases, end to end, from their table text and expected JSON.
+ *   6 D-4 end to end: the hint, then the existing handoff route with the owner alert (Codex R1 MEDIUM-5).
+ *   7 a calendar-date correction with an empty extraction never inherits the stored date (Codex R1 HIGH-2).
  * WHICH EXPORT: the staged Main if it exists, else the committed one; argv[2] overrides it (mutants).
  */
 const { test } = require('node:test');
@@ -72,6 +74,25 @@ test('4 NAME-CAPTURE through the replay: a bare name typed with ’ is stored wi
   assert.equal(r.turn('yes', answer('confirm', 0.92)).reply, 'Moved — your Haircut is now Friday 6 Nov 12:00.');
   assert.equal(r.db.appts[0].customer_name, "Sam O'Neil");
   assert.deepEqual(r.db.calendar.map((e) => e.summary), ["Haircut — Sam O'Neil (bot)", "Haircut — Sam O'Neil (bot)"]);
+});
+
+test('6 D-4 end to end: two dropped dates in a row — the hint, then the existing handoff route with the owner alert', () => {
+  const r = makeReplay(EXPORT, { nowISO: RUN2_AT });
+  const first = r.turn('a haircut someday at 11', answer('book', 0.9, { serviceId: 'haircut', dateExpr: 'someday', time: '11:00' }));
+  assert.equal(first.reply, 'Which day and time? You can write e.g. "Wednesday at 11:00", "tomorrow at 15:00" or "4 November at 11:00".');
+  const second = r.turn('whenever suits at 11', answer('book', 0.9, { dateExpr: 'whenever suits', time: '11:00' }));
+  assert.equal(second.reply, "I'm passing you to a team member — we'll get back to you shortly.");
+  assert.ok(second.path.includes('Mark Handoff'), 'through Mark Handoff');
+  assert.equal(r.db.conv.stage, 'handoff');
+  assert.ok(r.db.alerts.includes('date_handoff'), `the owner alert (${JSON.stringify(r.db.alerts)})`);
+});
+
+test('7 Codex R1 HIGH-2 end to end: "5 november instead" with an empty extraction re-asks — it never books the stored 4 November', () => {
+  const r = makeReplay(EXPORT, { nowISO: RUN2_AT });
+  assert.equal(r.turn('haircut 4 november 11:00', answer('book', 0.92, { serviceId: 'haircut', dateExpr: '4 november', time: '11:00' })).reply, ASK_NAME);
+  const o = r.turn('5 november instead at 11:00', answer('book', 0.9, { time: '11:00' }));
+  assert.equal(o.reply, 'Which day and time? You can write e.g. "Wednesday at 11:00", "tomorrow at 15:00" or "4 November at 11:00".');
+  assert.equal(r.db.conv.slot_date, '');
 });
 
 // 5 — the golden set, end to end: every stage-`new` booking case, from its table text and expected JSON.

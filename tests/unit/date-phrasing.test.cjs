@@ -213,6 +213,66 @@ test('the model\'s own date has no authority on a calendar date (the cross-check
   assert.equal(reason(forged), 'expr_not_in_text'); assert.equal(date(forged), null);
 });
 
+test('Codex R1 HIGH-1: a weekday-only (or today/tomorrow/ISO) extraction while the message names a calendar date is refused', () => {
+  for (const [text, dx, llm] of [['haircut thursday 4 november at 11', 'thursday', '2026-11-04'], ['haircut wednesday 4 november 2027', 'wednesday', '2027-11-04'],
+    ['haircut tomorrow, 4 november', 'tomorrow', null], ['haircut 2026-11-04 or 5 november', '2026-11-04', null], ['haircut friday 6.11.', 'friday', null]]) {
+    const r = book(text, dx, '11:00', { llmDate: llm });
+    assert.equal(reason(r), 'calendar_clipped', dx); assert.equal(date(r), null, dx);
+    assert.equal(r.sg.computed_reply, T.askDateTimeHint, dx);
+  }
+  assert.equal(date(book('haircut friday at 9.10', 'friday', '09:10')), '2026-11-06', 'a bare dot pair is a time, not a date: no refusal');
+  assert.equal(date(book('may 2 of us come friday at 11', 'friday')), '2026-11-06', '"<month> N of" is not a date (resolve-date N1-d)');
+  assert.equal(reason(book('may 2 people come friday at 11', 'friday')), 'calendar_clipped', 'the stated cost: one re-ask');
+});
+
+test('Codex R1 HIGH-1: a weekday ANYWHERE in the message counts against the date (not only right before it)', () => {
+  const r = book('haircut thursday on 4 november', '4 november');
+  assert.equal(reason(r), 'weekday_mismatch');
+  assert.equal(r.sg.computed_reply, '4 November is a Wednesday — did you mean Wednesday 4 November, or a Thursday?');
+  assert.equal(date(book('haircut on 4 november, a wednesday', '4 november')), '2026-11-04', 'the same weekday anywhere is fine');
+});
+
+test('Codex R1 HIGH-2: an empty extraction that names a calendar date never inherits the stored one', () => {
+  const r = turn('5 november instead at 11:00', { time: '11:00' }, { stored: { serviceId: 'haircut', date: '2026-11-04', time: '11:00' } });
+  assert.equal(r.rd.date_dropped, true); assert.equal(r.rd.date_resolution.outcome, 'day_named_not_extracted');
+  assert.equal(date(r), null); assert.equal(r.sg.computed_reply, T.askDateTimeHint);
+  const plain = turn('at 12:00 instead', { time: '12:00' }, { stored: { serviceId: 'haircut', date: '2026-11-04', time: '11:00' } });
+  assert.equal(date(plain), '2026-11-04', 'no day named: the stored date stays, as before');
+});
+
+test('Codex R1 MEDIUM-3: a year written as 0000 is a year given (past), never replaced by this year', () => {
+  assert.equal(reason(book('haircut 4 november 0000', '4 november 0000')), 'date_past');
+});
+
+test('Codex R1 MEDIUM-4: a compact time after the date is not a trimmed year; a 19xx/20xx number still is', () => {
+  assert.equal(date(book('haircut 4 november 1100', '4 november')), '2026-11-04');
+  assert.equal(date(book('haircut 4 november, 1100 please', '4 november')), '2026-11-04');
+  assert.equal(reason(book('haircut 4 november 2027', '4 november')), 'calendar_clipped');
+});
+
+test('Codex R1 MEDIUM-5: the shop timezone decides the day — 23:30Z on Sunday is already Monday in Vienna', () => {
+  const late = '2026-11-01T23:30:00Z';
+  assert.equal(date(book('haircut tomorrow', 'tomorrow', '11:00', { nowISO: late })), '2026-11-03');
+  const tsun = book('haircut this sunday', 'this sunday', '11:00', { nowISO: late });
+  assert.equal(reason(tsun), 'anchored_week'); assert.equal(date(tsun), '2026-11-08', 'Monday in Vienna: the current week, not D-5');
+  assert.equal(reason(book('haircut 1 november', '1 november', '11:00', { nowISO: late })), 'date_past', 'Vienna is past 1 November');
+});
+
+test('Codex R1 MEDIUM-5: A1 refuses a WEEKDAY too when the horizon is shorter than it (1 day)', () => {
+  const one = { ...CONFIG, bot: { ...CONFIG.bot, bookingHorizonDays: 1 } };
+  assert.equal(reason(book('haircut friday', 'friday', '11:00', { config: one })), 'beyond_horizon');
+  assert.equal(date(book('haircut tomorrow', 'tomorrow', '11:00', { config: one })), '2026-11-02');
+  assert.equal(reason(book('haircut this wednesday', 'this wednesday', '11:00', { config: one })), 'beyond_horizon', 'D-5\'s date too');
+});
+
+test('D-4 counts only when the date re-ask is what the customer sees: a booking with no known service does not strike', () => {
+  const noSvc = turn('book me someday', { dateExpr: 'someday', time: '11:00' }, { prev: 'date_reask' });
+  assert.equal(noSvc.rd.intent, 'book'); assert.equal(noSvc.rd.state.last_intent, 'book');
+  assert.equal(noSvc.sg.next_ask, 'service');
+  const svcStored = turn('someday please', { dateExpr: 'someday', time: '11:00' }, { prev: 'date_reask', stored: { serviceId: 'haircut' } });
+  assert.equal(svcStored.rd.intent, 'handoff', 'a stored service counts');
+});
+
 test('a calendar date the customer did not type with a month never resolves: digits inside other numbers, a time', () => {
   assert.equal(reason(book('haircut 14.11', '4.11')), 'expr_not_in_text');
   assert.equal(date(book('haircut at 11.30', '11.30')), null, '11.30 read as a date is month 30: invalid, never a booking');
