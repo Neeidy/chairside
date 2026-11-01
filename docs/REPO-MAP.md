@@ -197,6 +197,11 @@
 - `docs/codex/7-2-r2b/containment.md`
 - `docs/codex/7-2-r2b/deploy.md`
 
+### docs/codex/name-capture
+
+- `docs/codex/name-capture/prompt.md`
+- `docs/codex/name-capture/run.sh`
+
 ### docs/codex/phase-8
 
 - `docs/codex/phase-8/containment.md`
@@ -1009,6 +1014,7 @@
   - ### docs/codex/7-2
   - ### docs/codex/7-2-r2
   - ### docs/codex/7-2-r2b
+  - ### docs/codex/name-capture
   - ### docs/codex/phase-8
   - ### docs/codex/public-demo
   - ### n8n
@@ -1347,6 +1353,9 @@
   - ## Flag 2 — run 9
   - ## Flag 3 — run 9
   - ## Tur 1b — containment by isolation (runs 1b, 2, 5, 6, 12, 4, 11)
+
+### `docs/codex/name-capture/prompt.md`
+  - _(no `##` headings — flat file)_
 
 ### `docs/codex/phase-8/containment.md`
   - _(no `##` headings — flat file)_
