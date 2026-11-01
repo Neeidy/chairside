@@ -136,6 +136,7 @@
 - `docs/CP4-RESCHEDULE-EXECUTE-PLAN.md`
 - `docs/CP6D-BUILD-PACKAGE.md`
 - `docs/DATA-MODEL.md`
+- `docs/DATE-PHRASING-PLAN.md`
 - `docs/FLOW-DIAGRAM.md`
 - `docs/LOOM-SCRIPT.md`
 - `docs/MIGRATION-PLAN.md`
@@ -801,6 +802,22 @@
   - ## Backups (`db/ops/pg-backup.sh`)
   - ## Historical — the Airtable base (retired at D6c, 2026-10-27)
 
+### `docs/DATE-PHRASING-PLAN.md`
+  - ## 0. What `Resolve Date` does today (read from the committed node, replayed 2026-11-01)
+  - ## 1. Goal
+  - ## 2. Scope / NOT-build
+  - ## 3. Design (inside `Resolve Date`, before the weekday regex)
+  - ## 4. Skeleton (node level)
+  - ## 5. Integrations
+  - ## 6. Mock data
+  - ## 7. Critical-Review Targets (Codex)
+  - ## 8. Acceptance criteria
+  - ## 9. ⚙ Drill matrix
+  - ## 10. Tests
+  - ## 11. Deploy route
+  - ## 12. Automation-fit
+  - ## 13. Decisions for Yigitcan
+
 ### `docs/FLOW-DIAGRAM.md`
   - ## Overview — the lanes
   - ## Lane 1 — Ingress · idempotency · state load
@@ -881,6 +898,10 @@
   - ## R2 — Codex and the fixes (2026-11-01)
   - ## R3 — two offline amendments, then the live window (2026-11-01)
   - ### A0 — offline
+  - ### A1 — reads (`salon_ro`, read-only; n8n executions by GET) *(terminal-measured, 2026-11-01 ~20:15 Vienna)*
+  - ### A2/A3 — the puts (⚠ ONAY 1/2 and 2/2, Yigitcan 2026-11-01) *(terminal-measured, 20:27–20:29 Vienna)*
+  - ### A4 — the owner's live run (barber-demo, a real Turnstile token) and what CC reads afterwards
+  - ### The owner run of 2026-11-01 — the bot re-asked the date; diagnosed as a PRE-EXISTING defect, no rollback
 
 ### `docs/OPERATIONAL-INCIDENTS.md`
   - ## OPS-10 · 2026-10-30 · A local `next build` in the repo broke the LIVE owner dashboard, which runs from the same directory
@@ -1104,6 +1125,7 @@
   - ### `docs/CP4-RESCHEDULE-EXECUTE-PLAN.md`
   - ### `docs/CP6D-BUILD-PACKAGE.md`
   - ### `docs/DATA-MODEL.md`
+  - ### `docs/DATE-PHRASING-PLAN.md`
   - ### `docs/FLOW-DIAGRAM.md`
   - ### `docs/LOOM-SCRIPT.md`
   - ### `docs/MIGRATION-PLAN.md`
