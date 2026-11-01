@@ -771,6 +771,18 @@ def selftest():
         good = (not errs) == expect_pass
         ok &= good
         print(f"{'✓' if good else '✗'} {label}: {'pass' if not errs else 'RED — ' + errs[0][:120]}")
+    MAINP = os.path.join(ROOT, 'n8n', 'workflow.main.sanitized.json')
+    full = {k: set(v) for k, v in APPROVED_DELTAS['main'][1].items() if k not in ('settings', 'gate_edits')}
+    full.update(settings={}, gate_edits={GN: {GK: GT}})
+    for label, args, want_red in (
+            ('CLI gate check: a self-declared unapproved key (askFoo) is refused (LOW-1)', (MAINP, {'gate_edits': {GN: {'messageTemplates.askFoo': 'x'}}}), True),
+            ('CLI gate check: the approved delta passes', (MAINP, full), False),
+            ('CLI gate check: a committed export named without its workflow key is refused', ('/tmp/x.json', full), True),
+            ('CLI gate check: no gate edit, nothing to check', (MAINP, {}), False)):
+        errs = cli_gate_errs(*args)
+        good = bool(errs) == want_red
+        ok &= good
+        print(f"{'✓' if good else '✗'} {label}: {'RED — ' + errs[0][:100] if errs else 'pass'}")
     for label, d in (('parse: gate_edits not an object of objects', {'allow': [GN], 'gate_edits': {GN: GT}}),
                      ('parse: a gate-edit key without a dotted path', {'allow': [GN], 'gate_edits': {GN: {'askName': GT}}}),
                      ('parse: a gate-edit text that is empty', {'allow': [GN], 'gate_edits': {GN: {GK: ''}}}),
@@ -873,6 +885,19 @@ def selftest():
     return 0 if ok else 1
 
 
+def cli_gate_errs(original_path, delta):
+    """The CLI's own gate-edit check (security-auditor LOW-1, NAME-CAPTURE R1): `compare` takes a delta's gate_edits as
+    declared, so on its own it would pass ANY added key a delta file names. `put` holds the delta to APPROVED_DELTAS;
+    the CLI does the same whenever a gate edit is declared, with the workflow key read from the committed export's name
+    (workflow.<key>.…json). No key, no pass."""
+    if not (delta or {}).get('gate_edits'):
+        return []
+    m = re.match(r'workflow\.([a-z][a-z-]*)\.', os.path.basename(original_path))
+    if not m:
+        return ['a gate edit is checked against APPROVED_DELTAS, which needs the workflow key: name the committed export workflow.<key>.…json']
+    return approved_errs(m.group(1), delta)
+
+
 def main():
     if sys.argv[1:2] == ['--selftest']:
         return selftest()
@@ -894,7 +919,7 @@ def main():
     else:
         allow, delta = a.allow, {}
     cp = json.load(open(a.copy))
-    errs = compare(json.load(open(a.original)), cp, set(allow), 'edit', delta=delta)
+    errs = cli_gate_errs(a.original, delta) + compare(json.load(open(a.original)), cp, set(allow), 'edit', delta=delta)
     for line in sibling_order_lines(cp, delta):
         print('  ' + line)
     if errs:

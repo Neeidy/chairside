@@ -100,7 +100,8 @@ GATE (Yigitcan, 2026-10-26; R1c ruling), kept as defence in depth beside the app
 (diff-workflow-copy.GATE_NODES: Main's and Owner Actions' admission path, incl. `Load Config`, which holds the Turnstile
 literal) and EVERY trigger are never in --allow or a removal, and a declared edge touching one (as source or target) is
 refused unless it is one of the two R-Q2 edges (diff-workflow-copy.RULED_GATE_EDGES) — refused by put itself before the
-PUT AND by diff-workflow-copy --phase edit. The one exception is an approved GATE EDIT (ruling D-4, NAME-CAPTURE): a gate
+PUT AND by diff-workflow-copy --phase edit (whose CLI also holds a declared gate edit to APPROVED_DELTAS, as put does —
+cli_gate_errs). The one exception is an approved GATE EDIT (ruling D-4, NAME-CAPTURE): a gate
 node named in the delta's `gate_edits` may be in --allow, and diff-workflow-copy.gate_edit_errs holds its literal to
 having gained exactly the approved key and text.
 
