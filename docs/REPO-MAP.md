@@ -201,10 +201,12 @@
 
 - `docs/codex/name-capture/containment.md`
 - `docs/codex/name-capture/prompt-r2.md`
+- `docs/codex/name-capture/prompt-r3.md`
 - `docs/codex/name-capture/prompt.md`
 - `docs/codex/name-capture/r1.md`
 - `docs/codex/name-capture/r2.md`
 - `docs/codex/name-capture/run-r2.sh`
+- `docs/codex/name-capture/run-r3.sh`
 - `docs/codex/name-capture/run.sh`
 
 ### docs/codex/phase-8
@@ -1364,6 +1366,9 @@
   - ## R2 — the recheck run
 
 ### `docs/codex/name-capture/prompt-r2.md`
+  - _(no `##` headings — flat file)_
+
+### `docs/codex/name-capture/prompt-r3.md`
   - _(no `##` headings — flat file)_
 
 ### `docs/codex/name-capture/prompt.md`
