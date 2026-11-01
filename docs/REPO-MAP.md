@@ -87,6 +87,7 @@
 - `db/schema/001_init.sql`
 - `db/schema/002_roles.sql`
 - `db/schema/003_revoke_large_object_writes.sql`
+- `db/schema/004_slot_name.sql`
 
 ### design
 
@@ -223,6 +224,13 @@
 
 - `n8n/screenshots/.gitkeep`
 
+### n8n/staged
+
+- `n8n/staged/workflow.main.delta.json`
+- `n8n/staged/workflow.main.sanitized.json`
+- `n8n/staged/workflow.purge.delta.json`
+- `n8n/staged/workflow.purge.sanitized.json`
+
 ### ops/systemd
 
 - `ops/systemd/salon-dashboard.service`
@@ -299,6 +307,7 @@
 - `tests/db/contract-run.cjs`
 - `tests/db/copy-contract.cjs`
 - `tests/db/ro-negatives.cjs`
+- `tests/db/slot-name.test.sh`
 
 ### tests/db/fixtures
 
@@ -361,13 +370,17 @@
 - `tests/unit/leads-purge-mutants.py`
 - `tests/unit/leads-purge-read-error.test.cjs`
 - `tests/unit/live-parity-target.test.py`
+- `tests/unit/llm-schema-drift.test.cjs`
 - `tests/unit/locked-once-parity.test.cjs`
 - `tests/unit/main-tur2.test.cjs`
 - `tests/unit/message-id-guard.test.cjs`
+- `tests/unit/name-capture-mutants.py`
+- `tests/unit/name-capture.test.cjs`
 - `tests/unit/owner-actions-tur2.test.cjs`
 - `tests/unit/owner-alert-detail.test.cjs`
 - `tests/unit/privacy-facts-mutants.py`
 - `tests/unit/privacy-facts.test.cjs`
+- `tests/unit/render-client-askname.test.py`
 - `tests/unit/render-client-mutants.py`
 - `tests/unit/render-client.test.py`
 - `tests/unit/reschedule-orphan-alert.test.cjs`
@@ -851,6 +864,7 @@
   - ## 11. Deploy route, rollback, rounds
   - ## 12. Automation-fit
   - ## 13. Decisions — ruled 2026-11-01, each as recommended
+  - ## R1 — built offline (2026-11-01)
 
 ### `docs/OPERATIONAL-INCIDENTS.md`
   - ## OPS-10 · 2026-10-30 · A local `next build` in the repo broke the LIVE owner dashboard, which runs from the same directory
@@ -999,6 +1013,7 @@
   - ### docs/codex/public-demo
   - ### n8n
   - ### n8n/screenshots
+  - ### n8n/staged
   - ### ops/systemd
   - ### prompts
   - ### schemas

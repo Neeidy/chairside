@@ -1,8 +1,8 @@
 # NAME-CAPTURE PLAN — a booking carries the customer's name
 
 > **Status: APPROVED by Yigitcan, 2026-11-01** (written, in the conversation: "Evet onaylıyorum diger maddeleride"),
-> with two amendments and every decision as recommended (§13). **R1 (offline build) has not landed yet** — nothing
-> below is staged or live until its own record says so.
+> with two amendments and every decision as recommended (§13). **R1 built offline (2026-11-01, "R1 — built" at the end
+> of this file): staged, NOT live** — no migration run, no Main or Purge put.
 > **Amendments (essentials of the ruling, in English; only the approval quote above is verbatim):**
 > - **A1** month names (january…december) are NOT on the deny list — April, May, June, August are given names, and at
 >   the name ask the date is already stored. Weekdays and relative-date words stay.
@@ -247,3 +247,125 @@ Neither `/loop` nor `/goal`: every step ends at a human gate (the migration, the
 - **D-4** a one-off reviewed delta that lets `Load Config` gain exactly `messageTemplates.askName` (recommended) — the
   alternative is a hard-coded ask text, which breaks "config-driven" for every client.
 - **D-5** the migration run by the owner with the write role, measured by CC (recommended; CC holds read-only by Q6).
+
+## R1 — built offline (2026-11-01)
+
+Nothing live was written: no migration run, no Main or Purge put, no chat message, no LLM call.
+
+**What exists now** (each file named once; the tests below prove it):
+- `db/schema/004_slot_name.sql` — NOT run. It adds `salon.conversations.slot_name text` (nullable, no default). The DDL
+  runs under `SET LOCAL ROLE salon_owner`, inside one transaction whose check rolls everything back unless:
+  - the column is nullable text;
+  - `salon_app` can read and write it;
+  - `salon_ro` can read it and cannot write it.
+
+  `db/shape-spec.json` lists the column.
+- `n8n/staged/workflow.main.sanitized.json` + `workflow.main.delta.json` — the Main edit (§3), produced by exact text
+  replacements on the committed export:
+  - one new Code node, `Fill Name From Reply`, with its two edges replacing `Validate Intent → Resolve Date`;
+  - parameter edits on 17 nodes (two of them sticky notes);
+  - `Load Config`'s one gate edit (D-4).
+- `n8n/staged/workflow.purge.sanitized.json` + `workflow.purge.delta.json` — `Find Stale Conversations` and
+  `Scrub Recent Messages` (D-2), plus the branch's sticky note.
+- The deploy tools (`scripts/diff-workflow-copy.py`, `scripts/workflow-step.py`):
+  - `APPROVED_DELTAS['main']` is now a LIST — the 7-2 Tur 2 edit (kept; its fixtures exercise the tool) and this one.
+  - A delta's new `gate_edits` item lets a gate node's config literal GAIN exactly the approved keys and nothing else.
+    `gate_edit_errs` checks it with the render's own literal reader: the code around the literal byte-equal, the
+    literal's text equal once the added line is taken out, its object equal once the key is taken out, the path and
+    the text exact.
+- `messageTemplates.askName` in both example configs (the demo's text, ruled; example-b's own).
+- `/privacy`: the messages sentence now says the name given for a booking is stored with the messages and erased with
+  them. The booking sentence ("the name you give") was already there and becomes true; both are pinned now.
+- **CRT #16 (name handling)** is in MASTER-BRIEF §9, the repo's single CRT table. The brief named `dual-agent-review.md`;
+  no such file exists in this repo — that is the skill's name, and §9 is where this repo keeps the list.
+
+**Tests (all offline; terminal-measured):**
+
+| Test | Result | What it covers |
+|---|---|---|
+| `tests/unit/name-capture.test.cjs` (check-all) | 31/31 | every changed Code node and expression executed from the staged export; the SQL and the graph read from it |
+| its negative control (same test, unedited committed export) | 29 of 31 red | the 2 green are a Purge check (reads the staged Purge) and a premise about the unchanged `Resolve Date` |
+| `tests/unit/name-capture-mutants.py` | 44/44 killed | one survived the first cut (five words accepted: its fixture held a deny-list word), and a case was added for it |
+| `tests/db/slot-name.test.sh` (throwaway Postgres; Docker, not in check-all) | 17/17 | see below |
+| `tests/unit/llm-schema-drift.test.cjs` (check-all) | green | see below |
+| `tests/unit/render-client-askname.test.py` (check-all) | green | see below |
+| `diff-workflow-copy --selftest`, `workflow-step.test.py` | green | the gate-edit cases, each red for its intended check |
+| `privacy-facts` | green | goes red when the staged Purge is removed |
+| golden set | G16–G23 | expected outputs only, no model run |
+
+What some of those prove:
+- **`slot-name.test.sh`**:
+  - the migration as `salon_migrator`: dry run, real run, a second run;
+  - `salon_ro` cannot write the column;
+  - the staged Save/Load State SQL run verbatim as `salon_app`;
+  - `Write Appointment`'s COALESCE never blanks a stored name;
+  - the staged Purge finds a row with only a name and empties it;
+  - two mutants: the committed upsert blanks the name, and the committed Purge misses that row.
+- **`llm-schema-drift.test.cjs`**: the safe subset derived from `schemas/intent.schema.json` equals the node's
+  hand-written copy, in the committed and the staged Main. Its four negative controls go red.
+- **`render-client-askname.test.py`**: against the staged Main, both examples render with their own `askName`. A
+  config without it is refused by name; the same config renders against today's exports.
+- **The gate-edit cases**: a refused edit for each of
+  - a wrong text;
+  - a second key;
+  - another path;
+  - a changed value;
+  - a comment inside the literal;
+  - code outside it;
+  - a missing declaration;
+  - a non-gate node;
+  - a pre-existing key.
+
+  `workflow-step put` takes the staged Main with its delta and refuses it without the gate edit, with another text, or
+  with a Turnstile switch-off beside the key.
+
+**Declared — where the build departs from, or corrects, the text above:**
+1. **Migration number:** 004, not 003 (003 was taken).
+2. **A2's first example** replaced by a synthetic name (in the Status block).
+3. **The plan's premise "the slot is cleared wherever the other slots are cleared (a completed or rejected booking)"
+   is false.** Measured by a grep of every Code node: a completed booking clears no slot; a rejected one clears only
+   date/time (`Compute Availability`, `{ ...slots, time: null }` / `date: null`). The name follows the other slots:
+   - it is kept after a booking and after a rejected slot;
+   - it is emptied by the 30-day Purge with the messages.
+
+   The /privacy sentence the plan proposed ("until the booking is made or the messages are erased") would have been
+   false, so it reads "stored with the messages and erased with them".
+4. **Two nodes outside §4's list:**
+   - `Build Clarify State` — §3.3's re-ask must BE the name question on the uncertain path. At the name ask it now
+     answers `askName`; elsewhere `askIntent`, unchanged.
+   - `Reschedule Lookup` — it rebuilt `state.slots` from service/date/time alone, which would have emptied the kept
+     name. It is a slot-clearing site found by the grep §3.2 calls for, and it now spreads the stored slots first.
+5. **No new sticky node:** §11's approved delta adds one node only, so §4's "sticky notes on the touched branches" are
+   edits of two existing ones (`Sticky Note3`, `Sticky — Uncertain turn ≠ handoff`) and Purge's `Sticky — PII scrub`.
+6. **D-3's mechanics, within the ruling:**
+   - The previous turn's `last_intent` is read from `Merge State`, because `Validate Intent` overwrites it with this
+     turn's.
+   - A first detail-less `book` turn without a name is marked `name_reask`; a first `unknown` one is marked `clarify` by
+     the clarify gate.
+   - With either mark, the next turn without a name becomes `intent = 'handoff'` (`handoff_reason: 'name_not_given'`).
+     It goes through the existing route: `Invalid or Handoff Gate` → `Mark Handoff`, owner alert.
+7. **3.4's "the owner alert where alerts already carry slot facts":** the alert carries service/date/time only. The name
+   is in no alert.
+8. **Purge's scan** takes `recent_messages <> '' OR slot_name IS NOT NULL`. A row whose messages were already erased is
+   still found. The name is never projected, so it never enters the run's data.
+9. **`Fill Name From Reply`'s candidate:**
+   - one trailing run of `. ! ,` is dropped;
+   - the prefix matches a curly apostrophe (`I’m`);
+   - the name itself keeps what was typed and goes through the sanitiser.
+
+   ⚠ So **a name typed with a curly apostrophe (`O’Neil`, which phones produce) is refused** by 3.4's character set.
+   That leads to a re-ask, then D-3. Allowing it is a sanitiser change — open, for a ruling.
+10. **The example configs changed in R1** (the brief). The render cannot carry `askName` until the Main literal holds it,
+    so `render-client.test.py` lists it in `PENDING_KEYS`. That list is excluded from the A-leak probes, and one case
+    turns red the day the committed literal holds the key, forcing the list to be emptied at promotion.
+11. **Recorded bounds** (in the A2 note and the tests):
+    - a name that needs combining marks is refused;
+    - a ZWNJ is stripped;
+    - the deny list is a list (acceptance 2b).
+12. **An older test's premise moved:** `tests/unit/eval-spend-fail-closed.test.cjs` took "a staged Main exists" to mean
+    "the staged Main is the Eval Spend edit". That edit was promoted on 2026-10-30, so the staged file is now this one.
+    - While unpromoted, the exact four-node check stands.
+    - Since promotion, the test requires a later staged edit to leave those four nodes exactly as committed — this edit
+      does.
+    - Its mutants still run through a temporary file, so that check does not kill them (16/16 killed by the behaviour
+      cases).
