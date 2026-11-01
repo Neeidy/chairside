@@ -6,6 +6,10 @@
 > under it** ("R1 — built"). The ship gate this phase serves is ROADMAP →
 > "Ship gate after D6c" (items 11–16, 19, 21) plus the per-client Turnstile provisioning item moved here from Phase 8.
 > Hostnames are written as placeholders on purpose: `<apex>`, `demo.<apex>`, `<n8n host>`, `<dashboard host>`.
+> **Renamed 2026-11-01 (ruling 1 of the RENAME brief):** the public site is now **`barber-demo.<apex>`** and the owner
+> dashboard **`barber-dashboard.<apex>`**. Every `demo.<apex>` below — in the rulings D1, the widget's hostname list (#11),
+> Yigitcan's steps and the rounds — is the name at the time; it was removed from the Vercel project, with no redirect
+> (see "RENAME"). *(Added in place rather than rewriting each approved ruling.)*
 
 ## Rulings (Yigitcan, 2026-10-29)
 - **D1** — the site on **Vercel Hobby**, public hostname **`demo.<apex>`** (a DNS-only CNAME to Vercel).
@@ -397,7 +401,8 @@ authenticated read of the R2i deployment, then re-measured on the PUBLIC page by
 — and 6 true right after go-live, by behaviour (see "GO-LIVE") · **left for the owner** — #15 (see "GO-LIVE": not
 runnable from this machine), #19 (the dashboard by phone), #21 (a real booking through Turnstile — the first real
 conversation is the owner's), #13 (Purge read after a 04:00 Vienna run) · **at the phase close: the Vercel token is
-revoked.** *(Until go-live this line read "State after R2i … open before go-live — 1 and 4"; replaced in place.)*
+revoked.** **RENAME (2026-11-01):** #21 and #13 read — both true (see "RENAME"); **#15 declared OPEN by ruling 3**
+(v2, reason in "RENAME"); #19 still the owner's. *(Until go-live this line read "State after R2i … open before go-live — 1 and 4"; replaced in place.)*
 A check that lives only in a sentence does not stop a deploy, so they are listed here, by number, and the deploy step
 reads this list:
 1. **The privacy contact and the controller are published** *(R2c: pending — a Zoho address from Yigitcan; Cloudflare
@@ -457,6 +462,80 @@ reads this list:
    version is 16.4.1, a minor jump; waiting on a ruling.)* **R2g: true** — `next` 16.4.1 in `6a19a06`; `npm audit` on the
    committed lockfile: 0 advisories of any severity; Vercel's install of the deploy set: "found 0 vulnerabilities"
    *(terminal-measured, not committed)*.
+
+### RENAME — `barber-demo.<apex>` and `barber-dashboard.<apex>`; protection Standard (STOPPED: two project aliases stay public); owner-run reads (2026-11-01)
+**Preconditions — Cowork's statements, not CC's measurements.** Cowork added the DNS for `barber-demo.<apex>` (DNS only,
+to Vercel) and `barber-dashboard.<apex>` (proxied, to the tunnel), the tunnel ingress for the new dashboard name, and
+the new name to the dashboard's Access application (same application and policy); the widget's hostname list is
+`barber-demo.<apex>` + `demo.<apex>`. Cowork read the public `/privacy` (the fixed sentence present).
+**Rulings (Yigitcan, 2026-11-01), verbatim:** "(1) rename; no redirect; old names freed — Cowork removes the Cloudflare
+side after your cutover. (2) Vercel protection → Standard (only custom domains public). (3) #15 declared OPEN with its
+reason: it needs a hidden-container harness page on the demo hostname; the risk it probes (a token without a human) is
+bounded by the measured rate limit, spend cap and pause; v2. (4) A booking must carry the customer's name: asked when
+missing, kept across turns, written to the calendar event and the appointment, kept on reschedule. Widget contact
+(phone/email) stays OUT — the demo tells visitors not to enter real details; per-client option later (v2)."
+
+**Start gates (01:05 Vienna, after the Reminders window — the brief arrived at 01:00 and nothing ran before 01:05)** —
+all green *(terminal-measured, as is every live result below)*: dummy token 403, exports and live parity (191/191),
+listeners, host leak, hook drift, dashboard active, `demo-offline measure` online; secret scan "NOT MEASURED" on a
+clean tree, by design.
+
+**A — `8b7be91`.** `scripts/demo-offline.sh` measures `https://barber-demo.<apex>/` (`DEMO_URL` override unchanged). Its
+`APEX_HOST` branch had no test (every case passed `DEMO_URL`); a case now runs a copy in a scratch tree with a fake apex
+and a curl that only records, and a mutant restoring the old prefix dies — mutants 16/16. `security-auditor` GO, pushed.
+
+**B — STOPPED at the protection step (stop condition "any `*.vercel.app` public after the protection change").**
+- `barber-demo.<apex>` added to the project: `verified: true`, `misconfigured: false` (CNAME). **Certificate issued**
+  (Let's Encrypt, the new name only). Unauthenticated: `/` 200 and **`/privacy` 200 — no placeholder, the controller
+  and a contact sentence with an address present (values not recorded), the fixed sentence present, the old wording
+  absent**: the current build. Only then was **`demo.<apex>` removed from the project** (REST `DELETE`, HTTP 200; the
+  project's domain list now: the new name and one project alias).
+- **Protection → Standard** (`ssoProtection.deploymentType: prod_deployment_urls_and_all_previews` — Vercel's documented
+  value for Standard Protection), read back with a separate call. Measured: `barber-demo.<apex>` `/`, `/privacy`,
+  `/barber-widget.js` 200; **the four deployment URLs → `302` to Vercel's login; the TWO PROJECT ALIASES → 200, the page
+  served.** Standard does not protect a production project alias — the brief's stop condition, so B stopped here:
+  `all_except_custom_domains` (the setting that matches "only custom domains public") was NOT applied without a ruling.
+  **Not paused:** the aliases serve the current build with the correct `/privacy`, and their chat cannot mint (re-measured
+  after the change: `110200`, no token, no `/webhook/` request); a pause would take `barber-demo.<apex>` down too.
+- The chat on `barber-demo.<apex>`: no `110200` (the hostname is in the widget's list; the headless browser stays at
+  "loading", as on the old name — `remote-operator.md`).
+- **`demo.<apex>` now:** HTTP 404 `DEPLOYMENT_NOT_FOUND`. ⚠ **Its DNS still answers — a CNAME to `cname.vercel-dns.com`**
+  (on 1.1.1.1): a record pointing at Vercel with no project behind it is a subdomain-takeover surface until Cowork
+  deletes it (ruling 1: Cowork removes the Cloudflare side after the cutover).
+- `barber-dashboard.<apex>`: `/`, `/api/health`, `/api` → `302` to Access. The old dashboard name is not in any file CC
+  reads, so CC did not measure it (Cowork's statement: `302` to Access).
+- `demo-offline measure` → online (200), on the new name.
+
+**C — reads only** (`salon_ro`, n8n executions; no write, no chat message, no LLM call):
+- **#21 — the owner's booking and cancel (2026-10-31 23:45–23:47 UTC): TRUE, with the name defect.** Five Main
+  executions, all `success`, no run error: availability (`Compute Availability`), the booking (`Book Appointment` →
+  `Verify Slot` → `Write Appointment` → `Build Booked State`), the cancel prompt, the cancel (`Validate Cancel Target` →
+  `Delete Booking Event` → `Classify Cancel Delete` → `Update Appointment Cancelled`). The row: widget, Haircut, Mon 2 Nov
+  13:00 UTC (14:00 Vienna), `status = cancelled`, `calendar_id` set, **`customer_name = ''` (empty)** — ruling 4's defect,
+  live. The calendar event: deleted by `Delete Booking Event` in the cancel run (n8n's record; the calendar itself was
+  not read — CC's Calendar connection cannot see that calendar, as before).
+- **#13 — Purge 2026-10-31 04:00 Vienna: TRUE.** Execution at 03:00:18 UTC, `success`, trigger; `Delete Old Leads`
+  (one row per deleted id) returned 1 item; the leads table went from 5 `pd-` rows (R2b) to 4, none older than 30
+  days, no non-`pd-` lead. Exactly one aged `pd-` lead deleted.
+- **#15 — OPEN by ruling 3** (above): v2.
+- **Reported, not fixed:**
+  - *(i)* "1 row: the stored sender carried more than a mask and was re-masked" — the handoff queue's only row is the
+    **`pd-` seed conversation** (#19's seed, last updated 2026-10-30). The cause is **not** a missing channel branch:
+    the database's generated `sender_masked` keeps up to 16 characters of a widget key (all but the last 4 of a short
+    one) and the dashboard's `maskSenderKey` keeps 6 characters of the id, so the stored mask never equals the
+    re-mask on the widget lane — every widget row in the queue, real ones included, will be counted. Nothing extra
+    reaches the screen (the dashboard shows its own 6-character form). Two formulas for one mask: a fix is a ruling.
+  - *(ii)* "Today lists the Mon 2 Nov booking" — by the code (`appointmentSections`, the shop's timezone): a BOOKED
+    Mon 2 Nov 14:00 Vienna row, read on 1 Nov, is under "Coming up", not "Today". But when the window holds rows and
+    none is booked, the "Today" block prints "N appointment(s) in this window, none of them still active", and the
+    window is `start_utc > yesterday 00:00 UTC` (`store.ts`) — after the cancel, the 2 Nov row is counted under the
+    "Today" heading. That is the most likely reading; not reproduced (no screenshot was read).
+  - *(iii)* The widget's message time is `new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })`
+    (`LiveChatPanel.tsx`) — the VISITOR's device locale and time zone, not the shop's. "04:45 PM" at about 00:46
+    Vienna on 1 Nov is 23:45 UTC = 16:45 in UTC−7 (US Pacific daylight time that day) in a 12-hour locale — consistent
+    with a device set to US Pacific / en-US; an inference, not a measurement of the device.
+
+**E — the name-capture plan:** `docs/NAME-CAPTURE-PLAN.md` (plan only; awaiting Yigitcan's written "approved").
 
 ### GO-LIVE — the wording fix, every go-live check true, protection off, the public measure (2026-11-01)
 **Preconditions — Cowork's statements, not CC's measurements.** Cowork read the R2i deployment's `/privacy` through

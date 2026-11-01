@@ -190,6 +190,10 @@ So:
 
 ## 8 · Public demo (`docs/PUBLIC-DEMO-PLAN.md`)
 
+**The names (since 2026-11-01):** the public site is `barber-demo.<apex>`, the owner dashboard `barber-dashboard.<apex>`
+(behind Cloudflare Access). The earlier `demo.<apex>` was removed from the Vercel project with no redirect.
+`scripts/demo-offline.sh` measures the new name (`DEMO_URL` overrides it).
+
 **Take it offline — one step.** Pausing the Vercel project makes the demo give Vercel's paused answer (503 with
 `DEPLOYMENT_PAUSED` in the body): the site and the chat widget go.
 The engine does NOT stop — its webhook stays up, bounded by the LLM cap, the edge rate limit (30 requests per 10 s per IP and Cloudflare data centre, Block for 10 s; shown blocking in R2c) and the turn cap; stopping
@@ -200,6 +204,7 @@ and deactivating Main, do not.
   from deployment protection, a 404, another redirect, a 503 without the marker) is `unexpected`, exit 5 — the demo is NOT
   proven offline. **Measured R2f:** the real paused answer is a 503 with `x-vercel-error: DEPLOYMENT_PAUSED` and the marker
   in the body (exit 3); while protection is on, the unpaused site answers 302 and `measure` exits 5 — expected until go-live.
+  *(Since go-live the custom domain is public — Standard Protection does not cover it — so `measure` reads 200, "online".)*
 - A shell: `bash scripts/demo-offline.sh pause` (and `unpause`) — needs `~/.vercel-demo.env` (0600, this user):
   `VERCEL_TOKEN`, `VERCEL_PROJECT_ID`, and `VERCEL_TEAM_ID` if the project is in a team. It prints statuses only and
   exits 0 only when the new state was MEASURED (Vercel's paused answer after a pause, 200 after an unpause); no answer at all is "NOT
