@@ -518,6 +518,41 @@ try:
     rc, out = run(fake, ['put', M, cid, repo_file(tp), '--delta-file', DM])
     case('Main: an export that changes the trigger responseMode is refused', rc == 1 and fake.puts() == 0, f'rc {rc}')
 
+    # 11b. NAME-CAPTURE R1 (docs/NAME-CAPTURE-PLAN.md §11): the staged Main against HEAD's Main (not the 7-2 baseline),
+    #      with its approved delta — one Code node, two edges, and Load Config's one gate edit (ruling D-4).
+    SN, DN = 'n8n/staged/workflow.main.sanitized.json', 'n8n/staged/workflow.main.delta.json'
+    if os.path.exists(os.path.join(ROOT, SN)) and json.load(open(os.path.join(ROOT, SN))) != H.committed_export('n8n/workflow.main.sanitized.json'):
+        TEST_FILES.update({SN, DN})
+        _bl = BASELINE.pop('n8n/workflow.main.sanitized.json')
+        try:
+            en = json.load(open(os.path.join(ROOT, SN), encoding='utf-8'))
+            dn = json.load(open(os.path.join(ROOT, DN), encoding='utf-8'))
+            committed, fake, oid, cid = world('main')
+            rc, out = run(fake, ['put', M, cid, SN, '--delta-file', DN])
+            dr = drift(fake, cid, en)
+            case('NAME-CAPTURE: put the staged Main with its approved delta (incl. the Load Config gate edit), read back == staged',
+                 rc == 0 and fake.puts() == 1 and not dr, f'rc {rc} · drift {dr[:1]} · {out.strip().splitlines()[-1][:100]}')
+            committed, fake, oid, cid = world('main')
+            rc, out = run(fake, ['put', M, cid, SN, '--delta-file', repo_file({k: v for k, v in dn.items() if k != 'gate_edits'})])
+            case('NAME-CAPTURE: the same delta WITHOUT its gate edit is refused (Load Config is a gate node)',
+                 rc == 1 and fake.puts() == 0, f'rc {rc}')
+            alt = copy.deepcopy(en)
+            lc = next(n for n in alt['nodes'] if n['name'] == 'Load Config')['parameters']
+            lc['jsCode'] = lc['jsCode'].replace('(Any name is fine for this demo.)', '(Any name.)', 1)
+            committed, fake, oid, cid = world('main')
+            rc, out = run(fake, ['put', M, cid, repo_file(alt), '--delta-file', DN])
+            case('NAME-CAPTURE: a staged Load Config whose askName text differs from the approved one is refused',
+                 rc == 1 and fake.puts() == 0, f'rc {rc}')
+            alt = copy.deepcopy(en)
+            lc = next(n for n in alt['nodes'] if n['name'] == 'Load Config')['parameters']
+            lc['jsCode'] = ts_off(lc['jsCode'])
+            committed, fake, oid, cid = world('main')
+            rc, out = run(fake, ['put', M, cid, repo_file(alt), '--delta-file', DN])
+            case('NAME-CAPTURE: the gate edit cannot carry a Turnstile switch-off beside the approved key',
+                 rc == 1 and fake.puts() == 0, f'rc {rc}')
+        finally:
+            BASELINE['n8n/workflow.main.sanitized.json'] = _bl
+
     def m_webhook(b):
         next(n for n in b['nodes'] if n['type'] == 'n8n-nodes-base.webhook')['webhookId'] = 'changed-by-n8n'
 

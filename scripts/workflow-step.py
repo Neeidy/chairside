@@ -100,7 +100,9 @@ GATE (Yigitcan, 2026-10-26; R1c ruling), kept as defence in depth beside the app
 (diff-workflow-copy.GATE_NODES: Main's and Owner Actions' admission path, incl. `Load Config`, which holds the Turnstile
 literal) and EVERY trigger are never in --allow or a removal, and a declared edge touching one (as source or target) is
 refused unless it is one of the two R-Q2 edges (diff-workflow-copy.RULED_GATE_EDGES) — refused by put itself before the
-PUT AND by diff-workflow-copy --phase edit.
+PUT AND by diff-workflow-copy --phase edit. The one exception is an approved GATE EDIT (ruling D-4, NAME-CAPTURE): a gate
+node named in the delta's `gate_edits` may be in --allow, and diff-workflow-copy.gate_edit_errs holds its literal to
+having gained exactly the approved key and text.
 
 SCOPE: the five listed workflows (D6c: Drill State joined for its rename). For every workflow with a webhook trigger
 (Main, Owner Actions, Drill State) put also checks
@@ -544,7 +546,10 @@ def put(spec_path, copy_id, export_arg, allow, delta, snapshot, scratch=False):
     if errs:
         raise Refused('not an approved delta (ruling FIXED: only the reviewed deltas are applied): ' + '; '.join(errs[:3]))
     export = load_export(export_arg, spec_path)
-    gate = sorted(n for n in set(allow) | set(delta.get('remove_nodes') or ()) if H.DIFF.is_gate(n, committed, export))
+    # A gate node named in the delta's gate_edits (ruling D-4) may be in --allow: approved_errs above held the gate edit to
+    # its exact approved entry, and compare below checks that its literal gained exactly that key and nothing else.
+    gate = sorted(n for n in (set(allow) - set(delta.get('gate_edits') or ())) | set(delta.get('remove_nodes') or ())
+                  if H.DIFF.is_gate(n, committed, export))
     if gate:
         raise Refused(f'GATE node(s) {gate} are never in --allow or removed ({H.TS_NODE} holds the Turnstile literal; '
                       'every security-gate node and every trigger is the gate)')

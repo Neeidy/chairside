@@ -30,7 +30,11 @@ never declared (it is sibling order, i.e. behaviour). Without it, settings stay 
 sends them: its `settings` command applies them as the last step.
 GATE (Yigitcan, 2026-10-26; widened to every security-gate node by the R1c ruling): the GATE_NODES (Main's and Owner
 Actions' admission path, listed below) and every trigger (type webhook, *Trigger, or a LEGACY_TRIGGER_TYPES type) are red
-in --allow (even unchanged) and in remove_nodes. A DECLARED edge (added or removed) that touches a gate node, as source or
+in --allow (even unchanged) and in remove_nodes — with ONE kind of exception, a GATE EDIT (ruling D-4 of the NAME-CAPTURE
+plan, 2026-11-01): a delta's `gate_edits` {NODE: {"a.b.key": "text"}} lets that gate node's config literal GAIN exactly
+those keys with exactly those text values and nothing else (gate_edit_errs: the code around the literal byte-equal, the
+literal's text equal once the added lines are taken out, its object equal once the added keys are taken out, every other
+node key and parameter equal); it must equal the approved entry like any other delta item. A DECLARED edge (added or removed) that touches a gate node, as source or
 target, is red unless it is one of RULED_GATE_EDGES (ruling R-Q2: the two Tag Turnstile Unavailable edges). An UNDECLARED
 change of a gate node's connections is red like any other: an untouched source compares exactly, and a gate source
 touched by a ruled edge keeps every other edge, in its committed order.
@@ -85,8 +89,12 @@ EDGE_RE = re.compile(r'[^|]+\|\d+\|[^|]+\|\d+')
 # Ruling FIXED (Yigitcan, 2026-10-26): the ONLY deltas the deploy tool applies — the two reviewed 7-2 Tur 2 edits, by exact
 # identity (node name · "SRC|OUT|DST|IN" · settings key=value). The tool guards against OUR mistakes: a delta file that
 # differs from this in any item is refused before any call. A copy with no entry here takes no delta at all.
+NAME_CAPTURE_ASK = 'What name should I put the booking under? (Any name is fine for this demo.)'
 APPROVED_DELTAS = {
-    'main': {
+    # A key may hold a LIST of approved deltas: a file is approved when it is exactly ONE of them. Main holds the 7-2 Tur 2
+    # edit (live since 7-2 R3; kept because its fixtures exercise this tool — applying it again cannot pass `compare`,
+    # whose committed side no longer has those nodes) and the NAME-CAPTURE R1 edit (docs/NAME-CAPTURE-PLAN.md §11).
+    'main': [{
         'add_nodes': {'Tag Turnstile Unavailable', 'Sticky — Tag Turnstile Unavailable'},
         'remove_nodes': {'Record Processed', 'Build Dedupe-Marker Alert'},
         'add_edges': {'Tag Turnstile Unavailable|0|Build Owner Alert|0', 'Turnstile Valid?|1|Tag Turnstile Unavailable|0',
@@ -94,7 +102,14 @@ APPROVED_DELTAS = {
         'remove_edges': {'Build Dedupe-Marker Alert|0|Build Owner Alert|0', 'Record Processed|1|Build Dedupe-Marker Alert|0',
                          'Save State (Post-Write)|0|Record Processed|0', 'Save State|0|Record Processed|0'},
         'settings': {},
-    },
+    }, {
+        'add_nodes': {'Fill Name From Reply'},
+        'remove_nodes': set(),
+        'add_edges': {'Validate Intent|0|Fill Name From Reply|0', 'Fill Name From Reply|0|Resolve Date|0'},
+        'remove_edges': {'Validate Intent|0|Resolve Date|0'},
+        'settings': {},
+        'gate_edits': {'Load Config': {'messageTemplates.askName': NAME_CAPTURE_ASK}},   # ruling D-4
+    }],
     'owner-actions': {
         'add_nodes': set(),
         'remove_nodes': {'Build Marker Failure Alert', 'Marker Written?', 'Record Owner Action Processed',
@@ -136,23 +151,31 @@ def approved_errs(key, delta):
             errs.append(f"'{key}' has no approved rename")
         elif tuple(rn) != want_rn:
             errs.append(f"rename {tuple(rn)!r} is not the approved rename {want_rn!r} for '{key}'")
-        if any(delta.get(k) for k in (*DELTA_KEYS, 'settings')):
+        if any(delta.get(k) for k in (*DELTA_KEYS, 'settings', 'gate_edits')):
             errs.append('a rename travels alone: no node, edge or setting beside it')
         return errs
-    if not any(delta.get(k) for k in (*DELTA_KEYS, 'settings')):
+    if not any(delta.get(k) for k in (*DELTA_KEYS, 'settings', 'gate_edits')):
         return []
-    want = APPROVED_DELTAS.get(key)
-    if want is None:
+    entries = APPROVED_DELTAS.get(key)
+    if entries is None:
         return [f"'{key}' has no approved delta: it takes parameter edits (--allow) only"]
-    errs = []
-    for k in DELTA_KEYS:
-        got = set(delta.get(k) or ())
-        extra, missing = sorted(got - want[k]), sorted(want[k] - got)
-        if extra or missing:
-            errs.append(f"{k} is not the approved delta for '{key}' (not approved: {extra[:3]}; approved but absent: {missing[:3]})")
-    if canon(delta.get('settings') or {}) != canon(want['settings']):
-        errs.append(f"settings {canon(delta.get('settings') or {})} are not the approved {canon(want['settings'])} for '{key}'")
-    return errs
+    best = None
+    for want in (entries if isinstance(entries, list) else [entries]):
+        errs = []
+        for k in DELTA_KEYS:
+            got = set(delta.get(k) or ())
+            extra, missing = sorted(got - set(want[k])), sorted(set(want[k]) - got)
+            if extra or missing:
+                errs.append(f"{k} is not the approved delta for '{key}' (not approved: {extra[:3]}; approved but absent: {missing[:3]})")
+        if canon(delta.get('settings') or {}) != canon(want['settings']):
+            errs.append(f"settings {canon(delta.get('settings') or {})} are not the approved {canon(want['settings'])} for '{key}'")
+        if canon(delta.get('gate_edits') or {}) != canon(want.get('gate_edits') or {}):
+            errs.append(f"gate_edits are not the approved gate edits for '{key}' (ruling D-4: exact node, key and text)")
+        if not errs:
+            return []
+        if best is None or len(errs) < len(best):
+            best = errs
+    return best
 
 
 def _is_trigger(node):
@@ -163,6 +186,66 @@ def _is_trigger(node):
 def is_gate(name, *wfs):
     """A GATE node: named in GATE_NODES, or a trigger in any of the given workflows."""
     return name in GATE_NODES or any(_is_trigger(n) for wf in wfs for n in wf.get('nodes') or [] if n.get('name') == name)
+
+
+def _render_client():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        'render_client', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'render-client.py'))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)   # import-safe: render-client keeps its work under main()
+    return mod
+
+
+def gate_edit_errs(o, c, keys):
+    """[] when the gate node `c` is `o` with its config literal having GAINED exactly `keys` ({"a.b.key": text}) and
+    nothing else (ruling D-4). The literal is read WITHOUT executing it (render-client's reader, the same one the render
+    and the parity tools use). Checked: every node key but `parameters` equal (ids and position aside); every parameter
+    but `jsCode` equal; the code around the literal byte-equal; the literal's TEXT equal to the committed one once each
+    added key's own line (`<key>: "<text>",`) is taken out — so no comment, value or order moves either; and its OBJECT
+    equal to the committed one once the added keys are taken out, each added key absent before and present after, at
+    its dotted path, with exactly its text."""
+    RC = _render_client()
+    errs = []
+    so, sc = strip(o, drop=('parameters',)), strip(c, drop=('parameters',))
+    errs += [f"node key '{k}' changed" for k in sorted(set(so) | set(sc)) if canon(so.get(k)) != canon(sc.get(k))]
+    po, pc = o.get('parameters') or {}, c.get('parameters') or {}
+    errs += [f"parameter '{k}' changed (only the jsCode literal may)" for k in sorted(set(po) | set(pc))
+             if k != 'jsCode' and canon(po.get(k)) != canon(pc.get(k))]
+    try:
+        bo, lo, ao = RC.split_literal(po.get('jsCode') or '', 'committed')
+        bc, lc, ac = RC.split_literal(pc.get('jsCode') or '', 'staged')
+        obj_o, obj_c = RC.js_literal(lo), RC.js_literal(lc)
+    except RC.Refused as e:
+        return errs + [f'the config literal does not read ({e})']
+    if bo != bc or ao != ac:
+        errs.append('the code around the config literal changed')
+    lines = lc.split('\n')
+    for path, text in sorted(keys.items()):
+        want = f'{path.rsplit(".", 1)[1]}: {json.dumps(text, ensure_ascii=False)},'
+        hits = [i for i, ln in enumerate(lines) if ln.strip() == want]
+        if len(hits) != 1:
+            errs.append(f"'{path}': its line ({want[:40]}…) is not in the staged literal exactly once ({len(hits)})")
+        else:
+            del lines[hits[0]]
+    if '\n'.join(lines) != lo:
+        errs.append('the literal text differs beyond the added line(s)')
+    rest = json.loads(json.dumps(obj_c))
+    for path, text in sorted(keys.items()):
+        *parents, leaf = path.split('.')
+        a, b = obj_o, rest
+        for k in parents:
+            a = a.get(k) if isinstance(a, dict) else None
+            b = b.get(k) if isinstance(b, dict) else None
+        if not isinstance(b, dict) or b.get(leaf) != text:
+            errs.append(f"'{path}' does not hold exactly the approved text")
+        if isinstance(a, dict) and leaf in a:
+            errs.append(f"'{path}' already exists in the committed literal: a gate edit only ADDS a key")
+        if isinstance(b, dict):
+            b.pop(leaf, None)
+    if canon(rest) != canon(obj_o):
+        errs.append('the literal object differs beyond the added key(s)')
+    return errs
 
 
 def load_delta_file(path):
@@ -181,7 +264,7 @@ def parse_delta(d):
     an object not of that shape, raises ValueError. (workflow-step.py hands in the content read from git HEAD.)"""
     if not isinstance(d, dict):
         raise ValueError('the delta file is not a JSON object')
-    unknown = sorted(set(d) - {'_doc', 'allow', 'settings', 'rename', *DELTA_KEYS})
+    unknown = sorted(set(d) - {'_doc', 'allow', 'settings', 'rename', 'gate_edits', *DELTA_KEYS})
     if unknown:
         raise ValueError(f'the delta file has unknown key(s): {unknown}')
     for k in ('allow', *DELTA_KEYS):
@@ -195,7 +278,7 @@ def parse_delta(d):
         if not (isinstance(rn, dict) and set(rn) == {'from', 'to'} and all(isinstance(rn[k], str) and rn[k].strip() for k in rn)
                 and rn['from'] != rn['to']):
             raise ValueError("the delta file's 'rename' is not {\"from\": OLD, \"to\": NEW} with two different non-empty names")
-        if d.get('allow') or any(d.get(k) for k in DELTA_KEYS) or 'settings' in d:
+        if d.get('allow') or any(d.get(k) for k in DELTA_KEYS) or 'settings' in d or 'gate_edits' in d:
             raise ValueError('a rename delta carries nothing else: no allow, node, edge or setting')
     elif not d.get('allow'):
         raise ValueError("the delta file's 'allow' is missing or empty")
@@ -206,7 +289,15 @@ def parse_delta(d):
     if 'settings' in d and not (isinstance(st, dict) and st and all(
             k and isinstance(v, (str, bool, int, float)) for k, v in st.items())):
         raise ValueError("the delta file's 'settings' is not a non-empty object of workflow-settings keys to JSON scalars")
+    ge = d.get('gate_edits', {})
+    if 'gate_edits' in d and not (isinstance(ge, dict) and ge and all(
+            isinstance(n, str) and n and isinstance(m, dict) and m and all(
+                isinstance(k, str) and re.fullmatch(r'[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)+', k)
+                and isinstance(v, str) and v for k, v in m.items()) for n, m in ge.items())):
+        raise ValueError("the delta file's 'gate_edits' is not {NODE: {\"a.b.key\": \"non-empty text\"}}")
     out = dict({k: set(d.get(k, [])) for k in DELTA_KEYS}, settings=dict(st))
+    if 'gate_edits' in d:
+        out['gate_edits'] = {n: dict(m) for n, m in ge.items()}
     if 'rename' in d:
         out['rename'] = (rn['from'], rn['to'])
     return list(d.get('allow', [])), out
@@ -296,8 +387,15 @@ def compare(orig, cp, allow, phase='edit', delta=None):
     C = {n['name']: n for n in cp['nodes']}
     added, removed = set(C) - set(O), set(O) - set(C)
     delta = delta or {}
+    gedits = delta.get('gate_edits') or {}
     errs += [f"'{n}' is a GATE node (a security-gate node or a trigger): never in --allow"
-             for n in sorted(allow) if is_gate(n, orig, cp)]
+             for n in sorted(allow) if is_gate(n, orig, cp) and not (n in gedits and not _is_trigger(O.get(n) or {}))]
+    errs += [f"gate edit for '{n}': not in --allow" for n in sorted(set(gedits) - set(allow))]
+    errs += [f"gate edit for '{n}': not a GATE node — an ordinary node needs no gate edit" for n in sorted(gedits)
+             if n in O and not is_gate(n, orig, cp)]
+    for n in sorted(set(gedits) & set(allow) & set(O) & set(C)):
+        if is_gate(n, orig, cp) and not _is_trigger(O[n]):
+            errs += [f"gate edit for '{n}': {e}" for e in gate_edit_errs(O[n], C[n], gedits[n])]
     errs += [f"'{n}' is a GATE node (a security-gate node or a trigger): never removed"
              for n in sorted(set(delta.get('remove_nodes') or ())) if is_gate(n, orig)]
     errs += [f"declared edge '{e}' touches a GATE node and is not a ruled edge (R-Q2)"
@@ -627,11 +725,70 @@ def selftest():
             and len(after) == 2 and all('Tag Turnstile Unavailable [2464, 4256] → Reject Bot Request' in x for x in after))
     ok &= good
     print(f"{'✓' if good else '✗'} sibling order report: Reject Bot Request then the tag, reversed when it sits lower: {before[:1]}")
+    # GATE EDIT (ruling D-4): Load Config may GAIN exactly the approved key, nothing else, nowhere else — built from the
+    # committed Main export, so the literal is the real one
+    gexp = json.load(open(os.path.join(ROOT, 'n8n', 'workflow.main.sanitized.json')))
+    GN, GK, GT = 'Load Config', 'messageTemplates.askName', NAME_CAPTURE_ASK
+    ANCHOR = '    askDateTime: "What day and time works for you?",\n'
+    ge = {'gate_edits': {GN: {GK: GT}}}
+
+    def gedit(line=f'    askName: {json.dumps(GT, ensure_ascii=False)},\n', also=None):
+        e = _copy.deepcopy(gexp)
+        n = node(e, GN)
+        n['parameters']['jsCode'] = n['parameters']['jsCode'].replace(ANCHOR, ANCHOR + line, 1)
+        if also:
+            also(n)
+        return e
+    def sub(old, new):
+        def f(n):
+            assert old in n['parameters']['jsCode'], old
+            n['parameters']['jsCode'] = n['parameters']['jsCode'].replace(old, new, 1)
+        return f
+    gcases = [
+        ('gate edit: exactly the approved key, declared', gedit(), {GN}, ge, True),
+        ('gate edit: the same change NOT declared (Load Config in --allow alone)', gedit(), {GN}, {}, False),
+        ('gate edit: declared, but the text differs', gedit(line='    askName: "Your name?",\n'), {GN}, ge, False),
+        ('gate edit: a SECOND key added beside it', gedit(line=f'    askName: {json.dumps(GT)},\n    askFoo: "x",\n'), {GN}, ge, False),
+        ('gate edit: an existing value changed too (Turnstile off)', gedit(also=sub('turnstile: { enabled: true }', 'turnstile: { enabled: false }')), {GN}, ge, False),
+        ('gate edit: a comment added INSIDE the literal (the object reads the same; the text check must see it)',
+         gedit(also=sub(ANCHOR, ANCHOR.rstrip('\n') + ' // why\n')), {GN}, ge, False),
+        ('gate edit: the code OUTSIDE the literal changed too (its leading comment)', gedit(also=sub('// one-swap-to-real', '// ONE-swap-to-real')), {GN}, ge, False),
+        ('gate edit: the code after the literal changed too', gedit(also=lambda n: n['parameters'].__setitem__('jsCode', n['parameters']['jsCode'] + '\n'))
+         , {GN}, ge, False),
+        ('gate edit: the exact line added under ANOTHER object (channels) — the text check passes, the path check must not',
+         (lambda e: (node(e, GN)['parameters'].__setitem__('jsCode', node(e, GN)['parameters']['jsCode'].replace(
+             '    whatsapp:  { enabled: true,  provider: "zernio" },\n',
+             '    whatsapp:  { enabled: true,  provider: "zernio" },\n' + f'    askName: {json.dumps(GT, ensure_ascii=False)},\n', 1)), e)[1])(_copy.deepcopy(gexp)),
+         {GN}, ge, False),
+        ('gate edit: a node key changed (typeVersion)', gedit(also=lambda n: n.__setitem__('typeVersion', 1)), {GN}, ge, False),
+        ('gate edit: declared for a node NOT in --allow', gedit(), {medit} if medit in {x['name'] for x in gexp['nodes']} else set(), ge, False),
+        ('gate edit: declared for an ORDINARY node', _copy.deepcopy(gexp), {'Merge Slots'}, {'gate_edits': {'Merge Slots': {GK: GT}}}, False),
+        ('gate edit: a key that ALREADY exists, re-declared with its own text', _copy.deepcopy(gexp), {GN},
+         {'gate_edits': {GN: {'messageTemplates.askDateTime': 'What day and time works for you?'}}}, False),
+    ]
+    for label, e, allow, d, expect_pass in gcases:
+        errs = compare(gexp, e, allow, 'edit', delta=d)
+        good = (not errs) == expect_pass
+        ok &= good
+        print(f"{'✓' if good else '✗'} {label}: {'pass' if not errs else 'RED — ' + errs[0][:120]}")
+    for label, d in (('parse: gate_edits not an object of objects', {'allow': [GN], 'gate_edits': {GN: GT}}),
+                     ('parse: a gate-edit key without a dotted path', {'allow': [GN], 'gate_edits': {GN: {'askName': GT}}}),
+                     ('parse: a gate-edit text that is empty', {'allow': [GN], 'gate_edits': {GN: {GK: ''}}}),
+                     ('parse: a rename carrying a gate edit', {'rename': {'from': 'a', 'to': 'b'}, 'gate_edits': {GN: {GK: GT}}})):
+        try:
+            parse_delta(d)
+            good = False
+        except ValueError:
+            good = True
+        ok &= good
+        print(f"{'✓' if good else '✗'} {label}: {'refused' if good else 'ACCEPTED'}")
     # APPROVED DELTAS (ruling FIXED): exact identity, per item; an --allow-only edit carries none
     n_appr = 1
-    for key in APPROVED_DELTAS:
-        appr = {k: set(v) for k, v in APPROVED_DELTAS[key].items() if k != 'settings'}
-        appr['settings'] = dict(APPROVED_DELTAS[key]['settings'])
+    for key, entry in [(k, e) for k, v in APPROVED_DELTAS.items() for e in (v if isinstance(v, list) else [v])]:
+        appr = {k: set(v) for k, v in entry.items() if k not in ('settings', 'gate_edits')}
+        appr['settings'] = dict(entry['settings'])
+        if entry.get('gate_edits'):
+            appr['gate_edits'] = json.loads(json.dumps(entry['gate_edits']))
         acases = [(f'approved {key}: exactly the approved delta', appr, True),
                   (f'approved {key}: no delta at all (an --allow edit)', {}, True),
                   (f'approved {key}: one extra edge (T HIGH-1, between non-gate nodes)',
@@ -641,6 +798,12 @@ def selftest():
                   (f'approved {key}: a setting added', dict(appr, settings=dict(appr['settings'], availableInMCP=True)), False)]
         acases += [(f"approved {key}: '{k}' with a value of another type", dict(appr, settings=dict(appr['settings'], **{k: 0})), False)
                    for k in appr['settings']]
+        if entry.get('gate_edits'):
+            g = json.loads(json.dumps(entry['gate_edits'])); n0 = sorted(g)[0]; k0 = sorted(g[n0])[0]
+            acases += [(f'approved {key}: the gate edit with ANOTHER text', dict(appr, gate_edits={n0: {k0: g[n0][k0] + ' '}}), False),
+                       (f'approved {key}: the gate edit with a SECOND key', dict(appr, gate_edits={n0: dict(g[n0], **{'messageTemplates.askFoo': 'x'})}), False),
+                       (f'approved {key}: the same nodes and edges WITHOUT the gate edit', {k: v for k, v in appr.items() if k != 'gate_edits'}, False),
+                       (f'approved {key}: the gate edit ALONE (no node or edge)', {'gate_edits': g}, False)]
         n_appr += len(acases)
         for label, d, expect in acases:
             errs = approved_errs(key, d)
