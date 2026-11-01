@@ -895,6 +895,12 @@
   - ### A2/A3 — the puts (⚠ ONAY 1/2 and 2/2, Yigitcan 2026-11-01) *(terminal-measured, 20:27–20:29 Vienna)*
   - ### A4 — the owner's live run (barber-demo, a real Turnstile token) and what CC reads afterwards
   - ### The owner run of 2026-11-01 — the bot re-asked the date; diagnosed as a PRE-EXISTING defect, no rollback
+  - ## R4 — the owner's run read, promotion, site redeploy, close (2026-11-01)
+  - ### Step 1 — the run, read *(terminal-measured; n8n executions 4812–4818 by GET, the store as `salon_ro`)*
+  - ### Step 2 — promotion (`ee6af49`, `ce08ea0`)
+  - ### Step 3 — site redeploy (⚠ ONAY 1 of the R4 brief) *(terminal-measured, ~21:26 Vienna)*
+  - ### Step 4 — clean-up (⚠ ONAY 2 of the R4 brief)
+  - ### Definition of Done — NAME-CAPTURE
 
 ### `docs/OPERATIONAL-INCIDENTS.md`
   - ## OPS-10 · 2026-10-30 · A local `next build` in the repo broke the LIVE owner dashboard, which runs from the same directory
