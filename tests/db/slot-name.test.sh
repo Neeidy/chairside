@@ -6,11 +6,13 @@
 #   S  the STAGED Save State and Load State SQL, run verbatim as salon_app: a name is written as $14 and read back in
 #      `fields.slot_name`; NULL clears it; the conflict update carries it.
 #   W  the STAGED Write Appointment upsert: a re-write with NULL or '' never blanks a stored customer_name; a new name
-#      replaces it. Mutant: the COMMITTED upsert (customer_name = EXCLUDED.customer_name) must blank it — or this
+#      replaces it. Mutant: the PRE-EDIT upsert (customer_name = EXCLUDED.customer_name) must blank it — or this
 #      check measures nothing.
 #   P  the STAGED Purge: a 31-day-old row whose messages were already erased but whose name is set is FOUND, the
-#      scrub empties both, and takes the name out of the stored confirm question (Codex R1 M2). Mutant: the COMMITTED
+#      scrub empties both, and takes the name out of the stored confirm question (Codex R1 M2). Mutant: the PRE-EDIT
 #      Purge does not find it.
+# PRE-EDIT = the exports before NAME-CAPTURE (the parent of its first staged commit, 8f197e7^), read from git: since the
+# promotion of 2026-11-01 the committed exports ARE the edit, so "committed" can no longer serve as the mutant.
 # Not in check-all: it needs Docker. Run: bash tests/db/slot-name.test.sh [IMAGE]
 # The container is throwaway: labelled, no network, local-socket `trust` auth, removed on exit. The role passwords 002
 # requires are generated at run time and passed by name; nothing connects over a network. Synthetic names only.
@@ -23,6 +25,7 @@ fi
 [ -n "$IMAGE" ] || { echo "slot-name: no local postgres image (pass one as \$1)"; exit 2; }
 pick() { if [ -f "$ROOT/n8n/staged/workflow.$1.sanitized.json" ]; then echo "$ROOT/n8n/staged/workflow.$1.sanitized.json"; else echo "$ROOT/n8n/workflow.$1.sanitized.json"; fi; }
 MAIN="$(pick main)"; PURGE="$(pick purge)"
+PRE=8f197e7^   # read through process substitution: no temporary file to clean up
 
 PASS=0; FAIL=0
 ok()  { PASS=$((PASS+1)); echo "✓ $1"; }
@@ -91,9 +94,9 @@ upsert "$WA_Q" "''"
 check "W3: a re-write with '' keeps the stored name" "$(name_of)" 'Stored'
 upsert "$WA_Q" "'Newer'"
 check 'W4: a re-write with a name replaces it' "$(name_of)" 'Newer'
-OLD_WA_Q="$(q "$ROOT/n8n/workflow.main.sanitized.json" 'Write Appointment')"
+OLD_WA_Q="$(q <(git -C "$ROOT" show "$PRE:n8n/workflow.main.sanitized.json") 'Write Appointment')"
 upsert "$OLD_WA_Q" "''"
-check "W-mutant: the COMMITTED upsert blanks it (the check above can go red)" "$(name_of)" ''
+check "W-mutant: the PRE-EDIT upsert blanks it (the check above can go red)" "$(name_of)" ''
 
 # ── P: Purge ──
 su -c "INSERT INTO salon.conversations (sender_key, stage, recent_messages, slot_name, computed_reply, last_updated) VALUES ('widget:w-fake-sn3','confirming','', 'Oldname', 'Haircut, Monday 7 Jan 11:00 for Oldname — shall I book it? (yes / no)', now() - interval '31 days')" >/dev/null
@@ -106,7 +109,7 @@ check 'P2: the scrub empties the name with the messages' "$(su -c "SELECT coales
 check 'P3: …and takes the name out of the stored confirm question, keeping the reply (Codex R1 M2)' \
   "$(su -c "SELECT computed_reply FROM salon.conversations WHERE id = '$ID'")" 'Haircut, Monday 7 Jan 11:00 for … — shall I book it? (yes / no)'
 su -c "UPDATE salon.conversations SET slot_name = 'Oldname' WHERE id = '$ID'" >/dev/null
-check 'P-mutant: the COMMITTED Purge does not find that row (the check above can go red)' "$(found "$(q "$ROOT/n8n/workflow.purge.sanitized.json" 'Find Stale Conversations')")" 0
+check 'P-mutant: the PRE-EDIT Purge does not find that row (the check above can go red)' "$(found "$(q <(git -C "$ROOT" show "$PRE:n8n/workflow.purge.sanitized.json") 'Find Stale Conversations')")" 0
 
 echo "slot-name: $PASS passed, $FAIL failed"
 [ "$FAIL" = 0 ]

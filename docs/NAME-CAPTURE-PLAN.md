@@ -199,6 +199,20 @@ reschedule title, the lead. **#8 (reschedule)** — only for `Validate Reschedul
 7. `/privacy` states what the engine does (pinned).
 8. Guards 0, parity green after promotion, the owner's live run shows the name in the row and the event.
 
+**Status at promotion (R4, 2026-11-01)** — LIVE = measured on production in owner run 2 (executions 4812–4818, read by
+GET; the store read as `salon_ro`); OFFLINE = a committed test, not a live run:
+| # | Status | Evidence |
+|---|---|---|
+| 1 | ✅ bare reply LIVE · the other two forms OFFLINE | LIVE: the bare "Mara O'Test" (4813) reached the Calendar summary "Haircut — Mara O'Test (bot)" (4814's request and response) and `customer_name` "Mara O'Test". A name in the first message (the `Merge Slots` test; golden G16 checks only the model's expected output) and a name kept turns before "yes" (`Merge State` / `Merge Slots` tests) are offline only |
+| 2 | ✅ LIVE | 4813: `Fill Name From Reply` filled it (`_name_filled`); the reply was the confirm question — no clarify, no handoff |
+| 2b | ✅ OFFLINE, bound stated | the two "2b" tests and their mutants; the deny-list bound is written in the criterion itself |
+| 3 | ✅ LIVE + OFFLINE | LIVE: the move's new event summary carries the name and the row keeps `customer_name` (4816). "No path blanks it": the throwaway-Postgres W1–W4 and its pre-edit mutant (19/19 at promotion) |
+| 4 | ✅ OFFLINE | the D-3 test (re-ask, then handoff); not exercised live — owner run 2 gave the name at once |
+| 5 | ✅ OFFLINE | the sanitiser tests (R3-1 included) and "Build LLM Request: the kept name NEVER enters the request" |
+| 6 | ✅ OFFLINE | `render-client-askname.test.py`; `PENDING_KEYS` emptied at promotion, `render-client.test.py` green |
+| 7 | ✅ pinned OFFLINE · the deployed page measured at the R4 redeploy | `privacy-facts.test.cjs`; the live page: plan "R4" |
+| 8 | ✅ | `check-all` 0 after the promotion commit; `check-exports-parity` 5/5 and `check-live-parity` 192/192 nodes, 274/274 connections against the COMMITTED exports; the row and the event in owner run 2 (1 and 3) |
+
 ## 9. ⚙ Drill matrix
 | scenario | setup | expected | MUST-RUN | MUST-NOT-RUN |
 |---|---|---|---|---|
