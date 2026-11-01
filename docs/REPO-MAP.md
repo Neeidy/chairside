@@ -203,6 +203,7 @@
 - `docs/codex/name-capture/prompt-r2.md`
 - `docs/codex/name-capture/prompt.md`
 - `docs/codex/name-capture/r1.md`
+- `docs/codex/name-capture/r2.md`
 - `docs/codex/name-capture/run-r2.sh`
 - `docs/codex/name-capture/run.sh`
 
@@ -1360,7 +1361,7 @@
   - ## Tur 1b — containment by isolation (runs 1b, 2, 5, 6, 12, 4, 11)
 
 ### `docs/codex/name-capture/containment.md`
-  - _(no `##` headings — flat file)_
+  - ## R2 — the recheck run
 
 ### `docs/codex/name-capture/prompt-r2.md`
   - _(no `##` headings — flat file)_
@@ -1369,6 +1370,9 @@
   - _(no `##` headings — flat file)_
 
 ### `docs/codex/name-capture/r1.md`
+  - _(no `##` headings — flat file)_
+
+### `docs/codex/name-capture/r2.md`
   - _(no `##` headings — flat file)_
 
 ### `docs/codex/phase-8/containment.md`

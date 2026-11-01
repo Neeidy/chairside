@@ -426,4 +426,18 @@ reschedule, and there is none to keep; the reschedule lane does not ask for one.
 | throwaway Postgres | 19/19 (M6: `salon_ro` cannot INSERT) |
 | `privacy-facts` | 14/14; 2 red without the staged Purge |
 
-The Codex RECHECK of these fixes runs next (prompt `docs/codex/name-capture/prompt-r2.md`).
+**The Codex RECHECK** (contained, pin `5c452e6`; prompt `prompt-r2.md`, answer verbatim `r2.md`):
+- **M1 and M2 closed**, each confirmed by Codex's own probe:
+  - nameless confirmations → empty eventId, handoff reply, alert class `name_missing`; a named one books;
+  - the scrub's `replace` uses the name before it is cleared;
+  - NULL and empty values are unharmed.
+- Both question-4 notes are handled correctly.
+- The staged files changed only in `Build Event Request`, `Scrub Recent Messages` and the PII sticky.
+- The pre-edit nameless reschedule was confirmed as the stated bound, not a finding.
+- **One LOW, real:** the refusal's ROUTE was not tested. A mutant removing `Event ID Valid?`'s false output left the
+  suite green. **Fixed:** a test now pins the route — the builder feeds the gate, the gate's regex fails an empty
+  eventId, its false output is `Mark Handoff`, and `Mark Handoff` writes state AND alerts the owner. Two graph mutants
+  die: the false output removed, and the alert edge removed.
+
+  Verified internally (`name-capture` 33/33, mutants 48/48 *(terminal-measured)*), not re-run through Codex: a LOW
+  test-coverage item, the precedent of CRT #14/#15.

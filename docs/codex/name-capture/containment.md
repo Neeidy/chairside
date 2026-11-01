@@ -25,3 +25,14 @@ record is pushed (they hold the login copy).
   tools and history-widening git options: 0 hits. The scan was shown able to match first (a positive control of five
   lines: the four forbidden shapes matched, an ordinary test command did not).
 - Codex wrote its probes under `audit-tmp/` in the working copy and reported "No tracked files were changed".
+
+## R2 — the recheck run
+
+Same harness, run by `docs/codex/name-capture/run-r2.sh` (the R1 runner with the prompt path changed). Pin `5c452e6`
+(365 files), prompt 48 lines. Mount-check controls: one extra mount → 97, as intended → 0. Then: mount check OK, Codex
+exit 0, container exit 0, 144 container seconds. Answer verbatim as `r2.md`, byte-compared with the run's output file.
+- `scripts/codex-containment.py`: commands 10 · passed 9 · flags 1. The flag is again a
+  `require('../scripts/node_modules/luxon')`, from the run's own `audit-r2/` directory — inside the working copy.
+- The separate scan of the 10 command lines: 0 hits. Its positive control matched the four forbidden shapes and not the
+  ordinary command.
+- The R1 export and Codex home were deleted after the R1 records were pushed; the R2 ones are deleted after these.
