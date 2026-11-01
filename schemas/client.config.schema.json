@@ -99,6 +99,14 @@
         },
         "locale": {
           "type": "string"
+        },
+        "dateOrder": {
+          "type": "string",
+          "enum": [
+            "DMY",
+            "MDY"
+          ],
+          "description": "DATE-PHRASING D-1: the order a SLASH date follows (4/11 = 4 November under DMY, 11 April under MDY). A dot (4.11) is always day.month. Absent: a slash pair whose parts are both <= 12 and differ is re-asked, naming both readings."
         }
       }
     },
@@ -237,6 +245,11 @@
           "type": "number",
           "minimum": 0,
           "description": "Hard MONTHLY LLM spend cap in USD (spend-safety brake). Over cap → stop calling the LLM → deterministic reply + handoff. Default 10.00 ≈ 2,000–5,000 turns/mo, far above one salon's real traffic → never limits legitimate use, only trips on abuse/runaway (CP5b spend-cap)."
+        },
+        "bookingHorizonDays": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "DATE-PHRASING D-2 / A1: how many days ahead a booking may be. EVERY resolved date (a typed ISO date included) beyond today + this many days is re-asked, never moved; a past day+month rolls to next year only inside it."
         }
       },
       "additionalProperties": false,

@@ -3,7 +3,8 @@
   "business": {
     "name": "Hofgasse Barbers",
     "timezone": "Europe/Berlin",
-    "locale": "en-DE"
+    "locale": "en-DE",
+    "dateOrder": "DMY"
   },
   "$comment_demoMode": "false = a delivered client install: no mock ribbon, no demo footer notice, no noindex. The demo client (client.config.example.json) is the one that keeps demoMode true.",
   "demoMode": false,
@@ -113,7 +114,8 @@
     "whatsappSendDisabled": true,
     "llmPricePer1kTokensIn": 0.001,
     "llmPricePer1kTokensOut": 0.005,
-    "llmCostCapUsd": 10.0
+    "llmCostCapUsd": 10.0,
+    "bookingHorizonDays": 90
   },
   "$comment_ownerAlert": "Owner-alert channel (Telegram). enabled=false silences EVERY alert class, silently — there is no second channel. These two values MUST match across the three Load Configs (main / reminders / purge); scripts/check-cancel-validation-parity.py asserts it.",
   "ownerAlert": {
@@ -152,7 +154,13 @@
     "rescheduleInsertFailed": "Sorry — I couldn't move your booking; your original appointment still stands. A team member will follow up.",
     "rescheduleDone": "Moved — your {service} is now {when}.",
     "rescheduleMirrorFailed": "Your booking change is being finalized — a team member will confirm the new time shortly.",
-    "reminder": "Reminder: your {service} is booked for {when}. See you soon!"
+    "reminder": "Reminder: your {service} is booked for {when}. See you soon!",
+    "askDateTimeHint": "Which day and time? You can write e.g. \"Wednesday at 11:00\", \"tomorrow at 15:00\" or \"4 November at 11:00\".",
+    "dateWeekdayMismatch": "{date} is a {actual} — did you mean {actual} {date}, or a {said}?",
+    "dateAmbiguous": "Did you mean {a} or {b}?",
+    "datePast": "That date has passed — which date did you mean?",
+    "dateInvalid": "That date is not on the calendar — which date did you mean?",
+    "dateTooFar": "We take bookings up to {days} days ahead — which date did you mean?"
   },
   "faq": {
     "address": "We're at Hofgasse 7, 10405 Berlin — three minutes from Prenzlauer Allee S-Bahn.",
