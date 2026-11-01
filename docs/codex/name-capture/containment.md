@@ -36,3 +36,21 @@ exit 0, container exit 0, 144 container seconds. Answer verbatim as `r2.md`, byt
 - The separate scan of the 10 command lines: 0 hits. Its positive control matched the four forbidden shapes and not the
   ordinary command.
 - The R1 export and Codex home were deleted after the R1 records were pushed; the R2 ones are deleted after these.
+
+## R3 — the recheck of ruling R3-1's sanitiser diff
+
+Same harness, run by `docs/codex/name-capture/run-r3.sh` (the R2 runner with the prompt path changed). Pin `fe65b92`
+(368 files), prompt 43 lines. Mount-check controls: one extra mount → 97, as intended → 0. Then: mount check OK, Codex
+exit 0, container exit 0, 121 container seconds. Answer verbatim as `r3.md`, byte-compared with the run's output file.
+- `scripts/codex-containment.py`: commands 12 · passed 9 · search patterns that name no path 2 · flags 4 (exit 1), read
+  one by one:
+  - "unparseable shell script": a heredoc writing a JS probe into the run's own `audit-r3/`. The probe reads the staged
+    export and `git show 9e5d875^:…` (a commit reachable from the pin) and runs the repository's own test on mutated
+    copies it writes under `audit-r3/`.
+  - ".. escapes the worktree": again `require('../scripts/node_modules/luxon')` from `audit-r3/` — inside the working copy.
+  - "absolute path outside the worktree '//'" (twice, the same command): the token is the JS comment marker
+    `// >>> sanitiseName` inside a Python string, not a path.
+- The separate scan of the 12 command lines (the login file, the Codex home, `/proc`, `$HOME`, `~/`, the environment,
+  network tools, history-widening git options): 0 hits. Its positive control matched the four forbidden shapes and not
+  the ordinary command.
+- The R2 export and Codex home were deleted after the R2 records were pushed; the R3 ones are deleted after these.

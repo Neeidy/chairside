@@ -205,6 +205,7 @@
 - `docs/codex/name-capture/prompt.md`
 - `docs/codex/name-capture/r1.md`
 - `docs/codex/name-capture/r2.md`
+- `docs/codex/name-capture/r3.md`
 - `docs/codex/name-capture/run-r2.sh`
 - `docs/codex/name-capture/run-r3.sh`
 - `docs/codex/name-capture/run.sh`
@@ -878,6 +879,8 @@
   - ## 13. Decisions — ruled 2026-11-01, each as recommended
   - ## R1 — built offline (2026-11-01)
   - ## R2 — Codex and the fixes (2026-11-01)
+  - ## R3 — two offline amendments, then the live window (2026-11-01)
+  - ### A0 — offline
 
 ### `docs/OPERATIONAL-INCIDENTS.md`
   - ## OPS-10 · 2026-10-30 · A local `next build` in the repo broke the LIVE owner dashboard, which runs from the same directory
@@ -1364,6 +1367,7 @@
 
 ### `docs/codex/name-capture/containment.md`
   - ## R2 — the recheck run
+  - ## R3 — the recheck of ruling R3-1's sanitiser diff
 
 ### `docs/codex/name-capture/prompt-r2.md`
   - _(no `##` headings — flat file)_
@@ -1378,6 +1382,9 @@
   - _(no `##` headings — flat file)_
 
 ### `docs/codex/name-capture/r2.md`
+  - _(no `##` headings — flat file)_
+
+### `docs/codex/name-capture/r3.md`
   - _(no `##` headings — flat file)_
 
 ### `docs/codex/phase-8/containment.md`

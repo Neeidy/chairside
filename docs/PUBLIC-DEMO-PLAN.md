@@ -609,7 +609,7 @@ project's own `.vercel.app` domain removed → `404`. The heading keeps the stat
   (one row per deleted id) returned 1 item; the leads table went from 5 `pd-` rows (R2b) to 4, none older than 30
   days, no non-`pd-` lead. Exactly one aged `pd-` lead deleted.
 - **#15 — OPEN by ruling 3** (above): v2.
-- **Reported, not fixed:**
+- **Reported, not fixed — ruled v2 (Yigitcan, 2026-11-01; `PHASE-7-PLAN.md` §4b):**
   - *(i)* "1 row: the stored sender carried more than a mask and was re-masked" — the handoff queue's only row is the
     **`pd-` seed conversation** (#19's seed, last updated 2026-10-30). The cause is **not** a missing channel branch:
     the database's generated `sender_masked` keeps up to 16 characters of a widget key (all but the last 4 of a short

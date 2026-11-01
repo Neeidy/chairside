@@ -444,3 +444,30 @@ reschedule, and there is none to keep; the reschedule lane does not ask for one.
 
   Verified internally (`name-capture` 33/33, mutants 48/48 *(terminal-measured)*), not re-run through Codex: a LOW
   test-coverage item, the precedent of CRT #14/#15.
+
+## R3 — two offline amendments, then the live window (2026-11-01)
+
+**Accepted:** the 12 declared deviations of "R1 — built offline" (Yigitcan's ruling via Cowork's review, 2026-11-01).
+**Migration 004:** run by the owner on the server (2026-11-01): "--- DRY RUN OK ---" then "--- 004 APPLIED ---" —
+*operator output, not CC's measurement*; CC's read of the column is in "A1" below.
+**Rulings (Yigitcan, 2026-11-01, "1-3 evet"):**
+1. the sanitiser accepts `’` (U+2019) by normalising it to `'` before its character check — nothing else changes;
+2. combining marks (`\p{M}`) and ZWNJ stay a recorded bound (v2) — no change;
+3. the Turnstile slot keeps its spacing after the interactive state ends; the non-interactive collapse stays
+   (`docs/PUBLIC-DEMO-PLAN.md`, "R3 amendment").
+Also ruled: the three dashboard/widget display findings of the RENAME round (the two mask formulas, the "Today" block
+after a cancel, the widget's message time in the visitor's zone) → v2 (`docs/PHASE-7-PLAN.md` §4b).
+
+### A0 — offline
+- **(1), `9e5d875`:** both byte-equal copies of `sanitiseName` replace U+2019 with U+0027 right after NFC. 3.4 and R1
+  item 9 are corrected in place. Tests: `O’Neil` → `O'Neil`; "I’m O’Neil" is filled as `O'Neil`; U+2018, a backtick, an
+  acute accent and a fullwidth apostrophe stay refused. The mutant that removes the normalisation from both copies dies.
+- **Codex recheck of that diff** (contained, pin `fe65b92`; prompt `prompt-r3.md`, answer verbatim `r3.md`): no HIGH, no
+  MEDIUM. Both copies do exactly the ruling; over every Unicode code point in `A<c>B` the old and new sanitisers differ
+  at U+2019 only; the name's later uses (confirm, calendar title, appointment row, the Purge's `replace`) keep
+  `O'Neil`. Two observations, inside recorded bounds and not findings: "don’t" now sanitises to "don't" and is still
+  denied; "no’" is filled as `no'`, as "no'" already was (the deny list is an exact list, acceptance 2b).
+  **One LOW, real:** a mapping WIDENED to U+201B passed every test. **Fixed:** U+201B and a prime (U+2032) join the
+  refused look-alikes, and a widening mutant dies. Verified internally (`name-capture` 34/34, mutants 50/50
+  *(terminal-measured)*), not re-run through Codex: a LOW test-coverage item, as at R2.
+- **(3), `5921594`:** committed, not deployed (the site waits for promotion) — `docs/PUBLIC-DEMO-PLAN.md`.
