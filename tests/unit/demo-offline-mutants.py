@@ -17,6 +17,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 SCRIPT = os.path.join(ROOT, 'scripts', 'demo-offline.sh')
 TEST = os.path.join(ROOT, 'tests', 'unit', 'demo-offline.test.py')
 MUTANTS = {
+    'the old demo. hostname back (the rename of 2026-11-01)':
+        ('echo "https://barber-demo.$apex/"', 'echo "https://demo.$apex/"'),
     'the token printed':
         ("unset VERCEL_TOKEN\n", "echo \"token $VERCEL_TOKEN\" >&2\nunset VERCEL_TOKEN\n"),
     'the token on the curl command line':

@@ -20,7 +20,8 @@
 # permission bits. The token is written into a 0600 temporary header file that curl reads with -H @file, so it is
 # never on a command line, never printed, never in a log; the file is removed on exit. The script prints HTTP
 # statuses and states only — never the token, the project id or the hostname.
-# The hostname: "demo." + APEX_HOST from CLAUDE.local.md (the parse scripts/check-no-host-leak.sh uses), or DEMO_URL.
+# The hostname: "barber-demo." + APEX_HOST from CLAUDE.local.md (the parse scripts/check-no-host-leak.sh uses), or
+# DEMO_URL. (It was "demo." until the rename of 2026-11-01; the old name is freed, with no redirect.)
 # Test seams: VERCEL_API_URL (https://…, or http://127.0.0.1:… only — the token goes where it points), DEMO_URL,
 # POLL_S (tests/unit/demo-offline.test.py runs it against a local stand-in).
 #
@@ -53,7 +54,7 @@ demo_url() {
   apex=$(sed -n 's/^APEX_HOST=[[:space:]]*\([^[:space:]]*\).*/\1/p' "$ROOT/CLAUDE.local.md" 2>/dev/null | head -1 \
          | sed -E "s/^[\"']+//; s/[\"']+\$//")
   [ -n "$apex" ] || return 1
-  echo "https://demo.$apex/"
+  echo "https://barber-demo.$apex/"
 }
 
 # Prints 200, "paused" (503 + DEPLOYMENT_PAUSED in the body), another status code, or 000 for no answer.

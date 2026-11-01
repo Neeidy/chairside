@@ -212,6 +212,27 @@ def main():
              r.returncode == 0 and child_env.count('PATH=') >= 3 and token not in child_env, r.stdout)
         run('unpause')
 
+        # the hostname: without DEMO_URL the script measures "barber-demo." + APEX_HOST from CLAUDE.local.md (the rename of
+        # 2026-11-01). A copy in a scratch tree with a fake apex, and a curl that only records — no request leaves.
+        tree = os.path.join(tmp, 'tree')
+        os.makedirs(os.path.join(tree, 'scripts'))
+        shutil.copy(SCRIPT, os.path.join(tree, 'scripts', 'demo-offline.sh'))
+        with open(os.path.join(tree, 'CLAUDE.local.md'), 'w') as f:
+            f.write('APEX_HOST=apex.example.test\n')
+        rec_dir, rec_log = os.path.join(tmp, 'recbin'), os.path.join(tmp, 'rec.log')
+        os.makedirs(rec_dir)
+        with open(os.path.join(rec_dir, 'curl'), 'w') as f:
+            f.write(f'#!/bin/bash\nprintf "%s\\n" "$*" >> "{rec_log}"\n')
+        os.chmod(os.path.join(rec_dir, 'curl'), 0o755)
+        noenv = {k: v for k, v in env.items() if k != 'DEMO_URL'}
+        noenv['PATH'] = rec_dir + os.pathsep + os.environ['PATH']
+        r = subprocess.run(['bash', os.path.join(tree, 'scripts', 'demo-offline.sh'), 'measure'], env=noenv,
+                           capture_output=True, text=True, timeout=60, stdin=subprocess.DEVNULL)
+        asked = open(rec_log).read() if os.path.exists(rec_log) else ''
+        case('without DEMO_URL the page measured is https://barber-demo.<APEX_HOST>/ (the rename), never the old name',
+             'https://barber-demo.apex.example.test/' in asked and 'https://demo.' not in asked and r.returncode == 4,
+             asked + r.stdout)
+
         all_out = []
         for argv in (('pause',), ('unpause',), ('measure',)):
             all_out.append(run(*argv)[1])
