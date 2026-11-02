@@ -468,7 +468,7 @@ entry and the staged export match.
 |---|---|---|
 | **F1 MEDIUM** — the re-ask test never checks the slots; a builder that rewrites the stored time on the re-ask passed 25/25 | real (a test defect; the builder keeps the slots) | the D-6 test asserts the slots and the name after the re-ask; mutant "the re-ask alone corrupts the stored slots" |
 | **F2 LOW** — the closed set matched more than the stated literal phrases: `toLowerCase()` turns the KELVIN SIGN (U+212A) into `k`, and a line break collapsed like a space | real (no booking-integrity effect; the declared set was not what ran) | `Classify Confirm Reply` matches with the `/i` flag instead of lower-casing (a non-Unicode `/i` never maps a non-ASCII character to an ASCII one — measured: the Kelvin sign, the long s, fullwidth and Cyrillic look-alikes all fail; `NO THANKS`, a tab, `No Thank You!` match) and collapses only spaces and tabs. A test of look-alikes and line breaks (red on the R1 staged export, green after); mutants "toLowerCase back", "a line break collapsed", "the /i flag dropped" |
-| **F3 LOW** — the "no confidence" case passed `undefined` into a default and tested 0.4 | real (a test defect; the engine also rejects it earlier, in `Validate Intent`) | the helper can leave the key ABSENT; absent, `undefined`, `null`, `NaN` and STRING confidences are each not confident, for D-3 and the D-6 re-ask; mutants "a missing confidence counted as confident", "a string confidence compared as a number" |
+| **F3 LOW** — the "no confidence" case passed `undefined` into a default and tested 0.4 | real (a test defect; the engine also rejects it earlier, in `Validate Intent`) | the helper can leave the key ABSENT; for D-3 an absent, `undefined`, `null`, `NaN` and STRING confidence, for the D-6 re-ask an absent, `null` and string one, are each not confident (⚠ *corrected after pass 2: this said all five for both*); mutants "a missing confidence counted as confident", "a string confidence compared as a number" |
 | record — "6 green / 18 red" | real | corrected in place to 19 (the R1 number was taken before the last test was added) |
 | record — §11's owner-run list differed from the replayed owner scripts | real | §11 corrected in place to the approval brief's two scripts, which the tests replay |
 
@@ -479,6 +479,27 @@ entry and the staged export match.
 the control green, `staged-sanitised` and `diff-workflow-copy --phase edit` green. Every change is inside the three new
 nodes and the sticky; the delta is unchanged.
 
-**The cap (ruling):** pass 1 had real findings, so pass 2 runs on this round's diff. After pass 2, a finding of the same
+**The cap (ruling):** pass 1 had real findings, so pass 2 ran on this round's diff (below). After pass 2, a finding of the same
 class as one above is recorded as a bound, not chased; a NEW class that writes or cancels a booking wrongly is a stop.
+
+## R2 recheck — Codex pass 2, the last (2026-11-03)
+
+**Codex pass 2** at `a0779a7` (contained; verbatim `docs/codex/n1/p2.md`): **no HIGH, no MEDIUM, one LOW.** F1, F2 and
+F3 closed — each defect it showed now turns a test red (each relevant mutant run alone: 25 green / 1 red). The `/i`
+matching is sound: no non-ASCII code point matches `/[a-z]/i`, and all 1,372 ASCII case variants of the six decline
+phrases match. Everything else in the edit is byte-identical to pass 1's pin (the delta, the deploy checker, the
+committed export; three changed JSON lines). The R2 counts reproduce (26/26, 39/39, 6 green / 20 red).
+
+**The LOW — recorded as a BOUND (ruling: after pass 2, a finding of an earlier class is recorded, not chased):**
+`.trim()` runs first and removes LEADING and TRAILING whitespace of any kind, so `"no\n"`, `"\nno"` and a `no` wrapped
+in no-break spaces are still the closed "no" — the F2 class (the closed set's scope), no booking written or cancelled
+(the replay showed stage `collecting`, zero appointments). The engine's comment said "a line break does not [collapse]"
+without that qualification; it is corrected in place — **comments only, every code line byte-equal (asserted by the
+edit script)** — and this paragraph is the record.
+
+**One record qualification, corrected in place:** R2's F3 row said all five confidence shapes are tested for D-3 AND
+the D-6 re-ask; the re-ask tests three of them (the shared guard handles the other two).
+
+**Codex for N1 is closed by the cap.** The remaining gate to the live step is this round's ⚠ ONAY condition: A–C green
+and no open HIGH — both true.
 
