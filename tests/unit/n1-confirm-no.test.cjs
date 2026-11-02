@@ -62,10 +62,14 @@ function declined(r, o, label, kept = ['haircut', '2026-11-04', '11:00', 'Kim Mo
 
 // ── node level: the closed sets, run as code ────────────────────────────────────────────────────────────────────
 const node = (name) => EXPORT.nodes.find((n) => n.name === name);
-function classify(text, { stage = 'confirming', prev = 'book', intent = 'unknown', confidence = 0.4 } = {}) {
+const MISSING = Symbol('no confidence key');   // the key ABSENT — not undefined through a default (Codex N1 pass 1, F3)
+function classify(text, opts = {}) {
+  const { stage = 'confirming', prev = 'book', intent = 'unknown' } = opts;
   const refs = { 'Load Config': { config: { bot: { confidenceThreshold: 0.7 } } }, 'Merge State': { state: { last_intent: prev } } };
   const $ = (n) => { if (!(n in refs)) throw new Error(`unexecuted ${n}`); return { first: () => ({ json: refs[n] }) }; };
-  const j = { text, intent, confidence, state: { stage, last_intent: intent } };
+  const j = { text, intent, state: { stage, last_intent: intent } };
+  if (!('confidence' in opts)) j.confidence = 0.4;
+  else if (opts.confidence !== MISSING) j.confidence = opts.confidence;
   const out = new Function('$', '$json', '$input', node('Classify Confirm Reply').parameters.jsCode)($, j, { all: () => [{ json: j }] });
   return out[0].json._booking_reply ?? null;
 }
@@ -78,6 +82,12 @@ test('node: a closed "no" at the booking confirm is a decline whatever the model
   for (const t of CLOSED_NO) for (const [intent, confidence] of [['cancel', 0.9], ['unknown', 0.4], ['confirm', 0.3], ['confirm', 0.95], ['book', 0.9]])
     assert.equal(classify(t, { intent, confidence }), 'declined', `${JSON.stringify(t)} · ${intent}/${confidence}`);
 });
+test('node: the sets are the literal ASCII phrases in any case — no Unicode look-alike, no line break (Codex N1 pass 1, F2)', () => {
+  for (const t of ['NO THANKS', 'No\tthanks', 'No Thank You!', 'NOT NOW.']) assert.equal(classify(t), 'declined', JSON.stringify(t));
+  for (const t of ['no than\u212As', 'no\nthanks', '\uFF4E\uFF4F', 'n\u043E', 'no\r\nthanks']) assert.equal(classify(t), null, JSON.stringify(t));
+  assert.equal(classify('\u017Fure', { stage: 'collecting', prev: 'declined' }), null, 'the long s is not an s');
+  assert.equal(classify('yes\nplease', { stage: 'collecting', prev: 'declined' }), null);
+});
 test('node: near-misses are NOT a closed "no" — they stay with the model (an uncertain reading is not a decline)', () => {
   for (const t of NEAR_NO) assert.equal(classify(t, { intent: 'unknown', confidence: 0.4 }), null, JSON.stringify(t));
 });
@@ -86,7 +96,10 @@ test('node: a CONFIDENT model cancel at the booking confirm is a decline; an unc
   assert.equal(classify('no, make it 12:00', { intent: 'cancel', confidence: 0.8 }), 'declined');
   assert.equal(classify('cancel', { intent: 'cancel', confidence: 0.7 }), 'declined', 'at the threshold');
   assert.equal(classify('hm, cancel?', { intent: 'cancel', confidence: 0.69 }), null, 'below it');
-  assert.equal(classify('cancel', { intent: 'cancel', confidence: undefined }), null, 'no confidence is not confident');
+  for (const confidence of [MISSING, undefined, null, '0.9', NaN, '0.95'])
+    assert.equal(classify('cancel', { intent: 'cancel', confidence }), null, `a confidence of ${String(confidence)} is not confident (Codex N1 pass 1, F3)`);
+  for (const confidence of [MISSING, null, '0.95'])
+    assert.equal(classify('yes please book it', { stage: 'collecting', prev: 'declined', intent: 'confirm', confidence }), null, `re-ask: ${String(confidence)}`);
 });
 test('node: only the booking confirm, and the two turns right after a decline, are classified', () => {
   for (const stage of ['new', 'booked', 'cancelled', 'handoff', 'cancel_confirming', 'reschedule_confirming'])
@@ -199,6 +212,7 @@ test('§9 D-6 (amended): a bare "yes" after a decline re-asks ONCE (no lock, no 
     const o = r.turn('yes', first);
     assert.equal(o.reply, DECLINED, `the re-ask (model ${first.intent})`);
     assert.equal(r.db.conv.stage, 'collecting'); assert.equal(r.db.conv.last_intent, 'decline_reask');
+    assert.deepEqual(slots(r.db), ['haircut', '2026-11-04', '11:00', 'Kim Moss'], 'the re-ask keeps the stored slots and the name (Codex N1 pass 1, F1)');
     noWrite(o, 'the re-ask'); assert.deepEqual(r.db.alerts, []);
     const second = r.turn('yes', answer('confirm', 0.92));
     assert.equal(second.reply, HANDOFF, 'the second bare yes');

@@ -21,8 +21,8 @@ _STAGED = os.path.join(ROOT, 'n8n', 'staged', 'workflow.main.sanitized.json')
 STAGED = _STAGED if os.path.exists(_STAGED) else os.path.join(ROOT, 'n8n', 'workflow.main.sanitized.json')
 TESTS = [os.path.join(ROOT, 'tests', 'unit', 'n1-confirm-no.test.cjs')]
 CL, BI, BU, LC = 'Classify Confirm Reply', 'Booking Declined?', 'Build Booking-Declined State', 'Load Config'
-NO_RE = 'const NO = /^(?:no|nope|nah|no thanks|no thank you|not now)[.!]*$/;'
-YES_RE = 'const YES = /^(?:yes|yeah|yep|yup|ok|okay|sure|yes please|that works|confirm)[.!]*$/;'
+NO_RE = 'const NO = /^(?:no|nope|nah|no thanks|no thank you|not now)[.!]*$/i;'
+YES_RE = 'const YES = /^(?:yes|yeah|yep|yup|ok|okay|sure|yes please|that works|confirm)[.!]*$/i;'
 
 
 def rewire(src, k, to):
@@ -42,13 +42,17 @@ def if_expr(new):
 
 MUTANTS = {
     # Classify Confirm Reply — the closed set (D-2)
-    'the "no" set unanchored at the start': [(CL, NO_RE, 'const NO = /(?:no|nope|nah|no thanks|no thank you|not now)[.!]*$/;')],
-    'the "no" set unanchored at the end': [(CL, NO_RE, 'const NO = /^(?:no|nope|nah|no thanks|no thank you|not now)[.!]*/;')],
-    'a near-miss admitted ("no, …")': [(CL, NO_RE, 'const NO = /^(?:no|nope|nah|no thanks|no thank you|not now)(?:[.!]*|,.*)$/;')],
+    'the "no" set unanchored at the start': [(CL, NO_RE, 'const NO = /(?:no|nope|nah|no thanks|no thank you|not now)[.!]*$/i;')],
+    'the "no" set unanchored at the end': [(CL, NO_RE, 'const NO = /^(?:no|nope|nah|no thanks|no thank you|not now)[.!]*/i;')],
+    'a near-miss admitted ("no, …")': [(CL, NO_RE, 'const NO = /^(?:no|nope|nah|no thanks|no thank you|not now)(?:[.!]*|,.*)$/i;')],
     '"not now" dropped from the set': [(CL, 'no thank you|not now)', 'no thank you)')],
-    'trailing punctuation not accepted': [(CL, NO_RE, 'const NO = /^(?:no|nope|nah|no thanks|no thank you|not now)$/;')],
-    'the text not lower-cased': [(CL, ".replace(/\\s+/g, ' ').toLowerCase();", ".replace(/\\s+/g, ' ');")],
-    'inner spaces not collapsed': [(CL, ".trim().replace(/\\s+/g, ' ').toLowerCase();", '.trim().toLowerCase();')],
+    'trailing punctuation not accepted': [(CL, NO_RE, 'const NO = /^(?:no|nope|nah|no thanks|no thank you|not now)$/i;')],
+    'the "no" set case-sensitive (the /i flag dropped)': [(CL, NO_RE, 'const NO = /^(?:no|nope|nah|no thanks|no thank you|not now)[.!]*$/;')],
+    'inner spaces not collapsed': [(CL, ".trim().replace(/[ \\t]+/g, ' ');", '.trim();')],
+    'toLowerCase back (the KELVIN SIGN reads as "k" — Codex N1 pass 1, F2)': [(CL, ".trim().replace(/[ \\t]+/g, ' ');", ".trim().replace(/[ \\t]+/g, ' ').toLowerCase();")],
+    'a line break collapsed like a space (F2)': [(CL, ".trim().replace(/[ \\t]+/g, ' ');", ".trim().replace(/\\s+/g, ' ');")],
+    'a missing confidence counted as confident (F3)': [(CL, "const sure = typeof j.confidence === 'number' && ", "const sure = j.confidence === undefined || ")],
+    'a string confidence compared as a number (F3)': [(CL, "const sure = typeof j.confidence === 'number' && ", "const sure = ")],
     # D-3
     'a model cancel at the confirm ignored (text only: B1 comes back)': [(CL, " || (j.intent === 'cancel' && sure)", '')],
     'the confidence floor dropped from D-3 (an uncertain cancel drops the confirm)': [(CL, "(j.intent === 'cancel' && sure)", "(j.intent === 'cancel')")],
@@ -68,6 +72,7 @@ MUTANTS = {
     # Build Booking-Declined State
     'the decline leaves stage confirming (a later "yes" books the declined slot)': [(BU, "state: { ...st, stage: 'collecting', last_intent: j._booking_reply", "state: { ...st, stage: 'confirming', last_intent: j._booking_reply")],
     'the decline empties the slots': [(BU, "state: { ...st, stage: 'collecting', last_intent: j._booking_reply, confirm_turn: '' }", "state: { ...st, stage: 'collecting', last_intent: j._booking_reply, confirm_turn: '', slots: { serviceId: null, date: null, time: null, customerName: null } }")],
+    'the re-ask alone corrupts the stored slots (Codex N1 pass 1, F1)': [(BU, "state: { ...st, stage: 'collecting', last_intent: j._booking_reply, confirm_turn: '' }", "state: { ...st, stage: 'collecting', last_intent: j._booking_reply, confirm_turn: '', slots: j._booking_reply === 'decline_reask' ? { ...st.slots, time: '15:00' } : st.slots }")],
     'the decline drops the name': [(BU, "state: { ...st, stage: 'collecting', last_intent: j._booking_reply, confirm_turn: '' }", "state: { ...st, stage: 'collecting', last_intent: j._booking_reply, confirm_turn: '', slots: { ...st.slots, customerName: null } }")],
     'the decline marker not written': [(BU, "last_intent: j._booking_reply, confirm_turn: ''", "confirm_turn: ''")],
     'the close keeps stage collecting': [(BU, "stage: 'new', last_intent: 'dropped'", "stage: 'collecting', last_intent: 'dropped'")],
