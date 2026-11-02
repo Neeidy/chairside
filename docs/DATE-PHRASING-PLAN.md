@@ -8,7 +8,8 @@
 > Section "R2d" at the end. Still NOT live.
 > **R2e (ruling 2026-11-02):** the r5 stop ruled — E1 (too far, not "passed", for a date far behind us), the "sent, in
 > turn order" wording, a read-only deploy precondition instead of a confirm-turn check, three recorded bounds. Section
-> "R2e" at the end. **Codex r6: 1 HIGH on the precondition's window → STOPPED before any live step ("R2e recheck").**
+> "R2e" at the end. **Codex r6: 1 HIGH on the precondition's window → closed by procedure (ruling R-c). R3 LIVE 2026-11-02
+> (Main put + site redeploy; section "R3"); the owner's run and promotion follow.**
 > **Trigger:** the NAME-CAPTURE R3 owner run of 2026-11-01 (`docs/NAME-CAPTURE-PLAN.md` → "The owner run of
 > 2026-11-01"). "I'd like a haircut on Wednesday 4 November at 11:00" was extracted correctly by the model
 > (`date` 2026-11-04, `dateExpr` "wednesday 4 november") and dropped by `Resolve Date` (reason `unparsed`), so the bot
@@ -534,3 +535,84 @@ deletes the event and marks the appointment cancelled. It writes no new date, so
 precondition, and the cancel confirm has its own freshness check (`Confirm Fresh?`).
 **Containment:** `containment.md` → "R6". **Nothing live:** Main runs the promoted NAME-CAPTURE export; the site was not
 redeployed.
+
+## R3 — LIVE: the Main put with the in-flight precondition, the site redeploy; STOPPED for the owner run (2026-11-02)
+**Rulings (Yigitcan, 2026-11-02, by pasting the R3 brief):** R-a "within reach" = the horizon counted backwards —
+accepted as built. R-b the F1 widening (`reschedule_confirming` = 0 too) — accepted. R-c the r6 HIGH is closed by
+PROCEDURE: count → rehearse-rollback → put → wait until no Main execution that started before the put's end is still
+running → count again → 0 → site redeploy. R-d this is the LAST adjustment to the put procedure: a further finding in the
+same in-flight class is recorded as a bound, not chased. ⚠ ONAY (1) rehearse-rollback + the Main put, (2) the site
+redeploy after the second count reads 0, (3) the rollback of both on a red. Purge untouched.
+
+*(Every time below is Vienna local unless marked Z; every number terminal-measured, output not committed.)*
+
+**Step 0 — the wait method.** One read-only GET pair on the executions API: every row carries `status`, `startedAt`,
+`stoppedAt`; the `status` filter answers 200 and returns only rows of the asked status (`success` → 5 rows, all
+success). **But a `running` row was never shown** — no execution was running, and none could be made to run without a
+chat message or LLM spend (the probe execution lasts ~0.2 s). An empty `running` answer from a filter that has never
+gone non-empty proves nothing (`reporting.md`, the empty-result rule). **So the brief's fallback was used: a FIXED 5
+minutes after the put's end, polled every 30 s on BOTH the `running` filter and the UNFILTERED newest 100 Main executions
+(any row with no `stoppedAt`).**
+
+**The sequence:**
+- Start gates 16:35:08–16:35:17 (outside :55–:05): dummy token → 403, single holder · exports parity 5/5 · live parity
+  192/192 nodes, 274/274 connections · listeners OK · host-leak clean · hook-drift 4 OK · 0 labelled containers.
+  (Secret-scan "NOT MEASURED": nothing unpushed, a clean tree.)
+- **F1 count #1, 16:36:10 (`salon_ro`, READ ONLY): named `confirming` 0 · `reschedule_confirming` 0** · control: the
+  known nameless `confirming` row (21 h old) and every stage's count shown (cancelled 2, collecting 1, confirming 1,
+  new 2) — the instrument went non-empty.
+- `rehearse-rollback` 15:36:50–55Z: a scratch from the live draft, the edit put, the rollback read back == its snapshot
+  (192 nodes, 31 credential ids, connections, settings), the scratch deleted and read back 404.
+- deactivate 15:36:55.8Z → **put** 15:36:56.7Z: 6 nodes' stored content changed (Compute Availability, Compute
+  Reschedule Availability, Load Config, Reschedule Lookup, Resolve Date, Slot Gate), inside the allowlist, read back ==
+  the staged export and == the body sent, settings and webhook ids unchanged; pre-PUT snapshot kept outside the
+  repository, mode 600 → activate, published == draft. **The put's end (activation read back): 15:36:59.456Z. Main
+  was inactive about 3 seconds.** Probe: dummy token → 403 `turnstile_failed`, executed by Main, the only holder.
+- Parity against the STAGED export (the repo's guard from a scratch mirror whose `n8n/workflow.main.sanitized.json` is
+  the staged file; no local redaction file copied): content 169 executable nodes OK, settings OK (the allowlisted
+  `binaryMode` apart), structural 192/192 nodes, 274/274 connections. Negative control: the same content guard against
+  the COMMITTED export is red on exactly the staged nodes.
+- **The wait: 12 polls, 15:37:23Z–15:42:27Z — `running` 0 and unfinished 0 at every poll.** The newest Main execution
+  throughout was the post-put probe (4850); the one before the put was the start-gate probe at 15:35:09Z (4849): **no
+  customer execution was in flight at the put at all.**
+- **F1 count #2, 16:42:39: named `confirming` 0 · `reschedule_confirming` 0**, the same stage counts as #1.
+- **Site redeploy 16:42:45–16:43:13** (HEAD `0b500e3`, git archive, 56 files, none under `web/dashboard`); the
+  previous production deployment recorded first as the rollback target → **READY, target production**. Unauthenticated:
+  the deployment URL → 302 to Vercel's login; `barber-demo.<apex>` `/` and `/privacy` → 200 (public by the go-live
+  ruling). **Hero = the live engine:** the confirm bubble reads "Haircut, Friday 4 Sep 2026 15:30 — shall I book it?
+  (yes / no)" (server HTML and its payload; no other "shall I book it" on the page); the yearless "Friday 4 Sep 15:30"
+  appears only in the booked, cancel-ask and cancelled bubbles, which the engine keeps yearless (R2d). The token is in
+  no file outside its 0600 file.
+- **The window, 15:35Z → end:** Main executions 4849 and 4850 only (both probes, success); none on Owner Actions,
+  Purge, Reminders, Drill State; no error status, no alert class, no LLM call.
+- End gates 16:43:53–16:44:02: dummy token → 403 · live parity (structural) 192/192 · listeners OK · host-leak clean ·
+  hook-drift 4 OK · 0 labelled containers. **Declared, by construction:** content parity against the COMMITTED Main
+  export is red on exactly the six staged nodes — the live workflow runs the staged edit; promotion is the next round,
+  after the owner's run. The other four exports are green; the active set is exactly the five listed workflows.
+
+**Recorded bounds, after this procedure:** the wait shows no run of the promoted engine survived the put; what it cannot
+show is a run whose row the API never listed (the `running` filter has no positive control — the unfiltered list was
+read alongside for that reason). By R-d, any further finding in this class is a bound.
+
+**Rollback, if the owner's run goes wrong:** deactivate → `rollback` Main to the kept snapshot → activate → probe; the
+site to the recorded previous deployment (`vercel rollback`). Both scripted, not run.
+
+**The owner's run (every line replayed offline through the staged Main at four run instants, 2–10 November 2026 —
+identical replies):** on `barber-demo.<apex>`, a real Turnstile token.
+- **Conversation A:** "I'd like a haircut on 12 November at 11:00" → name ask · "Mara O'Test" → "Haircut, Thursday 12 Nov
+  2026 11:00 for Mara O'Test — shall I book it? (yes / no)" · "yes" → booked · "Can I move it to Friday 13 November at
+  15:00?" → "Move your Haircut from Thursday 12 Nov 2026 11:00 to Friday 13 Nov 2026 15:00? …" · "yes" → moved · "Please
+  cancel my appointment" → cancel ask · "yes" → cancelled.
+- **Conversation B** (a new chat session): "Haircut on Thursday 11 November at 11:00" → "11 November is a Wednesday —
+  did you mean Wednesday 11 November, or a Thursday?" (or the accepted-forms hint, by the model's reading) ·
+  "Wednesday 11 November at 11:00" → name ask · "Kim Moss" → "Haircut, Wednesday 11 Nov 2026 11:00 for Kim Moss — shall
+  I book it? (yes / no)" — **not answered**.
+- **What happens to B afterwards:** the conversation stays in `confirming` with the name, holding no calendar slot
+  (nothing is written before "yes"). A booking confirm has no freshness check (the v2 item), so a later "yes" from the
+  SAME chat session would book that slot; any other message follows the normal paths. The 30-day scrub empties
+  `slot_name` (the stage stays), after which a "yes" is handed off (M1). **Consequence for the NEXT Main put:** while it
+  stands, this row makes F1's named-`confirming` count 1, so a later put's precondition stops on it — a known row,
+  reported by age, for that round's ruling.
+
+**Next round:** read the owner's run back (executions and the store, read-only), then promotion (staged → committed,
+both parity guards 0 against the committed exports, the snapshot deleted).

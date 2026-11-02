@@ -212,6 +212,7 @@
 - `docs/codex/date-phrasing/r3.md`
 - `docs/codex/date-phrasing/r4.md`
 - `docs/codex/date-phrasing/r5.md`
+- `docs/codex/date-phrasing/r6.md`
 - `docs/codex/date-phrasing/run-r2.sh`
 - `docs/codex/date-phrasing/run-r3.sh`
 - `docs/codex/date-phrasing/run-r4.sh`
@@ -853,6 +854,7 @@
   - ### R2d recheck — Codex r5: 3 HIGH against the defence; the build STOPS (2026-11-02; NOT live)
   - ## R2e — the r5 stop ruled: two small fixes, a deploy precondition, three bounds (2026-11-02; NOT live until R3)
   - ### R2e recheck — Codex r6: 1 HIGH on the precondition's stated window; the build STOPS before any live step (2026-11-02; NOT live)
+  - ## R3 — LIVE: the Main put with the in-flight precondition, the site redeploy; STOPPED for the owner run (2026-11-02)
 
 ### `docs/FLOW-DIAGRAM.md`
   - ## Overview — the lanes
@@ -1472,6 +1474,9 @@
   - _(no `##` headings — flat file)_
 
 ### `docs/codex/date-phrasing/r5.md`
+  - _(no `##` headings — flat file)_
+
+### `docs/codex/date-phrasing/r6.md`
   - _(no `##` headings — flat file)_
 
 ### `docs/codex/name-capture/containment.md`
