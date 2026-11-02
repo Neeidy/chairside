@@ -560,6 +560,8 @@
 - `web/site/lib/privacyEnv.test.ts`
 - `web/site/lib/privacyEnv.ts`
 - `web/site/lib/retention.ts`
+- `web/site/lib/turnstileGate.test.ts`
+- `web/site/lib/turnstileGate.ts`
 
 ### web/site/public/fonts
 
@@ -586,6 +588,10 @@
 - `web/snippet/src/lockedOnce.ts`
 - `web/snippet/src/styles.ts`
 - `web/snippet/src/turnstile.ts`
+
+### web/snippet/test
+
+- `web/snippet/test/turnstile.test.ts`
 
 ## Markdown files — their `##`/`###` headings (anchors; code fences skipped)
 
@@ -1130,6 +1136,7 @@
   - ### web/site/scripts
   - ### web/snippet
   - ### web/snippet/src
+  - ### web/snippet/test
   - ## Markdown files — their `##`/`###` headings (anchors; code fences skipped)
   - ### `.claude/agents/code-reviewer.md`
   - ### `.claude/agents/flow-reviewer.md`
