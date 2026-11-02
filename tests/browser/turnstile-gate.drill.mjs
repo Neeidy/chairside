@@ -5,8 +5,10 @@
 // HOW: headless Chromium over CDP against a LOCAL build of the site (and the snippet it serves). Cloudflare's api.js is
 // intercepted and replaced by a STUB whose callbacks the drill drives (pass / error), so an error→success sequence is
 // deterministic — real Turnstile cannot be made to fail and then succeed on demand. The engine host is answered
-// locally with a 200 reply. EVERY other request to a host that is not loopback, Cloudflare's challenge host or the fake
-// engine is FAILED in the browser and counted, so a run against a build that points at a real engine sends nothing.
+// locally with a 200 reply. Every other request FROM THE PAGE'S OWN FRAME to a host that is not loopback, Cloudflare's
+// challenge host or the fake engine is FAILED in the browser and counted, so a run against a build that points at a
+// real engine sends nothing (the engine call is made from the page frame). Cross-origin iframes (Turnstile's own, in
+// the real modes), workers and the browser's background traffic are NOT intercepted by this session.
 // MODE `real-pass` / `real-block`: no stub — the REAL Turnstile script, with a build carrying Cloudflare's always-pass
 // (1x…AA) or always-block (2x…AB) TEST sitekey; only the engine is intercepted.
 //
@@ -38,6 +40,7 @@ const STUB = `(() => {
   window.__ts = {
     pass(t) { w[0].o.callback(t); },
     error() { w[0].o['error-callback'](); },
+    challenge(on) { w[0].o[on ? 'before-interactive-callback' : 'after-interactive-callback'](); },
     rendered() { return w.length; },
     resets() { return w[0] ? w[0].resets : 0; },
   };
@@ -62,9 +65,10 @@ async function browser() {
   }
   if (!target) { cleanup(); throw new Error('no CDP target'); }
   const ws = new WebSocket(target.webSocketDebuggerUrl);
-  await new Promise((r) => ws.addEventListener('open', r, { once: true }));
+  const opened = await Promise.race([new Promise((r) => ws.addEventListener('open', () => r(true), { once: true })), sleep(10000).then(() => false)]);
+  if (!opened) { try { ws.close(); } catch {} cleanup(); throw new Error('the CDP socket never opened'); }
   let id = 0; const pending = new Map();
-  const b = { posts: [], foreign: [], failScript: false };
+  const b = { posts: [], foreign: [], failScript: false, emptyScript: false };
   const send = (method, params = {}) => new Promise((r) => { const i = ++id; pending.set(i, r); ws.send(JSON.stringify({ id: i, method, params })); });
   const cors = [{ name: 'Access-Control-Allow-Origin', value: '*' }, { name: 'Access-Control-Allow-Methods', value: 'POST' },
     { name: 'Access-Control-Allow-Headers', value: 'content-type' }];
@@ -78,6 +82,8 @@ async function browser() {
       send('Fetch.continueRequest', { requestId: rid });
     } else if (host === CHALLENGE) {
       if (b.failScript) send('Fetch.failRequest', { requestId: rid, errorReason: 'BlockedByClient' });
+      else if (b.emptyScript) send('Fetch.fulfillRequest', { requestId: rid, responseCode: 200,   // loads, defines nothing
+        responseHeaders: [{ name: 'Content-Type', value: 'application/javascript' }], body: '' });
       else if (REAL) send('Fetch.continueRequest', { requestId: rid });
       else send('Fetch.fulfillRequest', { requestId: rid, responseCode: 200,
         responseHeaders: [{ name: 'Content-Type', value: 'application/javascript' }], body: Buffer.from(STUB).toString('base64') });
@@ -102,12 +108,12 @@ async function browser() {
   return b;
 }
 
-async function page(b, { failScript = false } = {}) {
-  b.posts.length = 0; b.failScript = failScript;
+async function page(b, { failScript = false, emptyScript = false } = {}) {
+  b.posts.length = 0; b.failScript = failScript; b.emptyScript = emptyScript;
   await b.send('Page.navigate', { url });
   for (let i = 0; i < 40; i++) { await sleep(250); if (await b.ev(`!!(${Q.launcher})`)) break; }
   await b.ev(`(${Q.launcher}).click()`);
-  if (failScript) { await sleep(1500); return; }
+  if (failScript || emptyScript) { await sleep(1500); return; }
   if (REAL) { for (let i = 0; i < 40; i++) { await sleep(250); if (await b.ev('!!window.turnstile')) return; } throw new Error('the Turnstile script never loaded'); }
   for (let i = 0; i < 40; i++) { await sleep(250); if (await b.ev('window.__ts && window.__ts.rendered() > 0')) return; }
   throw new Error('Turnstile was never rendered');
@@ -199,6 +205,36 @@ async function stubCases(b) {
   const shown = await waitFor(b, noticeShown, 6000);
   s = await state(b);
   check('the Turnstile script does not load: the notice is shown, nothing is sent', shown && b.posts.length === 0, { ...s, posts: b.posts.length });
+
+  // 4b. THE SCRIPT LOADS BUT DEFINES NOTHING (a blocker's empty stub): as unavailable as one that never loaded.
+  await page(b, { emptyScript: true });
+  const shownEmpty = await waitFor(b, noticeShown, 6000);
+  s = await state(b);
+  check('the Turnstile script loads but defines nothing: the notice is shown, nothing is sent', shownEmpty && b.posts.length === 0, { ...s, posts: b.posts.length });
+
+  // 6. A RETRY WHOSE RESET NEVER ANSWERS: one failure, our reset, then silence. Not "retrying…" forever — said as a stall.
+  await page(b);
+  await b.ev(`window.__ts.error()`);
+  const retryQuietAt15 = await (async () => { await sleep(15000); return !stuckShown(await state(b)); })();
+  const retrySaid = await waitFor(b, stuckShown, 15000);
+  s = await state(b);
+  check('a retry whose reset never answers: quiet at 15 s, the stall said by 30 s', retryQuietAt15 && retrySaid && !noticeShown(s), { retryQuietAt15, retrySaid, ...s });
+
+  // 7. THE FIRST TOKEN NEVER ARRIVES after render: said as a stall too.
+  await page(b);
+  const firstSaid = await waitFor(b, stuckShown, 25000);
+  check('the first token never arrives: the stall is said by 25 s', firstSaid, await state(b));
+
+  // 8. AN INTERACTIVE CHALLENGE IS UP for longer than the stuck timer: the visitor is solving it — no stall said.
+  await page(b);
+  await b.ev(`window.__ts.challenge(true)`);
+  await sleep(24000);
+  const quietDuringChallenge = !stuckShown(await state(b));
+  await b.ev(`window.__ts.challenge(false)`); await b.ev(`window.__ts.pass('t7')`); await sleep(400);
+  if (surface === 'site') await type(b, 'hello');   // the site's send button also needs a draft to enable
+  s = await state(b);
+  check('an interactive challenge for 24 s: no stall said while it is up; the token afterwards opens the send',
+    quietDuringChallenge && !stuckShown(s) && tokenReady(s), { quietDuringChallenge, ...s });
 
   // 5. A WAIT THAT NEVER ENDS: a send, then the reset's callback never comes. Said after 20 s; gone with the token.
   await page(b);
