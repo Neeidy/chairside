@@ -438,6 +438,18 @@ Reason deferred to Phase 7 (ARCHITECTURE-DECISIONS §5, 2026-08-17): the auth-br
 risk of running these mid-refactor outweighs the residual; classifier is unit-proven (17/17) + the
 `_reconcile_class` field/value contract is statically verified. **The phase may move; the gate may not.**
 
+### Booking confirm "no" — N1 (added 2026-11-03; OFFLINE replay, `tests/unit/n1-confirm-no.test.cjs`; live: the owner run of N1 R3)
+
+| # | setup | message | expected | MUST-NOT-RUN |
+|---|---|---|---|---|
+| N1-1 | W12 shown | `no` / `No thanks` / `nope` / `not now` (any model reading) · or a confident `cancel` | `bookingDeclined`, `stage=collecting`, `last_intent=declined`, slots + name kept | `Find Booking`, any Calendar node, `Write Appointment`, owner alert |
+| N1-2 | W12 shown, an EXISTING booking | `no` (model `cancel`) | `bookingDeclined`; the existing booking gets NO cancel ask | `Cancel Lookup`, `Build Cancel-Confirm State` |
+| N1-3 | W12 shown | `hm, cancel?` (model `cancel` 0.5) | clarify; the confirm stays pending | `Build Booking-Declined State` |
+| N1-4 | after N1-1 | `12:00` / `Thursday` / `beard instead` / `under Sam Lee` | W12 again with the change, name kept | `Build Booking-Declined State` |
+| N1-5 | after N1-1 | `yes`, then `yes` | the change question again (`decline_reask`), then today's handoff (`Event ID Valid?` → `Mark Handoff`) | `Book Appointment` |
+| N1-6 | after N1-1 (or N1-5's first) | `no` | `bookingDropped`, `stage=new`, service/date/time emptied, name kept | owner alert |
+| N1-7 | cancel / reschedule confirm | `no` | unchanged: `cancelAborted` / `rescheduleAborted` | `Classify Confirm Reply` |
+
 ### Clarify tier — `unknown` ≠ `handoff` (added 2026-09-07, all Airtable-verified — *Airtable era, not re-run on the copies*)
 
 Gate order (corrected twice on 2026-09-07, both times because `flow-reviewer` found a regression the drills and

@@ -57,6 +57,9 @@ ends in `stage=confirming` with a confirm ask.
 | G25 | new | "I'd like a haircut on Wednesday 4 November at 11:00" | `book` · high | the NAME-CAPTURE R3 owner run's phrase, refused (`unparsed`) before DATE-PHRASING: the weekday matches the date in 2026 → resolved → the name ask |
 | G26 | new | "Haircut on Thursday 4 November at 11:00" | `book` · high | in 2026 4 November is a Wednesday: `weekday_mismatch` → no date, the re-ask names both ("4 November is a Wednesday — did you mean Wednesday 4 November, or a Thursday?"), owner alert `date_weekday_mismatch`. Never a guess |
 | G27 | new | "A beard trim on 4.11 at 10:30 please" | `book` · high | a dot is always day.month (D-1) → 4 November → the name ask |
+| G28 | confirming | "no" | `cancel` · high | N1: the prompt's own meaning of cancel at a booking confirm ("Decline/cancel means intent=cancel"). The engine does not depend on it — a closed "no" is a decline whatever the model says — but a confident cancel is one too → `Build Booking-Declined State`, `bookingDeclined`, slots and name kept; never `Find Booking` |
+| G29 | confirming | "no, make it 12:00" | `book` · high | N1: a different time at the confirm is `book` with the new detail (the prompt) → the book lane re-confirms 12:00. Read as `cancel` instead, the engine declines and keeps the stored 11:00 (the recorded bound) |
+| G30 | collecting (right after a decline) | "yes" | `confirm` · high | N1 D-6 (amended): a bare "yes" right after the change question re-asks it once (`decline_reask`, no lock, no write) — the closed text decides; a second one in a row goes to today's handoff |
 
 ## Result — the paid run, 2026-10-27 (7-4 A)
 
@@ -71,6 +74,10 @@ session does not have: G8 a pending booking confirmation (`confirming`), G10 a p
 (`cancel_confirming`), G11 an existing booking. Their 7-4 A sends at stage `new` are not runs of these cases. They
 were not seeded and re-run in 7-4 (by the brief): `scripts/seed-workflow.py` can seed such a stage on a `w-mig-p7-`
 session, and the run would need a Turnstile window of its own — and G8's real route creates a production calendar event.
+
+**G28–G30 (N1 R1, 2026-11-03) — expected outputs only, no model run.** Each needs a seeded stage (`confirming`, or
+`collecting` right after a decline); the engine side of every one is replayed offline in `tests/unit/n1-confirm-no.test.cjs`
+with the answer GIVEN. What the live model answers for "no" is recorded by the N1 owner run (plan D-8), not here.
 
 ## Expected JSON (validated by `tests/unit/golden-set.test.cjs`)
 
@@ -102,7 +109,10 @@ session, and the run would need a Turnstile window of its own — and G8's real 
   "G24": {"intent":"book","confidence":0.92,"slots":{"serviceId":"haircut","date":null,"dateExpr":"4 november","time":"11:00","customerName":null,"notes":null,"faqTopic":null},"reply":null},
   "G25": {"intent":"book","confidence":0.95,"slots":{"serviceId":"haircut","date":null,"dateExpr":"wednesday 4 november","time":"11:00","customerName":null,"notes":null,"faqTopic":null},"reply":null},
   "G26": {"intent":"book","confidence":0.92,"slots":{"serviceId":"haircut","date":null,"dateExpr":"thursday 4 november","time":"11:00","customerName":null,"notes":null,"faqTopic":null},"reply":null},
-  "G27": {"intent":"book","confidence":0.9,"slots":{"serviceId":"beard","date":null,"dateExpr":"4.11","time":"10:30","customerName":null,"notes":null,"faqTopic":null},"reply":null}
+  "G27": {"intent":"book","confidence":0.9,"slots":{"serviceId":"beard","date":null,"dateExpr":"4.11","time":"10:30","customerName":null,"notes":null,"faqTopic":null},"reply":null},
+  "G28": {"intent":"cancel","confidence":0.9,"slots":{"serviceId":null,"date":null,"dateExpr":null,"time":null,"customerName":null,"notes":null,"faqTopic":null},"reply":null},
+  "G29": {"intent":"book","confidence":0.9,"slots":{"serviceId":null,"date":null,"dateExpr":null,"time":"12:00","customerName":null,"notes":null,"faqTopic":null},"reply":null},
+  "G30": {"intent":"confirm","confidence":0.92,"slots":{"serviceId":null,"date":null,"dateExpr":null,"time":null,"customerName":null,"notes":null,"faqTopic":null},"reply":null}
 }
 ```
 
