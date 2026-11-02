@@ -6,6 +6,9 @@
 > **R2d (ruling 2026-11-02, option B):** the r4 stop was ruled — the guarantee is STRUCTURAL (the year in both confirm
 > asks), D-2 amended to **30** days, the text-side checks stay only as best-effort, the r4 class is a recorded bound.
 > Section "R2d" at the end. Still NOT live.
+> **R2e (ruling 2026-11-02):** the r5 stop ruled — E1 (too far, not "passed", for a date far behind us), the "sent, in
+> turn order" wording, a read-only deploy precondition instead of a confirm-turn check, three recorded bounds. Section
+> "R2e" at the end.
 > **Trigger:** the NAME-CAPTURE R3 owner run of 2026-11-01 (`docs/NAME-CAPTURE-PLAN.md` → "The owner run of
 > 2026-11-01"). "I'd like a haircut on Wednesday 4 November at 11:00" was extracted correctly by the model
 > (`date` 2026-11-04, `dateExpr` "wednesday 4 november") and dropped by `Resolve Date` (reason `unparsed`), so the bot
@@ -453,3 +456,60 @@ BEST-EFFORT block ("show the resolved date WITH its year before any write") — 
 committed prompt `prompt-r5.md` is a record of what was asked and stays as written.
 **Containment:** `containment.md` → "R5". **Nothing live:** Main runs the promoted NAME-CAPTURE export.
 
+
+## R2e — the r5 stop ruled: two small fixes, a deploy precondition, three bounds (2026-11-02; NOT live until R3)
+**Ruling (Yigitcan, 2026-11-02, by pasting the brief), verbatim:**
+> F1 NOT option (b). Instead a deploy-time PRECONDITION, read-only: immediately before the Main put, count
+> conversations with stage `confirming` AND a non-empty slot_name. 0 → proceed (the known nameless confirming row
+> cannot book: M1 → handoff — cite the test that pins it). >0 → STOP, no put, report the rows' age (no values).
+> The seconds between that read and the put = a recorded bound. The missing booking-confirm freshness check = a
+> named v2 item.
+> F2, F3 accepted as recorded bounds with your corrected wording ("sent", "in turn order").
+> E1 "15 january" on 3 Nov (this year's date past, next year's beyond the 30-day horizon) answers the too-far reply,
+> not "has passed" — the past reply only when the date really is behind us within reach. One branch, plus tests.
+> N1 no designed path for "no" at the booking confirm → a NAMED item for after DATE-PHRASING closes; not in this round.
+
+**What was built (staged Main only):**
+- `ac46eca` — comments only (code lines byte-equal, measured): `Compute Availability`'s R2d note and `Resolve Date`'s
+  BEST-EFFORT block, the two sentences declared in "R2d recheck", now say the slot a "yes" writes was **SENT** with its
+  year in the confirm ask of the turn before the write, **in turn order**, and name the lost reply and two concurrent
+  turns of one sender as recorded bounds. **Declared, not named by the brief:** `Compute Reschedule Availability`'s R2d
+  comment said "is shown in full first" in the same sense and got the same correction.
+- `f170422` — **E1**, one branch in `resolveCalendar`: a day+month without a year whose date this year is behind us
+  and whose next-year date is beyond the horizon answers `beyond_horizon` (the too-far reply, "We take bookings up to
+  30 days ahead — which date did you mean?"), unless this year's date is behind us by **at most the horizon** — then
+  `date_past` as before. **"Within reach" is MY reading, stated so it can be overruled:** the reach is the horizon
+  counted back, so the rule is symmetric with A1 (30 days ahead, 30 days behind). Measured on 3 Nov 2026 (the ruling's
+  day), day 1 and day 15 of every month: 1 January – 1 October → too far; 15 October and 1 November → passed; 4 October
+  (30 days behind) passed, 3 October (31) too far — both pinned. A year given is unchanged (past stays past). A 29
+  February with no next-year date stays `date_past` / `invalid_date` as before; one whose next occurrence exists but is
+  beyond the horizon (said on 3 Nov 2027, next is 2028) is now too far, not "passed". The reschedule lane shares the
+  resolver; its visible re-ask is unchanged (`rescheduleAskSlot`, item 7 of R1) — only the outcome and its alert class
+  (`date_beyond_horizon` instead of `date_past`) differ. D-4 counts a too-far drop exactly as it counted a past one.
+  The plan's rule sentences (§2, §3 step 4, the R1 record) and golden G24 were corrected in place.
+
+**F1 — the deploy precondition (read-only, `salon_ro`, one READ ONLY transaction, counts and ages only):** immediately
+before the Main put, `stage = 'confirming' AND btrim(coalesce(slot_name, '')) <> ''` must count 0. **Declared
+widening:** `stage = 'reschedule_confirming'` must count 0 too. Its freshness check (`Reschedule Fresh?`) is turn-based
+(`confirm_turn = turn_count + 1`), not time-based, so a reschedule confirm saved before R2d answers that sender's next
+"yes" whenever it comes — the same r5 HIGH-1 class, with no M1-like refusal behind it. It only makes the precondition
+stricter. **Why a nameless `confirming` row may stay:** `Build Event Request` refuses a confirm with no kept name (null,
+empty or blank) with an empty event id tagged `name_missing` — `tests/unit/name-capture.test.cjs:207` — and that refusal
+reaches `Event ID Valid?` false → `Mark Handoff` → `Save State` + `Build Owner Alert` —
+`tests/unit/name-capture.test.cjs:226`. The read also prints every stage's row count and the nameless `confirming` rows,
+so it is shown able to go non-empty. **Recorded bound:** the seconds between that read and the put — a conversation that
+enters a confirm stage on the PROMOTED engine in that gap gets an ask without a year and can be answered after the put.
+**Named v2 item:** a freshness check on the booking confirm (`confirming` has none; only cancel and reschedule do).
+
+**F2 and F3 — recorded bounds (the wording of "R2d recheck", accepted):** two concurrent turns of one sender can write a
+slot that was sent and answered "yes" but was not the last one sent (no per-sender serialisation); an ask saved but
+lost in delivery can be answered by a later "yes" (the engine knows what it SENT, not what was displayed).
+
+**N1 — named, not built:** a "no" at the booking confirm has no designed path (it gets "what would you like?"); an item
+for after DATE-PHRASING closes.
+
+**Tests:** `date-phrasing` 35/35 (E1 both directions, the 30/31-day reach boundary, a year given, 29 February, the
+reschedule lane), negative control: the same suite against the pre-E1 staged export fails exactly the two tests that pin
+E1; DATE-PHRASING mutants 60/60 (five new: E1 removed, E1 without its reach, the reach one day shorter and longer, the
+too-far reply without its day count); NAME-CAPTURE mutants 50/50; `check-all` 0. The owner script replayed at four run
+instants (2–10 Nov 2026) gives identical replies to R2d's.
