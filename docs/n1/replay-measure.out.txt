@@ -1,0 +1,152 @@
+SETUP  confirm ask: Haircut, Wednesday 4 Nov 2026 11:00 for Kim Moss — shall I book it? (yes / no)
+       state: {"stage":"confirming","last_intent":"book","slots":"haircut 2026-11-04 11:00 Kim Moss","appointments":[],"calendar_events":0,"owner_alerts":[]}
+
+== A. One turn at the booking confirm, then a later "yes" (confirm/0.92)
+A1 "no" · model cancel/0.9 (prompt)
+    reply : You don't have an active booking to cancel.
+    route : Extract Intent > Uncertain Turn? > Route Intent > Find Booking > Cancel Route > Build No-Booking Reply
+    after : {"stage":"confirming","last_intent":"cancel","slots":"haircut 2026-11-04 11:00 Kim Moss","appointments":[],"calendar_events":0,"owner_alerts":[]}
+   then "yes"
+    reply : You're booked: Haircut, Wednesday 4 Nov 11:00. See you then!
+    route : Extract Intent > Uncertain Turn? > Route Intent > Confirm Router > Build Event Request > Event ID Valid? > Book Appointment > Write Appointment
+    after : {"stage":"booked","last_intent":"confirm","slots":"haircut 2026-11-04 11:00 Kim Moss","appointments":["Haircut@2026-11-04T10:00:00.000Z:booked"],"calendar_events":1,"owner_alerts":[]}
+A2 "no" · model unknown/0.4 (alt)
+    reply : Hi! I can help you book, change or cancel an appointment — what would you like?
+    route : Extract Intent > Uncertain Turn? > Repeat Uncertain? > Build Clarify State
+    after : {"stage":"confirming","last_intent":"clarify","slots":"haircut 2026-11-04 11:00 Kim Moss","appointments":[],"calendar_events":0,"owner_alerts":[]}
+   then "yes"
+    reply : You're booked: Haircut, Wednesday 4 Nov 11:00. See you then!
+    route : Extract Intent > Uncertain Turn? > Route Intent > Confirm Router > Build Event Request > Event ID Valid? > Book Appointment > Write Appointment
+    after : {"stage":"booked","last_intent":"confirm","slots":"haircut 2026-11-04 11:00 Kim Moss","appointments":["Haircut@2026-11-04T10:00:00.000Z:booked"],"calendar_events":1,"owner_alerts":[]}
+A3 "no" · model confirm/0.3 (alt)
+    reply : Hi! I can help you book, change or cancel an appointment — what would you like?
+    route : Extract Intent > Uncertain Turn? > Repeat Uncertain? > Build Clarify State
+    after : {"stage":"confirming","last_intent":"clarify","slots":"haircut 2026-11-04 11:00 Kim Moss","appointments":[],"calendar_events":0,"owner_alerts":[]}
+   then "yes"
+    reply : You're booked: Haircut, Wednesday 4 Nov 11:00. See you then!
+    route : Extract Intent > Uncertain Turn? > Route Intent > Confirm Router > Build Event Request > Event ID Valid? > Book Appointment > Write Appointment
+    after : {"stage":"booked","last_intent":"confirm","slots":"haircut 2026-11-04 11:00 Kim Moss","appointments":["Haircut@2026-11-04T10:00:00.000Z:booked"],"calendar_events":1,"owner_alerts":[]}
+A4 "No thanks" · model cancel/0.9 (prompt)
+    reply : You don't have an active booking to cancel.
+    route : Extract Intent > Uncertain Turn? > Route Intent > Find Booking > Cancel Route > Build No-Booking Reply
+    after : {"stage":"confirming","last_intent":"cancel","slots":"haircut 2026-11-04 11:00 Kim Moss","appointments":[],"calendar_events":0,"owner_alerts":[]}
+   then "yes"
+    reply : You're booked: Haircut, Wednesday 4 Nov 11:00. See you then!
+    route : Extract Intent > Uncertain Turn? > Route Intent > Confirm Router > Build Event Request > Event ID Valid? > Book Appointment > Write Appointment
+    after : {"stage":"booked","last_intent":"confirm","slots":"haircut 2026-11-04 11:00 Kim Moss","appointments":["Haircut@2026-11-04T10:00:00.000Z:booked"],"calendar_events":1,"owner_alerts":[]}
+A5 "nope" · model cancel/0.85 (prompt)
+    reply : You don't have an active booking to cancel.
+    route : Extract Intent > Uncertain Turn? > Route Intent > Find Booking > Cancel Route > Build No-Booking Reply
+    after : {"stage":"confirming","last_intent":"cancel","slots":"haircut 2026-11-04 11:00 Kim Moss","appointments":[],"calendar_events":0,"owner_alerts":[]}
+   then "yes"
+    reply : You're booked: Haircut, Wednesday 4 Nov 11:00. See you then!
+    route : Extract Intent > Uncertain Turn? > Route Intent > Confirm Router > Build Event Request > Event ID Valid? > Book Appointment > Write Appointment
+    after : {"stage":"booked","last_intent":"confirm","slots":"haircut 2026-11-04 11:00 Kim Moss","appointments":["Haircut@2026-11-04T10:00:00.000Z:booked"],"calendar_events":1,"owner_alerts":[]}
+A6 "no, make it 12:00" · model book/0.9 time=12:00 (prompt)
+    reply : Haircut, Wednesday 4 Nov 2026 12:00 for Kim Moss — shall I book it? (yes / no)
+    route : Extract Intent > Uncertain Turn? > Route Intent > Merge Slots > Availability Gate
+    after : {"stage":"confirming","last_intent":"book","slots":"haircut 2026-11-04 12:00 Kim Moss","appointments":[],"calendar_events":0,"owner_alerts":[]}
+   then "yes"
+    reply : You're booked: Haircut, Wednesday 4 Nov 12:00. See you then!
+    route : Extract Intent > Uncertain Turn? > Route Intent > Confirm Router > Build Event Request > Event ID Valid? > Book Appointment > Write Appointment
+    after : {"stage":"booked","last_intent":"confirm","slots":"haircut 2026-11-04 12:00 Kim Moss","appointments":["Haircut@2026-11-04T11:00:00.000Z:booked"],"calendar_events":1,"owner_alerts":[]}
+A7 "no, make it 12:00" · model cancel/0.8 time=12:00 (alt)
+    reply : You don't have an active booking to cancel.
+    route : Extract Intent > Uncertain Turn? > Route Intent > Find Booking > Cancel Route > Build No-Booking Reply
+    after : {"stage":"confirming","last_intent":"cancel","slots":"haircut 2026-11-04 11:00 Kim Moss","appointments":[],"calendar_events":0,"owner_alerts":[]}
+   then "yes"
+    reply : You're booked: Haircut, Wednesday 4 Nov 11:00. See you then!
+    route : Extract Intent > Uncertain Turn? > Route Intent > Confirm Router > Build Event Request > Event ID Valid? > Book Appointment > Write Appointment
+    after : {"stage":"booked","last_intent":"confirm","slots":"haircut 2026-11-04 11:00 Kim Moss","appointments":["Haircut@2026-11-04T10:00:00.000Z:booked"],"calendar_events":1,"owner_alerts":[]}
+A8 "actually Thursday" · model book/0.9 dateExpr=thursday (prompt)
+    reply : Haircut, Thursday 5 Nov 2026 11:00 for Kim Moss — shall I book it? (yes / no)
+    route : Extract Intent > Uncertain Turn? > Route Intent > Merge Slots > Availability Gate
+    after : {"stage":"confirming","last_intent":"book","slots":"haircut 2026-11-05 11:00 Kim Moss","appointments":[],"calendar_events":0,"owner_alerts":[]}
+   then "yes"
+    reply : You're booked: Haircut, Thursday 5 Nov 11:00. See you then!
+    route : Extract Intent > Uncertain Turn? > Route Intent > Confirm Router > Build Event Request > Event ID Valid? > Book Appointment > Write Appointment
+    after : {"stage":"booked","last_intent":"confirm","slots":"haircut 2026-11-05 11:00 Kim Moss","appointments":["Haircut@2026-11-05T10:00:00.000Z:booked"],"calendar_events":1,"owner_alerts":[]}
+A9 "cancel" · model cancel/0.95 (prompt)
+    reply : You don't have an active booking to cancel.
+    route : Extract Intent > Uncertain Turn? > Route Intent > Find Booking > Cancel Route > Build No-Booking Reply
+    after : {"stage":"confirming","last_intent":"cancel","slots":"haircut 2026-11-04 11:00 Kim Moss","appointments":[],"calendar_events":0,"owner_alerts":[]}
+   then "yes"
+    reply : You're booked: Haircut, Wednesday 4 Nov 11:00. See you then!
+    route : Extract Intent > Uncertain Turn? > Route Intent > Confirm Router > Build Event Request > Event ID Valid? > Book Appointment > Write Appointment
+    after : {"stage":"booked","last_intent":"confirm","slots":"haircut 2026-11-04 11:00 Kim Moss","appointments":["Haircut@2026-11-04T10:00:00.000Z:booked"],"calendar_events":1,"owner_alerts":[]}
+A10 "how much is a beard trim?" · model answer_faq/0.9 serviceId=beard faqTopic=price (prompt)
+    reply : Beard Trim is €15.
+    route : Extract Intent > Uncertain Turn? > Route Intent > Answer FAQ
+    after : {"stage":"confirming","last_intent":"answer_faq","slots":"haircut 2026-11-04 11:00 Kim Moss","appointments":[],"calendar_events":0,"owner_alerts":[]}
+   then "yes"
+    reply : You're booked: Haircut, Wednesday 4 Nov 11:00. See you then!
+    route : Extract Intent > Uncertain Turn? > Route Intent > Confirm Router > Build Event Request > Event ID Valid? > Book Appointment > Write Appointment
+    after : {"stage":"booked","last_intent":"confirm","slots":"haircut 2026-11-04 11:00 Kim Moss","appointments":["Haircut@2026-11-04T10:00:00.000Z:booked"],"calendar_events":1,"owner_alerts":[]}
+
+== B. Wider cases
+B1 an EXISTING booking (Haircut Wed), the confirm of a SECOND one (Beard Fri), "no" · cancel/0.9
+    reply : Cancel your Haircut on Wednesday 4 Nov 11:00? Reply "yes" to cancel, or anything else to keep it.
+    route : Extract Intent > Uncertain Turn? > Route Intent > Find Booking > Cancel Route > Build Cancel-Confirm State
+    after : {"stage":"cancel_confirming","last_intent":"cancel","slots":"beard 2026-11-06 10:00 Kim Moss","appointments":["Haircut@2026-11-04T10:00:00.000Z:booked"],"calendar_events":1,"owner_alerts":[]}
+   then "yes"
+    reply : Done — your Haircut on Wednesday 4 Nov 11:00 is cancelled.
+    route : Extract Intent > Uncertain Turn? > Route Intent > Confirm Router > Find Booking > Cancel Route
+    after : {"stage":"cancelled","last_intent":"confirm","slots":"beard 2026-11-06 10:00 Kim Moss","appointments":["Haircut@2026-11-04T10:00:00.000Z:cancelled"],"calendar_events":1,"owner_alerts":[]}
+B2 "no" · unknown/0.4
+    reply : Hi! I can help you book, change or cancel an appointment — what would you like?
+    route : Extract Intent > Uncertain Turn? > Repeat Uncertain? > Build Clarify State
+    after : {"stage":"confirming","last_intent":"clarify","slots":"haircut 2026-11-04 11:00 Kim Moss","appointments":[],"calendar_events":0,"owner_alerts":[]}
+   "no" again · unknown/0.4
+    reply : I'm passing you to a team member — we'll get back to you shortly.
+    route : Extract Intent > Uncertain Turn? > Repeat Uncertain? > Mark Handoff
+    after : {"stage":"handoff","last_intent":"unknown","slots":"haircut 2026-11-04 11:00 Kim Moss","appointments":[],"calendar_events":0,"owner_alerts":["handoff"]}
+B3 for comparison — the CANCEL confirm's own "no": "cancel my booking" · cancel/0.95
+    reply : Cancel your Haircut on Wednesday 4 Nov 11:00? Reply "yes" to cancel, or anything else to keep it.
+    route : Extract Intent > Uncertain Turn? > Route Intent > Find Booking > Cancel Route > Build Cancel-Confirm State
+    after : {"stage":"cancel_confirming","last_intent":"cancel","slots":"haircut 2026-11-04 11:00 Kim Moss","appointments":["Haircut@2026-11-04T10:00:00.000Z:booked"],"calendar_events":1,"owner_alerts":[]}
+   "no" · cancel/0.9
+    reply : No problem — your booking stands.
+    route : Extract Intent > Build Cancel-Aborted State
+    after : {"stage":"new","last_intent":"cancel","slots":"haircut 2026-11-04 11:00 Kim Moss","appointments":["Haircut@2026-11-04T10:00:00.000Z:booked"],"calendar_events":1,"owner_alerts":[]}
+
+== C. From the PROPOSED post-decline state (written into the in-memory store; the export is unchanged)
+C1 "12:00" · model book/0.9 time=12:00
+    reply : Haircut, Wednesday 4 Nov 2026 12:00 for Kim Moss — shall I book it? (yes / no)
+    route : Extract Intent > Uncertain Turn? > Route Intent > Merge Slots > Availability Gate
+    after : {"stage":"confirming","last_intent":"book","slots":"haircut 2026-11-04 12:00 Kim Moss","appointments":[],"calendar_events":0,"owner_alerts":[]}
+C2 "actually Thursday" · model book/0.9 dateExpr=thursday
+    reply : Haircut, Thursday 5 Nov 2026 11:00 for Kim Moss — shall I book it? (yes / no)
+    route : Extract Intent > Uncertain Turn? > Route Intent > Merge Slots > Availability Gate
+    after : {"stage":"confirming","last_intent":"book","slots":"haircut 2026-11-05 11:00 Kim Moss","appointments":[],"calendar_events":0,"owner_alerts":[]}
+C3 "a beard trim instead" · model book/0.9 serviceId=beard
+    reply : Beard Trim, Wednesday 4 Nov 2026 11:00 for Kim Moss — shall I book it? (yes / no)
+    route : Extract Intent > Uncertain Turn? > Route Intent > Merge Slots > Availability Gate
+    after : {"stage":"confirming","last_intent":"book","slots":"beard 2026-11-04 11:00 Kim Moss","appointments":[],"calendar_events":0,"owner_alerts":[]}
+C4 "put it under Sam Lee" · model book/0.9 customerName=Sam Lee
+    reply : Haircut, Wednesday 4 Nov 2026 11:00 for Sam Lee — shall I book it? (yes / no)
+    route : Extract Intent > Uncertain Turn? > Route Intent > Merge Slots > Availability Gate
+    after : {"stage":"confirming","last_intent":"book","slots":"haircut 2026-11-04 11:00 Sam Lee","appointments":[],"calendar_events":0,"owner_alerts":[]}
+C5 "actually Wednesday 11:00 is fine" · model book/0.9 dateExpr=wednesday time=11:00
+    reply : Haircut, Wednesday 4 Nov 2026 11:00 for Kim Moss — shall I book it? (yes / no)
+    route : Extract Intent > Uncertain Turn? > Route Intent > Merge Slots > Availability Gate
+    after : {"stage":"confirming","last_intent":"book","slots":"haircut 2026-11-04 11:00 Kim Moss","appointments":[],"calendar_events":0,"owner_alerts":[]}
+C6 "yes" · model confirm/0.92
+    reply : I'm passing you to a team member — we'll get back to you shortly.
+    route : Extract Intent > Uncertain Turn? > Route Intent > Confirm Router > Build Event Request > Event ID Valid? > Mark Handoff
+    after : {"stage":"handoff","last_intent":"confirm","slots":"haircut 2026-11-04 11:00 Kim Moss","appointments":[],"calendar_events":0,"owner_alerts":["handoff"]}
+C7 "no" · model cancel/0.9
+    reply : You don't have an active booking to cancel.
+    route : Extract Intent > Uncertain Turn? > Route Intent > Find Booking > Cancel Route > Build No-Booking Reply
+    after : {"stage":"collecting","last_intent":"cancel","slots":"haircut 2026-11-04 11:00 Kim Moss","appointments":[],"calendar_events":0,"owner_alerts":[]}
+C8 "hmm" · model unknown/0.3
+    reply : Hi! I can help you book, change or cancel an appointment — what would you like?
+    route : Extract Intent > Uncertain Turn? > Repeat Uncertain? > Build Clarify State
+    after : {"stage":"collecting","last_intent":"clarify","slots":"haircut 2026-11-04 11:00 Kim Moss","appointments":[],"calendar_events":0,"owner_alerts":[]}
+C9 "how much is a beard trim?" · model answer_faq/0.9 serviceId=beard faqTopic=price
+    reply : Beard Trim is €15.
+    route : Extract Intent > Uncertain Turn? > Route Intent > Answer FAQ
+    after : {"stage":"collecting","last_intent":"answer_faq","slots":"haircut 2026-11-04 11:00 Kim Moss","appointments":[],"calendar_events":0,"owner_alerts":[]}
+C10 [existing booking] "cancel" · cancel/0.95
+    reply : Cancel your Haircut on Wednesday 4 Nov 11:00? Reply "yes" to cancel, or anything else to keep it.
+    route : Extract Intent > Uncertain Turn? > Route Intent > Find Booking > Cancel Route > Build Cancel-Confirm State
+    after : {"stage":"cancel_confirming","last_intent":"cancel","slots":"beard 2026-11-06 10:00 Kim Moss","appointments":["Haircut@2026-11-04T10:00:00.000Z:booked"],"calendar_events":1,"owner_alerts":[]}

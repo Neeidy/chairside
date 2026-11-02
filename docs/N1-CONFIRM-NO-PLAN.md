@@ -1,0 +1,392 @@
+# N1 PLAN — a designed path for "no" at the booking confirm
+
+> **Status: PLAN ONLY — awaiting Yigitcan's written "approved"** (`.claude/rules/plan-gate.md`). Nothing is built:
+> no Main or staged edit, no live write. Written from the committed export at `4cd53fd`.
+> **Ruling it implements:** Yigitcan's ruling, given by pasting the N1 brief (dated 2026-11-03 in the brief), says
+> to plan N1 now and build only after his written "approved". ROADMAP calls N1 "a 'no' at the booking confirm has no
+> designed path".
+> **Not reopened:** the "change during confirmation" intent (ARCH-DEC 2026-09-09e, v2) and the booking-confirm
+> freshness check (the v2 item carried at DATE-PHRASING R4). §3.7 shows where each one touches this plan and why neither
+> is needed for it.
+
+## 0. What the committed Main does today — measured offline
+
+**Instrument:** the committed chat-replay harness (`tests/unit/chat-replay.lib.cjs`), driven by
+[`docs/n1/replay-measure.cjs`](n1/replay-measure.cjs). Its full output is committed beside it as
+[`replay-measure.out.txt`](n1/replay-measure.out.txt). What the harness runs, stubs and does not prove is written in
+its own header. The **model's answer is GIVEN on every row, never called.**
+- The first answer listed for each phrase is the one `Build LLM Request` instructs at stage `confirming`, quoted from
+  the export: *"A clear agreement (yes/yep/ok/sure/confirm/that works) means intent=confirm and keep the same slots. A
+  DIFFERENT service/date/time means intent=book with the new detail. Decline/cancel means intent=cancel. Unclear
+  means low confidence."*
+- Rows marked *alt* are plausible deviations from that instruction.
+
+**Setup for every row:** the customer asks for "a haircut on Wednesday at 11:00" and gives the name "Kim Moss". The bot
+asks: *"Haircut, Wednesday 4 Nov 2026 11:00 for Kim Moss — shall I book it? (yes / no)"*. At that point `stage =
+confirming` and the slots hold haircut, 2026-11-04, 11:00 and Kim Moss.
+
+| # | customer types | model answer (given) | reply | stage after | slots after | alert / handoff | then "yes" |
+|---|---|---|---|---|---|---|---|
+| A1 | `no` | cancel · 0.9 | *"You don't have an active booking to cancel."* | **confirming** | kept | none | **books the declined slot** |
+| A2 | `no` | *alt* unknown · 0.4 | `askIntent` *"Hi! I can help you book, change or cancel…"* | confirming (`last_intent=clarify`) | kept | none | books it |
+| A3 | `no` | *alt* confirm · 0.3 | `askIntent` (clarify) | confirming | kept | none | books it |
+| A4 | `No thanks` | cancel · 0.9 | *"You don't have an active booking to cancel."* | confirming | kept | none | books it |
+| A5 | `nope` | cancel · 0.85 | same as A4 | confirming | kept | none | books it |
+| A6 | `no, make it 12:00` | book · 0.9 · time 12:00 | the confirm ask again, with 12:00 | confirming | time → 12:00 | none | books 12:00 ✅ |
+| A7 | `no, make it 12:00` | *alt* cancel · 0.8 · time 12:00 | *"You don't have an active booking to cancel."* | confirming | **11:00 kept, 12:00 lost** | none | **books 11:00** |
+| A8 | `actually Thursday` | book · 0.9 · dateExpr thursday | the confirm ask again, Thursday 5 Nov | confirming | date → 2026-11-05 | none | books Thursday ✅ |
+| A9 | `cancel` | cancel · 0.95 | *"You don't have an active booking to cancel."* | confirming | kept | none | books it |
+| A10 | `how much is a beard trim?` | answer_faq · 0.9 | *"Beard Trim is €15."* | confirming | kept | none | books it (see §3.7) |
+
+**Two wider cases (part B of the output):**
+
+| # | situation | what happens |
+|---|---|---|
+| B1 | The customer **already has a booking** (Haircut Wed 11:00), is at the confirm of a **second** one (Beard Trim Fri 10:00), and types `no` (model: cancel · 0.9) | The reply is ***"Cancel your Haircut on Wednesday 4 Nov 11:00? Reply "yes" to cancel…"***, so the "no" became a cancel ask about the OTHER, existing booking (`stage=cancel_confirming`, target = the existing row). A following "yes" **cancels the existing booking**. |
+| B2 | `no` twice, both read unknown · 0.4 | First turn: clarify. Second turn: handoff + owner alert (`handoff`). This is the two-strike ladder working as designed. |
+| B3 | For comparison: the **cancel** confirm's own `no` | *"No problem — your booking stands."* (`Build Cancel-Aborted State`), and the pending cancel is dropped. |
+
+**What the measurement says:**
+1. **No designed answer.** A plain "no" either gets an answer to a question that was not asked (A1, A4, A5, A9: "no
+   booking to cancel") or the generic greeting (A2, A3). Nothing says "nothing is booked" or asks what to change.
+2. **A declined confirm stays live.** In every "no" row `stage` stays `confirming` with the slots intact, and a later
+   "yes" (or "ok", or anything the model reads as `confirm`) **books the slot the customer declined**. The booking-confirm
+   lane has no freshness check to stop it; that check is the carried v2 item (handoff.md: *"`Confirm Router` →
+   `Reschedule Router` → `Build Event Request` has no freshness check"*).
+3. **Our own contract contradicts itself.** The prompt defines `cancel` at a booking confirm as *decline*, but
+   `Route Intent` sends every `cancel` to `Find Booking` → `Cancel Lookup`, which means "cancel an EXISTING booking".
+   With no booking that is the wrong sentence (A1). With one it is the B1 misroute: the customer is one "yes" away from
+   cancelling a booking they kept. It is not silent, because the cancel ask names the booking, but it is the wrong question.
+4. **"No + a new detail" already works when the model follows the prompt (A6, A8):** the existing `book` lane re-merges
+   and re-confirms. It fails only when the model reads the "no" as `cancel` (A7).
+
+**From the proposed post-decline state (part C):** `stage = collecting`, slots and name kept. This state was written into
+the replay's in-memory store; the export is unchanged. From there today's engine:
+- **re-confirms** a new time (C1), a new day (C2), a new service (C3), a new name (C4), and the original slot restated
+  (C5), all through the existing `book` → `Merge Slots` → availability path, with the name kept;
+- routes a bare "yes" to the existing fail-closed gate (C6: `Build Event Request` sees `stage !== 'confirming'`, so the
+  eventId is empty, then `Event ID Valid?` → `Mark Handoff`, owner alert `handoff`). **No booking**;
+- answers a second "no" read as `cancel` with "no booking to cancel" (C7). With an existing booking it gives the
+  existing booking's cancel ask (C10);
+- answers an unclear turn with clarify (C8), and a question as a question (C9).
+
+So the proposed state needs **no new code on the change path**. §3.5 covers C7 and §3.6 covers C6.
+
+## 1. Goal
+A customer who answers the booking confirm with "no" gets a designed answer: *nothing is booked, here is what you can
+change*. The declined confirm can no longer be booked by a later "yes", and a "no" at a booking confirm never turns
+into a question about cancelling a different booking.
+
+## 2. Scope / NOT-build
+**In:**
+- one deterministic check at the booking confirm, for a closed yes/no-shaped "no";
+- the model's confident `cancel` at a booking confirm read as the decline the prompt already defines it to be;
+- the decline transition (leave `confirming`, keep the slots and the name, ask what to change);
+- a second closed "no" after a decline closes the request;
+- two message templates;
+- tests, mutants and a negative control;
+- the config surfaces, the screen inventory and the flow diagram.
+
+**NOT built:**
+- the "change during confirmation" intent (v2, ARCH-DEC 2026-09-09e);
+- a freshness check / TTL on the booking confirm (v2, carried);
+- any prompt or schema change (`Build LLM Request`, `schemas/intent.schema.json`) — no LLM behaviour changes, so no paid eval is needed;
+- a pre-LLM shortcut that skips the model call (§13 D-1);
+- a new `stage` value;
+- any DB / schema migration (`last_intent` is free `text`, `db/schema/001_init.sql` line 58);
+- any change to the cancel or reschedule confirm, `Find Booking`, `Cancel Lookup`, the write path, Purge or the dashboard;
+- other languages: the customer text stays English, the repo's stated bound.
+
+## 3. Design
+
+**3.1 Where.** Add one IF, **`Booking Declined?`**, on `Abort Reschedule?`'s false output, in front of `Uncertain Turn?`.
+- **Where that is today (measured):** `Abort Reschedule?` false → `Uncertain Turn?`. The cancel and reschedule confirms
+  already drop a non-`confirm` answer at that point (`Abort Cancel?` → `Build Cancel-Aborted State`, `Abort Reschedule?`
+  → `Build Reschedule-Aborted State`). The booking confirm gets the same shape, at the same place.
+- **Why after the model call, not before it:** every downstream node reads `$('Validate Intent')`, so skipping the model
+  would mean synthesising that item (§13 D-1). A "no" costs one LLM call, the same as today.
+- **What runs before it (unchanged):** the earlier gates — kill-switch, spend, `Extraction Transient?`, `Invalid or
+  Handoff Gate`, `Confirm Pending & Uncertain?`. A model failure on a "no" therefore keeps its own visible class (§3.7).
+
+**3.2 The deterministic check — a closed set, matched on the text.** At `state.stage === 'confirming'` the turn is a
+decline when the inbound text is exactly a closed "no":
+- **The pattern:** `^(?:no|nope|nah|no thanks|no thank you|not now)[.!]*$`, case-insensitive, after trimming spaces.
+  The set is ruled in §13 D-2.
+- **Where the text comes from:** `$json.text`, which is present on the item at this point (measured: `"No thanks"`).
+- **It overrides the model's answer.** For this closed shape the text decides and the model's intent and confidence are
+  not consulted. That is deterministic-before-AI, and it makes A1–A5 independent of what the model says.
+- **Anything longer goes to the model, as today.** "no, make it 12:00" or "no 🙂" are examples.
+
+**3.3 The model's `cancel` at a booking confirm = decline.** At `state.stage === 'confirming'`, `intent === 'cancel'`
+with `confidence ≥ bot.confidenceThreshold` is a decline too (§13 D-3).
+- **Why:** it is the meaning our own prompt gives `cancel` in that stage (§0, point 3). It closes A9 and B1: from this
+  turn the bot never asks about cancelling a different booking.
+- **A customer who did mean an existing booking** says "cancel" again on the next turn. The stage is then `collecting`
+  and the existing cancel lane answers (C10, measured).
+- **An uncertain `cancel` is not a decline.** It goes to `Uncertain Turn?` → clarify as today (A2/A3 shape) and the
+  confirm stays pending, so handoff.md's "never drop a pending confirmation on a classification we distrust" holds.
+  The only drop without a confident classification is §3.2's, and that one rests on the text, not on a classification.
+
+**3.4 The decline transition — `Build Booking-Declined State`** (new Code node, → `Save State`, which already exists).
+It returns `{ ...vi, state: { ...st, stage: 'collecting', last_intent: 'declined', confirm_turn: '' }, computed_reply:
+messageTemplates.bookingDeclined }`.
+- **The slots** are the STORED ones (`st.slots` at this point holds them, measured), so service, date, time and name are
+  kept and `Save State` writes them back unchanged.
+- **Demo text (§13 D-5):** *"No problem — nothing is booked. What would you like to change: the service, the day, the
+  time or the name?"*
+- **What the path does not do:** no owner alert, because a customer changing their mind is not a fault; no `Find Booking`
+  read; no Calendar call; no appointment write. `last_intent='declined'` is the audit trail (prompt-injection.md:
+  "log every action").
+
+**3.5 A second closed "no" closes the request (§13 D-4).** The same IF also fires when `state.stage === 'collecting'`,
+the PREVIOUS turn's `last_intent` is `'declined'`, and the text matches the closed set of §3.2.
+- **Where the previous value comes from:** `$('Merge State').first().json.state.last_intent`. At this point
+  `$json.state.last_intent` already holds THIS turn's value (measured: `cancel` vs `Merge State`'s `book`), which is why
+  `Repeat Uncertain?` reads it the same way.
+- **What the Build node writes:** `stage: 'new'`, `last_intent: 'dropped'`, service/date/time emptied, the name kept.
+- **Demo text:** *"Okay — nothing is booked. Message me any time you'd like to book."*
+- **Why:** without this rung C7 answers a customer who said "no" twice with "you don't have an active booking to
+  cancel". A non-locking class still needs an exit (handoff.md: "no lock quietly means no exit").
+
+**3.6 After a decline: what each next turn does** — all measured in part C, none needing new code:
+
+| next turn | result |
+|---|---|
+| new time / day / service / name, or the original slot restated | re-confirm (C1–C5) |
+| a question | answered (C9) |
+| something unclear | clarify (C8) |
+| bare "yes" | fail-closed handoff with an owner alert (C6) — **never a booking**; a recorded bound (§13 D-6) |
+| "cancel" with an existing booking | that booking's own cancel ask (C10) |
+
+**3.7 "No + a new detail", and what this plan leaves alone.**
+- **"no, make it 12:00" when the model follows the prompt** (`book` + the time): it does not match §3.2. It reaches the
+  existing `book` lane and re-confirms with 12:00 (A6). That lane is reused unchanged.
+- **The same message read as `cancel` (A7):** §3.3 makes it a decline. The 12:00 is **not merged**: the stored slot is
+  kept and the reply asks what to change, so the customer types the time once more. **Recorded bound: one extra turn,
+  never a wrong booking.** Merging a detail out of a `cancel` would mean rewriting the model's intent, which is the v2
+  change-during-confirmation design and is not reopened here.
+- **A question at the confirm (A10)** keeps the confirm pending, and a later "yes" books it. That is the carried v2
+  freshness item, unchanged and recorded in a test so a later change to it is visible.
+- **The cancel and reschedule confirms** are untouched (B3 stays as it is).
+- **The two-strike ladder for non-closed uncertain turns** is untouched (B2).
+- **A model failure on a "no"** (unparseable answer, schema failure, `handoff`) still meets its own earlier gate:
+  extraction-transient or intent-handoff, both visible. A closed "no" is matched only after those gates. **Bound,
+  recorded.**
+
+## 4. Skeleton (node level)
+**Main (edited):**
+- **`Booking Declined?`** (NEW IF): one boolean expression carrying §3.2, §3.3 and §3.5.
+- **`Build Booking-Declined State`** (NEW Code): picks the variant by `state.stage` (`confirming` → §3.4,
+  `collecting` → §3.5); no regex of its own.
+- **`Sticky — Booking Declined`** (NEW sticky note).
+- **Edges:** remove `Abort Reschedule?|1|Uncertain Turn?|0`; add `Abort Reschedule?|1|Booking Declined?|0`,
+  `Booking Declined?|0|Build Booking-Declined State|0`, `Booking Declined?|1|Uncertain Turn?|0` and
+  `Build Booking-Declined State|0|Save State|0`.
+- **`Load Config`** gains exactly `messageTemplates.bookingDeclined` and `messageTemplates.bookingDropped`
+  (a `gate_edits` entry, §13 D-5).
+- **Nothing else in Main changes.**
+
+**Config:** `config/client.config.example.json` and `config/client.config.example-b.json` (the two templates);
+`render-client` refuses a config without them, by the same mechanism `askName` used (`PENDING_KEYS` while staged,
+emptied at promotion).
+
+**Docs:**
+- `docs/SCREEN-INVENTORY.md` and `docs/UX-ARCHITECTURE.md`: two new reply rows next to W12/W22;
+- `docs/FLOW-DIAGRAM.md`: the new branch;
+- `tests/regression-suite.md`: new rows;
+- `tests/golden-set.md`: expected model answers for the "no" phrasings at a seeded `confirming` stage, which is not run
+  live — the same status as G8.
+
+**Tests:** see §10. **Delta:** a new `APPROVED_DELTAS['main']` entry in `scripts/diff-workflow-copy.py` (§11).
+
+## 5. Integrations
+None new:
+- **Postgres:** only `Save State`, which already exists. The decline turn drops today's `Find Booking` read.
+- **Google Calendar:** no call on the decline path.
+- **LLM:** one call per turn, the same as today, with no prompt change.
+- **Telegram:** no new alert. C6's existing `handoff` alert is unchanged.
+- **Untouched:** Zernio, Turnstile, Vercel and the site.
+
+## 6. Mock data
+Synthetic names only (`Kim Moss`, `Sam Lee`, `Testname`) in the replay, the unit tests and the golden rows. The live
+check is the owner's own run through Turnstile on the demo calendar. His rows stay as demo data unless he rules
+otherwise. No real customer name enters a fixture or a report.
+
+## 7. Critical-Review Targets (Codex)
+The change adds no write and REMOVES two paths: a pending booking that survived a "no", and a "no" turning into a cancel
+ask about another booking. The targets it touches:
+- **#5 (handoff threshold).** Two drops of a pending confirmation: a deterministic one (§3.2) and a confident-model one
+  (§3.3). Is there any route where a drop rests on an UNCERTAIN classification? An uncertain `cancel` must still clarify.
+- **#8 (booking mutation via bot).** The B1 route is closed from the booking-confirm turn; the cancel lane itself is
+  unchanged. Can any booking-confirm "no" still reach `Cancel Lookup`?
+- **#1b / #2 (the booking write).** No new write. Can a "yes" after a decline reach `Book Appointment` (C6: it must not)?
+  Can `Build Booking-Declined State` leave `stage = confirming`?
+
+One Codex pass on the delta (§13 D-7), not a new target.
+
+## 8. Acceptance criteria
+1. **A closed "no" at the booking confirm** (§3.2's set, any case and trailing `.`/`!`) gets `bookingDeclined`,
+   whatever the model answered (cancel / unknown / confirm-low / book). After it: `stage=collecting`,
+   `last_intent=declined`, and service, date, time and name kept. Not on the path: `Find Booking`, any Calendar node,
+   `Write Appointment` and any owner alert.
+2. **A confident model `cancel` at the booking confirm** gets the same result (A1, A4, A5, A7, A9 and B1). No
+   `Cancel Lookup` runs on that turn, so the existing booking in B1 gets no cancel ask.
+3. **An uncertain `cancel` or `unknown` on a non-closed text** keeps today's clarify, and the confirm stays pending.
+4. **After a decline:** a new time, day, service or name — or the original slot restated — re-confirms (C1–C5); a bare
+   "yes" never books (C6); a question is answered (C9).
+5. **A second closed "no" after a decline** gets `bookingDropped`: `stage=new`, service/date/time cleared, name kept,
+   no alert.
+6. **Unchanged:**
+   - "yes" at the confirm books (A6 and A8, then "yes");
+   - a question at the confirm keeps it pending (A10, the v2 freshness item, recorded);
+   - the cancel and reschedule confirms' own "no" (B3);
+   - two uncertain non-closed turns hand off (B2);
+   - every existing replay test and golden case stays green.
+7. **Config:** both templates are in `Load Config` and in both example configs; `render-client` refuses a config
+   without them; the inventory and flow-diagram rows exist.
+8. **Release:** guards at 0; parity green against the committed exports after promotion; the owner's live run shows (1)
+   and (4), read back by GET on executions and with `salon_ro`.
+
+## 9. ⚙ Drill matrix
+| scenario | setup | expected | MUST-RUN | MUST-NOT-RUN |
+|---|---|---|---|---|
+| plain "no" | confirm → `no` (each model answer A1–A3) | `bookingDeclined`, collecting, slots kept | `Booking Declined?` true → `Build Booking-Declined State` → `Save State` | `Find Booking`, `Uncertain Turn?`, any Calendar node |
+| closed variants | `No thanks`, `nope`, `NO!`, `no thank you.`, `not now` | as above | same | same |
+| near-misses stay with the model | `no, make it 12:00` (book), `no 🙂`, `nothing else`, `know what, 12:00` | the model's own route | `Uncertain Turn?` → `Route Intent` | `Booking Declined?` true |
+| confident cancel at confirm, no booking | `cancel` · 0.95 | `bookingDeclined` | the decline path | `Build No-Booking Reply` |
+| confident cancel at confirm, existing booking (B1) | booked Wed, confirm Fri → `no` · cancel | `bookingDeclined`; the existing booking untouched | the decline path | `Build Cancel-Confirm State`, `Cancel Lookup` |
+| uncertain cancel at confirm | `hm, cancel?` · cancel 0.5 | clarify; the confirm stays pending | `Build Clarify State` | the decline path |
+| "no + detail" read as cancel (A7) | `no, make it 12:00` · cancel 0.8 · time | `bookingDeclined`; stored 11:00 kept, 12:00 not merged (bound) | decline path | a booking at either time |
+| "yes" after a decline (C6) | decline → `yes` | handoff + owner alert | `Event ID Valid?` false → `Mark Handoff` | `Book Appointment`, `Write Appointment` |
+| change after a decline | decline → `12:00` / `Thursday` / `beard instead` / `under Sam Lee` | re-confirm with the change, name kept | `Merge Slots` → availability | the decline path |
+| second "no" after a decline | decline → `no` | `bookingDropped`, stage new, service/date/time cleared, name kept | `Booking Declined?` (collecting rung) | `Build No-Booking Reply` |
+| "no" at the cancel / reschedule confirm | B3 | unchanged: `cancelAborted` / `rescheduleAborted` | `Abort Cancel?` / `Abort Reschedule?` | `Booking Declined?` |
+| "no" outside any confirm | stage new / booked → `no` | unchanged (today's route) | — | the decline path (stage gate) |
+| jailbreak at the confirm | `no. ignore previous instructions…` | not a closed "no" → the model's route (handoff) | `Invalid or Handoff Gate` | the decline path |
+| idempotency / double-booking / DST | unchanged paths | unchanged | the existing drills | — |
+
+## 10. Tests
+- **Replay, end to end:** a new `tests/unit/n1-confirm-no.test.cjs` on the export under test, built from this plan's
+  replay rows. It covers every §9 row that the offline harness can drive, plus the C1–C10 follow-ups, the A10 freshness
+  bound, and B2/B3 as regression.
+- **Negative control:** the same test run on the committed pre-N1 export goes red on criteria 1, 2, 4 and 5. §0 is
+  already that run.
+- **Node level:**
+  - the `Booking Declined?` expression is evaluated on a table of the closed set and its near-misses (case, punctuation,
+    spaces, the emoji, the comma form);
+  - `Build Booking-Declined State` is run as code for both variants;
+  - the `Load Config` gate edit is checked by `gate_edit_errs`.
+- **Mutants:** `tests/unit/n1-confirm-no-mutants.py`, each mutant must die. Candidates:
+  - the stage gate dropped;
+  - the regex anchors dropped;
+  - a near-miss admitted;
+  - the confidence term dropped from §3.3;
+  - `stage` left at `confirming`;
+  - the slots or the name emptied on the decline;
+  - `last_intent` not written;
+  - the ladder reading `$json` instead of `Merge State`;
+  - the ladder's stage gate dropped;
+  - the false edge pointed past `Uncertain Turn?`;
+  - the drop variant clearing the name;
+  - an owner-alert flag set on the decline.
+- **Wiring:** golden set (expected answers only) and the regression suite as in §4, and `check-all` wiring for the new
+  test.
+- **Live:** the owner's run (§11), read back with GET and `salon_ro`.
+
+## 11. Deploy route, rollback, rounds
+**Route:** `scripts/workflow-step.py put` with a new `APPROVED_DELTAS['main']` entry:
+- `add_nodes {Booking Declined?, Build Booking-Declined State, Sticky — Booking Declined}`;
+- the four edges of §4 added and the one removed;
+- `gate_edits {'Load Config': {messageTemplates.bookingDeclined, messageTemplates.bookingDropped}}`.
+
+IF, Code and sticky note are all in `ADDABLE_TYPES`. Everything else is unchanged and `compare` holds it so.
+
+**Procedure** (as at DATE-PHRASING R3):
+1. Start gates first, outside :55–:05: the Turnstile dummy 403, parity, listeners and host-leak.
+2. `rehearse-rollback` with a live snapshot in the scratchpad (0600, outside the repo).
+3. The put, then probe and both parity guards against the staged export.
+4. End gates.
+
+**No in-flight precondition is needed this time, and the reason is stated rather than assumed:** the change adds an exit
+from `confirming` and changes no confirm text, slot shape or write. A conversation already at `confirming` when the put
+lands meets the new path like any other. One that reached `collecting` before the put has no `last_intent='declined'`,
+so the §3.5 rung cannot fire for it.
+
+**⚠ ONAY blocks** (each its own written approval, in the shape of `irreversible-actions.md`):
+```
+⚠ ONAY GEREKİYOR (1)
+Ne yapacağım:      Canlı Main iş akışına iki yeni node ve bir dal ekleyip yayınlayacağım (önce geri-alma provası).
+Neden:             Rezervasyon onayındaki "no" için tasarlanmış cevap canlıya çıksın.
+Yanlışsa ne olur:  Onay adımında müşteri cevabı yanlış yola gidebilir; yazma yolu değişmediği için yanlış kayıt oluşmaz.
+Geri alınabilir mi:Evet — put öncesi alınan canlı snapshot ile tek komutla geri yüklenir (prova edilmiş olur).
+
+⚠ ONAY GEREKİYOR (2)
+Ne yapacağım:      Kapılardan biri kırmızı dönerse canlı Main'i put öncesi snapshot'a geri yükleyeceğim.
+Neden:             Kırmızı bir canlı sürüm üretimde kalmasın.
+Yanlışsa ne olur:  Geri yükleme yanlış snapshot'tan yapılırsa önceki sürümden farklı bir graf canlıya çıkar.
+Geri alınabilir mi:Evet — snapshot ve committed export ikisi de durur; parity ölçer.
+
+⚠ ONAY GEREKİYOR (3)
+Ne yapacağım:      Promosyon ve parity yeşil olduktan sonra canlı snapshot'ı ve staged dosyayı sileceğim.
+Neden:             Snapshot canlı değerler taşır; iş kapanınca tutulmaz (remote-operator.md).
+Yanlışsa ne olur:  Promosyon eksikse geri-alma kaynağı kaybolur.
+Geri alınabilir mi:Hayır — bu yüzden yalnız parity committed export'a karşı yeşilken yapılır.
+```
+
+**Owner run (his browser — it needs a real Turnstile token):**
+1. Book a haircut and give a name; at the confirm type `no`. Expected: `bookingDeclined`.
+2. Type a new time. Expected: the confirm again, with the name.
+3. Type `yes`. Expected: booked.
+4. In a second conversation: book and give a name; at the confirm type `no`, then `no` again. Expected:
+   `bookingDropped`.
+
+Read back by GET on executions and with `salon_ro`. The run also records what the live model answers for "no",
+which this plan only assumes (§13 D-8).
+
+**Promotion:** staged → committed, parity 0 against the committed exports, then ⚠ ONAY (3).
+
+**Rounds (estimate, 3–4):**
+- **R1:** offline build — nodes, delta, config, tests, mutants, staged export — plus the L2 agents (`flow-reviewer`,
+  `code-reviewer`, `qa-tester`, `security-auditor`).
+- **Codex:** on the §7 delta.
+- **R2:** fixes. Skipped if Codex finds nothing.
+- **R3:** live put, then STOP for the owner run.
+- **R4:** read the run, promote, records.
+
+## 12. Automation-fit
+Neither `/loop` nor `/goal`: every step ends at a human gate (the plan approval, the put, the owner's live run).
+
+## 13. Decisions for the approver — each with a recommendation
+- **D-1 Where the check sits.**
+  - **Recommended:** after the model call, on `Abort Reschedule?`'s false output (§3.1). It mirrors the cancel and
+    reschedule aborts, the topology change is the smallest, and spend is the same as today.
+  - *Alternative:* a pre-LLM shortcut. It saves one call per "no", but every downstream node reads `$('Validate Intent')`,
+    so that item would have to be synthesised.
+- **D-2 The closed set.**
+  - **Recommended:** `no · nope · nah · no thanks · no thank you · not now`, with trailing `.`/`!`, case-insensitive,
+    nothing else.
+  - *Alternatives:* adding `n` (one stray key would then drop a confirm), or `cancel` (unnecessary: D-3 covers it
+    through the model with a confidence floor).
+- **D-3 A confident model `cancel` at a booking confirm is a decline.**
+  - **Recommended:** yes (§3.3). It is our own prompt's definition, and it closes B1. A customer who meant an existing
+    booking says "cancel" again (C10).
+  - *Alternative:* text-only (D-2) and leave B1 as it is.
+- **D-4 A second closed "no" after a decline closes the request.**
+  - **Recommended:** yes (§3.5): stage `new`, service/date/time cleared, name kept.
+  - *Alternative:* none, which leaves C7's "no booking to cancel".
+- **D-5 The two templates live in `Load Config`** (a `gate_edits` entry, as `askName` and the date templates did).
+  - **Recommended:** yes — config-driven and visible, and `render-client` makes a new client set them.
+  - *Alternative:* the `OPTIONAL` route with a code fallback (as `cancelRetry`). It touches fewer surfaces, but the
+    demo text would live in a node.
+  - **Texts proposed in §3.4 and §3.5; amend them freely.**
+- **D-6 A bare "yes" after a decline.**
+  - **Recommended:** keep today's fail-closed handoff (C6) as a recorded bound. It is rare after a reply that asks what
+    to change; it is visible and never a booking.
+  - *Alternative:* a new path that re-asks the confirm. That is new code on the confirm lane, close to the v2 design.
+- **D-7 Codex.**
+  - **Recommended:** one pass on the delta against #5, #8 and #1b/#2 (§7).
+  - *Alternative:* the L2 agents only.
+- **D-8 No separate paid eval.**
+  - **Recommended:** none. The design does not depend on the model's answer for a closed "no"; the owner's live run
+    records it for "no", and for "no, make it 12:00" if he types it.
+  - *Alternative:* a capped paid mini-eval (≤ 10 calls) at R1, under its own approval.

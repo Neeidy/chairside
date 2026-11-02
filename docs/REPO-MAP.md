@@ -140,6 +140,7 @@
 - `docs/FLOW-DIAGRAM.md`
 - `docs/LOOM-SCRIPT.md`
 - `docs/MIGRATION-PLAN.md`
+- `docs/N1-CONFIRM-NO-PLAN.md`
 - `docs/NAME-CAPTURE-PLAN.md`
 - `docs/OPERATIONAL-INCIDENTS.md`
 - `docs/PHASE-6-BACKLOG.md`
@@ -246,6 +247,11 @@
 - `docs/codex/public-demo/crt15.md`
 - `docs/codex/public-demo/prompt.md`
 - `docs/codex/public-demo/run.sh`
+
+### docs/n1
+
+- `docs/n1/replay-measure.cjs`
+- `docs/n1/replay-measure.out.txt`
 
 ### n8n
 
@@ -926,6 +932,22 @@
   - ## 10 · Budget and emergency exit
   - ## 11 · Rulings (Yigitcan, 2026-10-19: "onaylıyorum", with Cowork's recommendations)
 
+### `docs/N1-CONFIRM-NO-PLAN.md`
+  - ## 0. What the committed Main does today — measured offline
+  - ## 1. Goal
+  - ## 2. Scope / NOT-build
+  - ## 3. Design
+  - ## 4. Skeleton (node level)
+  - ## 5. Integrations
+  - ## 6. Mock data
+  - ## 7. Critical-Review Targets (Codex)
+  - ## 8. Acceptance criteria
+  - ## 9. ⚙ Drill matrix
+  - ## 10. Tests
+  - ## 11. Deploy route, rollback, rounds
+  - ## 12. Automation-fit
+  - ## 13. Decisions for the approver — each with a recommendation
+
 ### `docs/NAME-CAPTURE-PLAN.md`
   - ## 0. The defect, verified against `n8n/workflow.main.sanitized.json`
   - ## 1. Goal
@@ -1103,6 +1125,7 @@
   - ### docs/codex/name-capture
   - ### docs/codex/phase-8
   - ### docs/codex/public-demo
+  - ### docs/n1
   - ### n8n
   - ### n8n/screenshots
   - ### ops/systemd
@@ -1185,6 +1208,7 @@
   - ### `docs/FLOW-DIAGRAM.md`
   - ### `docs/LOOM-SCRIPT.md`
   - ### `docs/MIGRATION-PLAN.md`
+  - ### `docs/N1-CONFIRM-NO-PLAN.md`
   - ### `docs/NAME-CAPTURE-PLAN.md`
   - ### `docs/OPERATIONAL-INCIDENTS.md`
   - ### `docs/PHASE-6-BACKLOG.md`
