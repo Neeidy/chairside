@@ -236,6 +236,18 @@ async function stubCases(b) {
   check('an interactive challenge for 24 s: no stall said while it is up; the token afterwards opens the send',
     quietDuringChallenge && !stuckShown(s) && tokenReady(s), { quietDuringChallenge, ...s });
 
+  // 9. A CHALLENGE THAT ENDS IN A FAILURE, with no after-interactive and then silence: the pause must not outlive it.
+  await page(b);
+  await b.ev(`window.__ts.challenge(true)`); await sleep(500); await b.ev(`window.__ts.error()`);
+  const failedChallengeSaid = await waitFor(b, stuckShown, 30000);
+  check('a challenge that fails (no after-interactive), then silence: the stall is still said by 30 s', failedChallengeSaid, await state(b));
+
+  // 10. A CHALLENGE THAT ENDS WITHOUT A TOKEN: the wait restarts and is said after 20 s.
+  await page(b);
+  await b.ev(`window.__ts.challenge(true)`); await sleep(500); await b.ev(`window.__ts.challenge(false)`);
+  const endedSaid = await waitFor(b, stuckShown, 25000);
+  check('a challenge that ends without a token: the stall is said by 25 s', endedSaid, await state(b));
+
   // 5. A WAIT THAT NEVER ENDS: a send, then the reset's callback never comes. Said after 20 s; gone with the token.
   await page(b);
   await b.ev(`window.__ts.pass('t5')`); await sleep(200);
