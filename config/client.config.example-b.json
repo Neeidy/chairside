@@ -115,7 +115,7 @@
     "llmPricePer1kTokensIn": 0.001,
     "llmPricePer1kTokensOut": 0.005,
     "llmCostCapUsd": 10.0,
-    "bookingHorizonDays": 90
+    "bookingHorizonDays": 30
   },
   "$comment_ownerAlert": "Owner-alert channel (Telegram). enabled=false silences EVERY alert class, silently — there is no second channel. These two values MUST match across the three Load Configs (main / reminders / purge); scripts/check-cancel-validation-parity.py asserts it.",
   "ownerAlert": {

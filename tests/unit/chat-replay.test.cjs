@@ -188,7 +188,7 @@ const GOLD_FIRST = {
   G1: ASK_NAME,                                                       // tomorrow 15:00: complete but the name
   G4: 'Which service would you like? (Haircut / Beard Trim / Haircut + Beard)',
   G6: ASK_NAME,                                                       // "this friday" on a Sunday → D-5 → Friday 6 Nov
-  G15: 'We take bookings up to 90 days ahead — which date did you mean?',   // A1
+  G15: 'We take bookings up to 30 days ahead — which date did you mean?',   // A1, D-2 as amended by R2d
   G16: 'Haircut, Monday 2 Nov 2026 15:00 for Alex — shall I book it? (yes / no)',
   G24: ASK_NAME, G25: ASK_NAME,
   G26: '4 November is a Wednesday — did you mean Wednesday 4 November, or a Thursday?',

@@ -95,7 +95,7 @@ NAME_CAPTURE_ASK = 'What name should I put the booking under? (Any name is fine 
 # DATE-PHRASING R1 (docs/DATE-PHRASING-PLAN.md §4; rulings D-1, D-2, D-3): the plan's two config keys and six templates.
 DATE_PHRASING_GATE_EDITS = {
     'business.dateOrder': 'DMY',
-    'bot.bookingHorizonDays': 90,
+    'bot.bookingHorizonDays': 30,   # D-2 as amended by the R2d ruling (2026-11-02): 30, was 90
     'messageTemplates.askDateTimeHint': 'Which day and time? You can write e.g. "Wednesday at 11:00", "tomorrow at 15:00" or "4 November at 11:00".',
     'messageTemplates.dateWeekdayMismatch': '{date} is a {actual} — did you mean {actual} {date}, or a {said}?',
     'messageTemplates.dateAmbiguous': 'Did you mean {a} or {b}?',
@@ -811,7 +811,7 @@ def selftest():
         TPL = ''.join(f'    {k.split(".")[1]}: {json.dumps(v, ensure_ascii=False)},\n'
                       for k, v in DATE_PHRASING_GATE_EDITS.items() if k.startswith('messageTemplates.'))
         ASKN = f'    askName: {json.dumps(GT, ensure_ascii=False)},\n'
-        def dedit(biz=', dateOrder: "DMY" }', bot=', bookingHorizonDays: 90 }', tpl=None, also=None):
+        def dedit(biz=', dateOrder: "DMY" }', bot=', bookingHorizonDays: 30 }', tpl=None, also=None):
             e = _copy.deepcopy(dbase); n = node(e, GN); c = n['parameters']['jsCode']
             c = c.replace('locale: "en-AT" }', 'locale: "en-AT"' + biz, 1).replace('llmCostCapUsd: 10.00 }', 'llmCostCapUsd: 10.00' + bot, 1)
             c = c.replace(ASKN, ASKN + (TPL if tpl is None else tpl), 1)
@@ -820,12 +820,13 @@ def selftest():
         icases = [
             ('inline gate edit: exactly the eight approved keys (two inline, six on their own lines)', dedit(), True),
             ('inline gate edit: bookingHorizonDays inline in the WRONG object (business)',
-             dedit(biz=', dateOrder: "DMY", bookingHorizonDays: 90 }', bot=' }'), False),
-            ('inline gate edit: another value (91)', dedit(bot=', bookingHorizonDays: 91 }'), False),
-            ('inline gate edit: the value as TEXT ("90")', dedit(bot=', bookingHorizonDays: "90" }'), False),
-            ('inline gate edit: a second key inline beside it', dedit(bot=', bookingHorizonDays: 90, foo: 1 }'), False),
+             dedit(biz=', dateOrder: "DMY", bookingHorizonDays: 30 }', bot=' }'), False),
+            ('inline gate edit: another value (31)', dedit(bot=', bookingHorizonDays: 31 }'), False),
+            ('inline gate edit: the pre-R2d value (90)', dedit(bot=', bookingHorizonDays: 90 }'), False),
+            ('inline gate edit: the value as TEXT ("30")', dedit(bot=', bookingHorizonDays: "30" }'), False),
+            ('inline gate edit: a second key inline beside it', dedit(bot=', bookingHorizonDays: 30, foo: 1 }'), False),
             ('inline gate edit: an existing value on the same line changed too', dedit(also=lambda c: c.replace('llmCostCapUsd: 10.00,', 'llmCostCapUsd: 20.00,', 1)), False),
-            ('inline gate edit: the key ALSO on its own line', dedit(tpl=TPL + '    bookingHorizonDays: 90,\n'), False),
+            ('inline gate edit: the key ALSO on its own line', dedit(tpl=TPL + '    bookingHorizonDays: 30,\n'), False),
             ('inline gate edit: one template missing', dedit(tpl=TPL.split('\n', 1)[1]), False),
             ('inline gate edit: dateOrder with another value (MDY)', dedit(biz=', dateOrder: "MDY" }'), False),
         ]

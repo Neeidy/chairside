@@ -11,7 +11,7 @@
   "gate_edits": {
     "Load Config": {
       "business.dateOrder": "DMY",
-      "bot.bookingHorizonDays": 90,
+      "bot.bookingHorizonDays": 30,
       "messageTemplates.askDateTimeHint": "Which day and time? You can write e.g. \"Wednesday at 11:00\", \"tomorrow at 15:00\" or \"4 November at 11:00\".",
       "messageTemplates.dateWeekdayMismatch": "{date} is a {actual} — did you mean {actual} {date}, or a {said}?",
       "messageTemplates.dateAmbiguous": "Did you mean {a} or {b}?",

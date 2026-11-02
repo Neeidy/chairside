@@ -78,7 +78,10 @@ MUTANTS = {
     'R2d: the reschedule confirm shows a date other than the one "yes" writes': [(CRA, "to ${newWhen}?", "to ${start.plus({ days: 1 }).toFormat('cccc d LLL yyyy HH:mm')}?")],
     'R2d: the year spread to the reschedule busy reply': [(CRA, "const fmt = start.toFormat('cccc d LLL HH:mm');\n", "const fmt = start.toFormat('cccc d LLL yyyy HH:mm');\n")],
     'Slot Gate: the template values not filled': [(SG, "return t[key] ? fill(t[key], dr.vars) : t.askDateTime;", 'return t[key] ? t[key] : t.askDateTime;')],
-    'Load Config: another horizon (900)': [(LC, 'bookingHorizonDays: 90 }', 'bookingHorizonDays: 900 }')],
+    'Load Config: another horizon (900)': [(LC, 'bookingHorizonDays: 30 }', 'bookingHorizonDays: 900 }')],
+    'Load Config: the pre-R2d horizon (90; D-2 as amended by R2d is 30)': [(LC, 'bookingHorizonDays: 30 }', 'bookingHorizonDays: 90 }')],
+    'Load Config: the horizon one day longer (31)': [(LC, 'bookingHorizonDays: 30 }', 'bookingHorizonDays: 31 }')],
+    'Load Config: the horizon one day shorter (29)': [(LC, 'bookingHorizonDays: 30 }', 'bookingHorizonDays: 29 }')],
     'Load Config: MDY': [(LC, 'dateOrder: "DMY" }', 'dateOrder: "MDY" }')],
 }
 

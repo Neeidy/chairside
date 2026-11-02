@@ -45,9 +45,9 @@ const book = (text, dateExpr, time = '11:00', o = {}) => turn(text, { serviceId:
 const date = (r) => r.sg.state.slots.date;
 const reason = (r) => r.rd.date_resolution && r.rd.date_resolution.reason;
 
-test('the config literal carries the ruled keys: business.dateOrder DMY (D-1), bot.bookingHorizonDays 90 (D-2), the D-3 text', () => {
+test('the config literal carries the ruled keys: business.dateOrder DMY (D-1), bot.bookingHorizonDays 30 (D-2 as amended by R2d), the D-3 text', () => {
   assert.equal(CONFIG.business.dateOrder, 'DMY');
-  assert.equal(CONFIG.bot.bookingHorizonDays, 90);
+  assert.equal(CONFIG.bot.bookingHorizonDays, 30);
   assert.equal(T.askDateTimeHint, 'Which day and time? You can write e.g. "Wednesday at 11:00", "tomorrow at 15:00" or "4 November at 11:00".');
   for (const k of ['dateWeekdayMismatch', 'dateAmbiguous', 'datePast', 'dateInvalid', 'dateTooFar']) assert.equal(typeof T[k], 'string', k);
 });
@@ -111,7 +111,8 @@ test('ambiguous numeric (D-1): with no date order a slash pair whose parts are b
   assert.equal(r.sg.computed_reply, 'Did you mean 4 November or 11 April?');
   const MDY = { ...noOrder, business: { ...noOrder.business, dateOrder: 'MDY' } };
   assert.equal(date(book('haircut 12/1', '12/1', '11:00', { config: MDY })), '2026-12-01', 'MDY');
-  assert.equal(date(book('haircut 12/1', '12/1')), '2027-01-12', 'DMY (the demo)');
+  assert.equal(date(book('haircut 1/12', '1/12')), '2026-12-01', 'DMY (the demo)');
+  assert.equal(reason(book('haircut 12/1', '12/1')), 'date_past', 'DMY reads 12 January: passed this year, next year past the 30-day horizon — the plan\'s rule says "passed"');
   assert.equal(date(book('haircut 4/11', '4/11')), '2026-11-04', 'DMY (the demo)');
   assert.equal(date(book('haircut 25/11', '25/11', '11:00', { config: noOrder })), '2026-11-25', 'not ambiguous: 25 cannot be a month');
   assert.equal(date(book('haircut 11/11', '11/11', '11:00', { config: noOrder })), '2026-11-11', 'not ambiguous: both readings agree');
@@ -125,16 +126,18 @@ test('a past day+month rolls to next year only inside the horizon; otherwise it 
   assert.equal(reason(book('haircut 4 october 2026', '4 october 2026')), 'date_past', 'a year given is honoured, not moved');
 });
 
-test('A1: the horizon (90 days) applies to EVERY resolved date — both directions, day+month and verbatim ISO', () => {
-  assert.equal(date(book('haircut 30 january', '30 january')), '2027-01-30', 'day 90: inside');
-  assert.equal(reason(book('haircut 31 january', '31 january')), 'date_past',
+test('A1: the horizon (30 days, D-2 as amended by R2d) applies to EVERY resolved date — both directions, day+month and verbatim ISO', () => {
+  assert.equal(date(book('haircut 1 december', '1 december')), '2026-12-01', 'day 30: inside');
+  const out = book('haircut 2 december', '2 december');
+  assert.equal(reason(out), 'beyond_horizon', 'day 31: outside');
+  assert.equal(out.sg.computed_reply, 'We take bookings up to 30 days ahead — which date did you mean?');
+  assert.equal(reason(book('haircut 31 october', '31 october')), 'date_past',
     'no year, passed this year, next year past the horizon: the plan\'s rule says "passed" (see the R1 record)');
-  const out = book('haircut 31 january 2027', '31 january 2027');
-  assert.equal(reason(out), 'beyond_horizon'); assert.equal(out.sg.computed_reply, 'We take bookings up to 90 days ahead — which date did you mean?');
+  assert.equal(reason(book('haircut 2 december 2026', '2 december 2026')), 'beyond_horizon', 'a year given, one day too far');
   assert.equal(reason(book('haircut 4 november', '4 november', '11:00', { nowISO: '2026-03-01T10:00:00Z' })), 'beyond_horizon', 'this year, but 248 days ahead');
-  assert.equal(date(book('haircut 4 april', '4 april', '11:00', { nowISO: '2026-03-01T10:00:00Z' })), '2026-04-04', 'this year, inside');
-  assert.equal(date(book('haircut 2027-01-30', '2027-01-30')), '2027-01-30', 'ISO inside');
-  assert.equal(reason(book('haircut 2027-01-31', '2027-01-31')), 'beyond_horizon', 'ISO outside');
+  assert.equal(date(book('haircut 25 march', '25 march', '11:00', { nowISO: '2026-03-01T10:00:00Z' })), '2026-03-25', 'this year, inside');
+  assert.equal(date(book('haircut 2026-12-01', '2026-12-01')), '2026-12-01', 'ISO inside');
+  assert.equal(reason(book('haircut 2026-12-02', '2026-12-02')), 'beyond_horizon', 'ISO outside');
   assert.equal(reason(book('haircut 2031-11-04', '2031-11-04')), 'beyond_horizon', 'an ISO date years ahead no longer books');
   assert.equal(reason(book('haircut 4 november 2027', '4 november 2027')), 'beyond_horizon', 'a year given, too far');
   assert.equal(date(book('haircut tomorrow', 'tomorrow')), '2026-11-02', 'today/tomorrow are inside');
