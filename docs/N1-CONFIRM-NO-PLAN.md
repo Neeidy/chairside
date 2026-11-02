@@ -2,7 +2,8 @@
 
 > **Status: APPROVED by Yigitcan, 2026-11-03** (by pasting the N1 R1 brief): D-1…D-5, D-7, D-8 as recommended, **D-6
 > AMENDED** (a bare "yes" right after a decline re-asks the change question once; a second one in a row → today's handoff)
-> and a Codex cap of two passes. **R1 built offline (staged, NOT live)** — "R1" at the end of this file. Written from the
+> and a Codex cap of two passes. **R1 built offline; R2 Codex (two passes, no HIGH); R3 LIVE — the Main put of
+> 2026-11-02 23:06 Vienna; ⏸ STOPPED for the owner run; promotion is the next round** — "R1"–"R3" at the end of this file. Written from the
 > committed export at `4cd53fd`.
 > **Ruling it implements:** Yigitcan's ruling, given by pasting the N1 brief (dated 2026-11-03 in the brief), says
 > to plan N1 now and build only after his written "approved". ROADMAP calls N1 "a 'no' at the booking confirm has no
@@ -237,7 +238,8 @@ One Codex pass on the delta (§13 D-7), not a new target.
 1. **A closed "no" at the booking confirm** (§3.2's set, any case and trailing `.`/`!`) gets `bookingDeclined`,
    whatever the model answered (cancel / unknown / confirm-low / book). After it: `stage=collecting`,
    `last_intent=declined`, and service, date, time and name kept. Not on the path: `Find Booking`, any Calendar node,
-   `Write Appointment` and any owner alert.
+   `Write Appointment` and any owner alert on the normal path (a `Save State` failure keeps its own alerting error
+   branch — *precision added at R3, `security-auditor`*).
 2. **A confident model `cancel` at the booking confirm** gets the same result (A1, A4, A5, A7, A9 and B1). No
    `Cancel Lookup` runs on that turn, so the existing booking in B1 gets no cancel ask.
 3. **An uncertain `cancel` or `unknown` on a non-closed text** keeps today's clarify, and the confirm stays pending.
@@ -502,4 +504,45 @@ the D-6 re-ask; the re-ask tests three of them (the shared guard handles the oth
 
 **Codex for N1 is closed by the cap.** The remaining gate to the live step is this round's ⚠ ONAY condition: A–C green
 and no open HIGH — both true.
+
+## R3 — LIVE: the Main put; ⏸ STOPPED for the owner run (2026-11-02, server time)
+
+*(The approval brief is dated 2026-11-03; the server clock read 2026-11-02 for this window, and the times below are the
+server's, Vienna.)* *(Every read and number below terminal-measured, output not committed.)*
+
+**Precondition of the ⚠ ONAY, both true:** A–C fully green (`check-all` 0; `n1-confirm-no` 26/26; mutants 39/39 with the
+control green; DATE-PHRASING 60/60 and NAME-CAPTURE 50/50 mutants on the final staged export; Codex pass 2 the last, no
+open HIGH).
+
+**The window, 23:06–23:07 Vienna (outside :55–:05, away from 04:00):**
+- Start gates (23:06:11): dummy token → 403, sole holder · `check-exports-parity` 5/5 against the committed exports ·
+  live parity 192/192 nodes, 274/274 connections · listeners OK · host-leak clean · hook-drift OK · import-safe over the
+  window's scripts 0 faults · clean tree.
+- `rehearse-rollback` (green on a scratch, scratch deleted, 404 read back) → deactivate → **put**: the nodes whose
+  stored content changed are exactly `Classify Confirm Reply`, `Booking Declined?`, `Build Booking-Declined State`,
+  `Load Config` and the sticky; inside the allowlist (1 node) and the approved delta; **read back == export and == the
+  body sent**; settings, webhook ids unchanged; the pre-PUT snapshot kept (0600, outside the repo) → activate: active,
+  **published == draft** (inactive from 22:06:30.8Z to 22:06:34.1Z, about three seconds) → probe: dummy token 403, sole
+  holder.
+- **Parity against the STAGED export** (a scratch mirror of HEAD with the staged Main in the committed path — the guard
+  refuses a staged path): content OK (172 executable nodes), settings OK, structure 196/196 nodes, 278/278 connections.
+  **Negative control:** the same structural guard against the COMMITTED export → DRIFT (192 vs 196) — red by
+  construction until promotion.
+- **The window's executions:** three on Main, all probes (4876, 4877, 4878), all `success`; none on the other four
+  workflows. No customer turn, no error, no owner alert, no LLM spend.
+- End gates (23:07:19): dummy token 403 · Main parity against the committed export red by construction, the other four
+  green · listeners, host-leak, hook-drift OK · 0 project containers.
+
+**The owner's run** — the two scripts of §11, each line replayed through the staged Main (`OWNER_SCRIPT_1/2` in
+`tests/unit/n1-confirm-no.test.cjs`, and again at Tuesday 3 Nov 07:00Z and 17:00Z: identical replies). A store read as
+`salon_ro` (READ ONLY): no booked appointment overlaps 3–6 Nov (control: one booked appointment in total, the owner's
+11 Nov row). The calendar itself is not read here — the bot's own `Get Calendar Busy` decides at run time. **Run each
+script in a fresh private window** (a new widget session: no earlier booking of his is visible to it, so the owner's
+kept rows are never in reach) **and before Wednesday 4 Nov** ("Wednesday" resolves to the coming one).
+
+**Kept for rollback and promotion:** the pre-PUT snapshot and the parity mirror (scratchpad); both are deleted after
+promotion with parity green (⚠ ONAY (3) of §11). Content parity against the committed Main stays red until then.
+
+**Next round:** read the owner's run (executions + `salon_ro`), then promotion — staged → committed, `PENDING_KEYS`
+emptied, the two A-leak `ALLOW` entries (R1 deviation 6), both parity guards 0 against the committed exports.
 
