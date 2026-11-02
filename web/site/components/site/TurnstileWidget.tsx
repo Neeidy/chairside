@@ -12,6 +12,9 @@
  * widget to mint the next one.
  */
 import { useEffect, useRef, useState } from 'react';
+import type { TurnstileState } from '../../lib/turnstileGate';
+
+export type { TurnstileState };
 
 declare global {
   interface Window {
@@ -41,7 +44,6 @@ function loadScript(): Promise<void> {
   return window.__turnstileScriptLoading;
 }
 
-export type TurnstileState = 'loading' | 'ready' | 'error';
 
 export function TurnstileWidget({
   siteKey,

@@ -16,7 +16,8 @@ import {
   sendMessage, getSessionId, newMessageId, FRONTEND_TEXT, welcomeLine,
   type ChatReply, type EndpointConfig,
 } from '@salon/shared/chat';
-import { TurnstileWidget, type TurnstileState } from './TurnstileWidget';
+import { TurnstileWidget } from './TurnstileWidget';
+import { composerGate, shouldRetry, type TurnstileState } from '../../lib/turnstileGate';
 import { lockLineDecision } from '../../lib/lockedOnce';
 import { MESSAGE_TEXT_DAYS } from '../../lib/retention';   // no config import: a client component
 
@@ -46,21 +47,27 @@ export function LiveChatPanel({ config, endpoint }: { config: ClientConfig; endp
   const [busy, setBusy] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const [tsState, setTsState] = useState<TurnstileState>('loading');
+  // Consecutive Turnstile failures, reset by a success. Counted here, per report, because `tsState` going 'error' →
+  // 'error' is not a change React re-runs an effect for — the old retry counter advanced only once (measured, R4).
+  const [tsErrors, setTsErrors] = useState(0);
   const [resetSignal, setResetSignal] = useState(0);
   const sessionId = useRef<string>('');
   const threadRef = useRef<HTMLDivElement>(null);
 
   // A Turnstile error must not dead-end the visitor. Cloudflare's 600010 family is transient in many
   // environments (a blocked resource, a slow network, an extension), so retry a couple of times before
-  // giving up — and never lock the input on account of it: the send path already refuses without a
-  // token and says so, which is honest without making the widget unusable until a reload.
-  const retries = useRef(0);
+  // giving up — and never lock the input on account of it. Only when the retries have failed too does the
+  // panel say it cannot verify (lib/turnstileGate.ts), and a later success takes that notice away.
+  const onTsState = (s: TurnstileState) => {
+    setTsState(s);
+    setTsErrors((n) => (s === 'error' ? n + 1 : s === 'ready' ? 0 : n));
+  };
   useEffect(() => {
-    if (tsState !== 'error' || retries.current >= 2) return;
-    retries.current += 1;
+    if (!shouldRetry(tsState, tsErrors)) return;
     const id = setTimeout(() => setResetSignal((n) => n + 1), 2500);
     return () => clearTimeout(id);
-  }, [tsState]);
+  }, [tsState, tsErrors]);
+  const gate = composerGate(!!token, tsState, tsErrors);
 
   useEffect(() => {
     sessionId.current = getSessionId();
@@ -73,12 +80,11 @@ export function LiveChatPanel({ config, endpoint }: { config: ClientConfig; endp
     const text = draft.trim();
     if (!text || busy) return;
 
-    if (!token) {
-      // Fail-closed on OUR side too: without a token the engine returns 403, so say something true
-      // rather than firing a request we know will be rejected.
-      setThread((t) => [...t, { from: 'system', text: FRONTEND_TEXT.blocked, stamp: now() }]);
-      return;
-    }
+    // Fail-closed on OUR side too: without a token the engine returns 403, so nothing is sent. The send button is
+    // disabled meanwhile and the draft stays in the box. This branch used to add "We couldn't verify this browser…" to
+    // the log — and a token is missing for a moment after EVERY send, so a quick "yes" got the reload sentence while
+    // nothing was blocked (DATE-PHRASING R4). A real block is shown by `gate.blocked`, below.
+    if (!token) return;
 
     setThread((t) => [...t, { from: 'user', text, stamp: now() }]);
     setDraft('');
@@ -144,12 +150,16 @@ export function LiveChatPanel({ config, endpoint }: { config: ClientConfig; endp
           </div>
         ))}
         {busy && <div className="typing in" aria-hidden="true"><i /><i /><i /></div>}
+        {gate.blocked && (
+          // Bound to the state, not appended to the log: it is on screen exactly while no token can be obtained.
+          <div className="msg in bot" role="status">{FRONTEND_TEXT.blocked}</div>
+        )}
       </div>
 
       <TurnstileWidget
         siteKey={endpoint.turnstileSiteKey}
         onToken={setToken}
-        onState={setTsState}
+        onState={onTsState}
         resetSignal={resetSignal}
       />
 
@@ -158,12 +168,12 @@ export function LiveChatPanel({ config, endpoint }: { config: ClientConfig; endp
           className="panel-input"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder={tsState === 'error' ? 'Verification is having trouble — retrying…' : 'Type a message…'}
+          placeholder={gate.placeholder}
           aria-label="Message"
           disabled={busy}
           maxLength={1000}
         />
-        <button className="panel-send" type="submit" aria-label="Send" disabled={busy || !draft.trim()}>↑</button>
+        <button className="panel-send" type="submit" aria-label="Send" disabled={busy || !draft.trim() || !gate.canSend}>↑</button>
       </form>
     </section>
   );

@@ -10,7 +10,7 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "check": "tsc --noEmit && node --test lib/privacyEnv.test.ts"
+    "check": "tsc --noEmit && node --test lib/privacyEnv.test.ts lib/turnstileGate.test.ts"
   },
   "dependencies": {
     "@salon/shared": "*",

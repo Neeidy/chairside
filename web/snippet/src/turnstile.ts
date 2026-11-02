@@ -112,7 +112,10 @@ export function mountTurnstile(
       if (!window.turnstile) throw new Error('turnstile_unavailable');
       widgetId = window.turnstile.render(slot, {
         sitekey: siteKey,
-        callback: (t: string) => { token = t; onChange('ready'); },
+        // A success ends a block: `blocked` is cleared here. It used to stay set after an error that Cloudflare's own
+        // retry then cleared, so the NEXT `refresh()` returned early and never asked for a token — the composer sat at
+        // "Verifying…" for good after one transient error (DATE-PHRASING R4, 2026-11-02).
+        callback: (t: string) => { token = t; blocked = false; onChange('ready'); },
         'error-callback': () => { token = null; blocked = true; onChange('blocked'); },
         'expired-callback': () => { token = null; onChange('pending'); window.turnstile?.reset(widgetId ?? undefined); },
         'timeout-callback': () => { token = null; onChange('pending'); window.turnstile?.reset(widgetId ?? undefined); },
