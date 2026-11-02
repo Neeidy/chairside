@@ -138,7 +138,9 @@ messageTemplates.bookingDeclined }`.
   kept and `Save State` writes them back unchanged.
 - **Demo text (§13 D-5):** *"No problem — nothing is booked. What would you like to change: the service, the day, the
   time or the name?"*
-- **What the path does not do:** no owner alert, because a customer changing their mind is not a fault; no `Find Booking`
+- **What the path does not do:** no owner alert on the normal path, because a customer changing their mind is not a fault
+  (a `Save State` FAILURE still takes its own error branch and alerts the owner — *precision added at R2,
+  `security-auditor` LOW-1*); no `Find Booking`
   read; no Calendar call; no appointment write. `last_intent='declined'` is the audit trail (prompt-injection.md:
   "log every action").
 
@@ -341,12 +343,14 @@ Yanlışsa ne olur:  Promosyon eksikse geri-alma kaynağı kaybolur.
 Geri alınabilir mi:Hayır — bu yüzden yalnız parity committed export'a karşı yeşilken yapılır.
 ```
 
-**Owner run (his browser — it needs a real Turnstile token):**
-1. Book a haircut and give a name; at the confirm type `no`. Expected: `bookingDeclined`.
-2. Type a new time. Expected: the confirm again, with the name.
-3. Type `yes`. Expected: booked.
-4. In a second conversation: book and give a name; at the confirm type `no`, then `no` again. Expected:
-   `bookingDropped`.
+**Owner run (his browser — it needs a real Turnstile token)** — ⚠ *corrected at R2: the brief of the approval round set
+the two scripts, and the R1 tests replay THOSE (Codex pass 1 noted that this list differed from them):*
+1. Book → confirm → `no` → the change question → a new time → the new confirm → `no` → `no` again → closed
+   (`bookingDropped`); nothing booked.
+2. A booking made first → a second booking → its confirm → `no` → NO cancel ask about the first → then the first is
+   cancelled cleanly ("cancel my haircut" → its cancel ask → `yes`), so nothing stays booked.
+The exact lines are `OWNER_SCRIPT_1` / `OWNER_SCRIPT_2` in `tests/unit/n1-confirm-no.test.cjs`, each replayed through
+the staged Main.
 
 Read back by GET on executions and with `salon_ro`. The run also records what the live model answers for "no",
 which this plan only assumes (§13 D-8).
@@ -442,7 +446,8 @@ the committed export too (measured). The owner-script test reads the delete from
   near-misses, D-3's floor inclusive, the stage and previous-turn gates, pass-through unchanged), `Load Config`'s two
   texts, the graph (the new nodes read only `Load Config` and `Merge State`; the true branch reaches `Save State` only),
   every §9 row end to end, D-6 and its bound, both owner scripts line by line, and the NEGATIVE CONTROL on the export at
-  `bc6eadf`, which shows the §0 defect (on the committed export the test is 6 green / 18 red).
+  `bc6eadf`, which shows the §0 defect (on the committed export the test is 6 green / 19 red — ⚠ *corrected at R2: this
+  said 18, a count taken before the last test was added; Codex pass 1 measured 19*).
 - `tests/unit/n1-confirm-no-mutants.py` — 34/34 killed, the unmutated control green. Two survived the first run and each
   showed a gap in the test, now closed: a "no" set unanchored at the start (no near-miss ending in "no" — "oh no", "is
   that a no" added) and the after-decline rung without its stage gate (no case with the marker kept under another stage).
@@ -450,4 +455,30 @@ the committed export too (measured). The owner-script test reads the delete from
   key is refused by name; the control against the committed exports.
 - Unchanged behaviour: `name-capture.test.cjs`, `date-phrasing.test.cjs`, `chat-replay.test.cjs` green on the staged
   export; `date-phrasing-mutants.py` 60/60 and `name-capture-mutants.py` 50/50 against it, both controls green.
+
+## R2 — Codex pass 1 and the fixes (2026-11-03)
+
+**Codex pass 1** at `819982f` (contained; verbatim `docs/codex/n1/p1.md`, containment `docs/codex/n1/containment.md`):
+**no HIGH**, one MEDIUM and two LOW, plus two record imprecisions. Its answers: CRT #5 — uncertainty protections hold;
+CRT #8 — a booking-confirm decline cannot enter the cancel lane that turn, and the markers do not alter the cancel or
+reschedule confirms; CRT #1b/#2 — the new path preserves booking integrity; D-6 — exactly one re-ask; the deploy tool's
+entry and the staged export match.
+
+| finding | triage | fix |
+|---|---|---|
+| **F1 MEDIUM** — the re-ask test never checks the slots; a builder that rewrites the stored time on the re-ask passed 25/25 | real (a test defect; the builder keeps the slots) | the D-6 test asserts the slots and the name after the re-ask; mutant "the re-ask alone corrupts the stored slots" |
+| **F2 LOW** — the closed set matched more than the stated literal phrases: `toLowerCase()` turns the KELVIN SIGN (U+212A) into `k`, and a line break collapsed like a space | real (no booking-integrity effect; the declared set was not what ran) | `Classify Confirm Reply` matches with the `/i` flag instead of lower-casing (a non-Unicode `/i` never maps a non-ASCII character to an ASCII one — measured: the Kelvin sign, the long s, fullwidth and Cyrillic look-alikes all fail; `NO THANKS`, a tab, `No Thank You!` match) and collapses only spaces and tabs. A test of look-alikes and line breaks (red on the R1 staged export, green after); mutants "toLowerCase back", "a line break collapsed", "the /i flag dropped" |
+| **F3 LOW** — the "no confidence" case passed `undefined` into a default and tested 0.4 | real (a test defect; the engine also rejects it earlier, in `Validate Intent`) | the helper can leave the key ABSENT; absent, `undefined`, `null`, `NaN` and STRING confidences are each not confident, for D-3 and the D-6 re-ask; mutants "a missing confidence counted as confident", "a string confidence compared as a number" |
+| record — "6 green / 18 red" | real | corrected in place to 19 (the R1 number was taken before the last test was added) |
+| record — §11's owner-run list differed from the replayed owner scripts | real | §11 corrected in place to the approval brief's two scripts, which the tests replay |
+
+**Also in this round:** `security-auditor`'s LOW-1 of the R1 push — "no owner alert" holds on the normal path only; a
+`Save State` failure still alerts — the sticky, the Build node's comment and §3.4 now say so.
+
+**Re-run** (`check-all` 0): `n1-confirm-no` 26/26 (on the unedited committed export 6 green / 20 red), mutants 39/39 with
+the control green, `staged-sanitised` and `diff-workflow-copy --phase edit` green. Every change is inside the three new
+nodes and the sticky; the delta is unchanged.
+
+**The cap (ruling):** pass 1 had real findings, so pass 2 runs on this round's diff. After pass 2, a finding of the same
+class as one above is recorded as a bound, not chased; a NEW class that writes or cancels a booking wrongly is a stop.
 
