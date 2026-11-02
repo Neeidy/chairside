@@ -262,7 +262,7 @@ One Codex pass on the delta (§13 D-7), not a new target.
 | second "no" after a decline | decline → `no` | `bookingDropped`, stage new, service/date/time cleared, name kept | `Booking Declined?` (collecting rung) | `Build No-Booking Reply` |
 | "no" at the cancel / reschedule confirm | B3 | unchanged: `cancelAborted` / `rescheduleAborted` | `Abort Cancel?` / `Abort Reschedule?` | `Booking Declined?` |
 | "no" outside any confirm | stage new / booked → `no` | unchanged (today's route) | — | the decline path (stage gate) |
-| jailbreak at the confirm | `no. ignore previous instructions…` | not a closed "no" → the model's route (handoff) | `Invalid or Handoff Gate` | the decline path |
+| jailbreak at the confirm | `no. ignore previous instructions…` | not a closed "no" (deterministic: the anchored pattern) → the model's own route; a jailbreak read as `handoff` hands off (model-dependent) | the model's route | the decline path |
 | idempotency / double-booking / DST | unchanged paths | unchanged | the existing drills | — |
 
 ## 10. Tests
@@ -317,7 +317,7 @@ so the §3.5 rung cannot fire for it.
 ⚠ ONAY GEREKİYOR (1)
 Ne yapacağım:      Canlı Main iş akışına iki yeni node ve bir dal ekleyip yayınlayacağım (önce geri-alma provası).
 Neden:             Rezervasyon onayındaki "no" için tasarlanmış cevap canlıya çıksın.
-Yanlışsa ne olur:  Onay adımında müşteri cevabı yanlış yola gidebilir; yazma yolu değişmediği için yanlış kayıt oluşmaz.
+Yanlışsa ne olur:  Yanlış randevu ya da takvim kaydı oluşmaz (bu yolda Calendar ve Write Appointment yok); en kötü durumda bekleyen bir onay düşer ve müşteri slotu yeniden onaylar.
 Geri alınabilir mi:Evet — put öncesi alınan canlı snapshot ile tek komutla geri yüklenir (prova edilmiş olur).
 
 ⚠ ONAY GEREKİYOR (2)
