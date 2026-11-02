@@ -19,17 +19,24 @@ import tempfile
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 STAGED = os.path.join(ROOT, 'n8n', 'staged', 'workflow.main.sanitized.json')
 TESTS = [os.path.join(ROOT, 'tests', 'unit', n) for n in ('date-phrasing.test.cjs', 'chat-replay.test.cjs', 'resolve-date.test.cjs')]
-RD, SG, LC = 'Resolve Date', 'Slot Gate', 'Load Config'
+RD, SG, LC, RL = 'Resolve Date', 'Slot Gate', 'Load Config', 'Reschedule Lookup'
 MUTANTS = {
+    'a weekday elsewhere in the message ignored (Codex R1 HIGH-1)': [(RD, r".filter((k) => occursIn(k, text)).map((k) => DAYS[k])).filter", r".filter((k) => false).map((k) => DAYS[k])).filter")],
+    'the expression\'s weekday switches off the message\'s weekdays (Codex R2 MEDIUM-5)': [(RD, r".concat(Object.keys(DAYS).filter((k) => occursIn(k, text))", r".concat(Object.keys(DAYS).filter((k) => c.weekday === null && occursIn(k, text))")],
+    'a numeric continuation ("4.11" in "4.11.2027") not detected': [(RD, r"if (new RegExp(at + '[./]\\d').test(text)) return", r"if (false) return")],
+    'a year the model left out, anywhere in the message, not detected (Codex R2 HIGH-1)': [(RD, r"if (c.year === null && /(^|[^0-9:.\/])\d{3,4}(?![0-9:])/.test(text)) return", r"if (false) return")],
+    'the "may N of" exemption removed (resolve-date N1-d)': [(RD, r".replace(/(^|[^a-z])may\s+\d{1,2}\s+of\s+(?=[a-z])/g, '$1')", r"")],
+    'the exemption widened to "<any word> N of <anything>" (Codex R2 HIGH-2)': [(RD, r"(^|[^a-z])may\s+\d{1,2}\s+of\s+(?=[a-z])", r"(^|[^a-z])[a-z]+\s+\d{1,2}\s+of\s+")],
+    'a dot pair after a weekday needs a space (Codex R2 HIGH-3)': [(RD, r"\\s*,?\\s*(?:the\\s+)?\\d{1,2}\\.\\d{1,2}(?=$|[^0-9]))');", r"\\s*,?\\s+\\d{1,2}\\.\\d{1,2}(?=$|[^0-9]))');")],
+    'the weekday-adjacent dot-pair detector removed (Codex R2 MEDIUM-7)': [(RD, r"  + '|(?:' + WD_RE + ')\\s*,?\\s*(?:the\\s+)?\\d{1,2}\\.\\d{1,2}(?=$|[^0-9]))');", r"  + ')');")],
+    '"today" exempt from the written-date guard (Codex R2 MEDIUM-7)': [(RD, r"if (!cal && CAL_IN_TEXT.test(text)) return", r"if (!cal && e !== 'today' && CAL_IN_TEXT.test(text)) return")],
+    'Reschedule Lookup drops D-4\'s marker (Codex R2 MEDIUM-6)': [(RL, r"const st = { ...vi.state, last_intent: ((($('Resolve Date').first().json || {}).state || {}).last_intent) ?? (vi.state || {}).last_intent };", r"const st = vi.state;")],
     'weekday/date conflict not checked': [(RD, '  if (wrong !== undefined) {\n', '  if (false) {\n')],
-    'a weekday elsewhere in the message ignored (the model may drop it; Codex R1 HIGH-1)': [(RD, ": Object.keys(DAYS).filter((k) => occursIn(k, text)).map((k) => DAYS[k]).filter((w, i, a) => a.indexOf(w) === i);", ': [];')],
     'a calendar date in the message ignored when the expression is a weekday (Codex R1 HIGH-1)': [(RD, 'if (!cal && CAL_IN_TEXT.test(text)) return', 'if (false) return')],
     'an ISO date next to a written calendar date picked anyway': [(RD, "    if (CAL_IN_TEXT.test(text)) return { date: null, reason: 'calendar_clipped' };   // two dates written", "    if (false) return { date: null, reason: 'calendar_clipped' };   // two dates written")],
     'an empty extraction naming a calendar date inherits the stored date (Codex R1 HIGH-2)': [(RD, "|| (CAL_IN_TEXT.test(rawText) ? 'calendar date' : null))", '|| null)')],
-    '"<month> N of" counted as a date (resolve-date N1-d)': [(RD, r'(?!\\s+of(?:$|[^a-z]))', r'')],
     'a bare dot pair counted as a date': [(RD, r"  + '|\\d{1,2}\\.\\d{1,2}\\.(?:\\d{4})?'", r"  + '|\\d{1,2}\\.\\d{1,2}'")],
     'year 0000 read as no year (Codex R1 MEDIUM-3)': [(RD, 'if (c.year !== null) {   // Codex R1 MEDIUM-3', 'if (c.year) {   // Codex R1 MEDIUM-3')],
-    'any four digits taken for a trimmed year (Codex R1 MEDIUM-4)': [(RD, r'(?:19|20)\\d{2}(?![\\d:])', r'\\d{4}(?![\\d:])')],
     'the shop clock read in UTC (Codex R1 MEDIUM-5)': [(RD, 'const now = DateTime.now().setZone(tz);', "const now = DateTime.now().setZone('utc');")],
     'A1 skipped for relative days (Codex R1 MEDIUM-5)': [(RD, 'if (r.date && HORIZON && ', "if (r.date && (r.reason === 'calendar_date' || r.reason === 'iso_verbatim') && HORIZON && ")],
     'D-4 strikes with no known service (the customer never saw the date re-ask)': [(RD, "((j.intent === 'book' && svcKnown) || j.intent === 'reschedule')", "(j.intent === 'book' || j.intent === 'reschedule')")],
@@ -42,7 +49,6 @@ MUTANTS = {
     'an impossible day accepted': [(RD, 'if (!(month >= 1 && month <= 12 && day >= 1 && day <= 31)) return', 'if (false) return'),
                                    (RD, "    if (!isLeapSafe(c.year, month, day)) return { date: null, reason: 'invalid_date' };\n", ''),
                                    (RD, "    else if (!ok0 && !ok1) return { date: null, reason: 'invalid_date' };\n", '')],
-    'a year the model trimmed is not detected': [(RD, r"(?![\\d:]))').test(text)) return", r"(?![\\d:]))').test(text) && false) return")],
     'an ambiguous slash pair guessed instead of re-asked': [(RD, 'else if (c.a <= 12 && c.b <= 12 && c.a !== c.b) {', 'else if (false) {')],
     'business.dateOrder ignored': [(RD, "if (DATE_ORDER === 'DMY') ({ day, month } = dm);", "if (false) ({ day, month } = dm);")],
     'D-5 removed (Sunday keeps the current week)': [(RD, 'now.weekday === 7 && wd !== 7', 'now.weekday === 8 && wd !== 7')],

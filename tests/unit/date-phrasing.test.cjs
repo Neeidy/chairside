@@ -244,10 +244,34 @@ test('Codex R1 MEDIUM-3: a year written as 0000 is a year given (past), never re
   assert.equal(reason(book('haircut 4 november 0000', '4 november 0000')), 'date_past');
 });
 
-test('Codex R1 MEDIUM-4: a compact time after the date is not a trimmed year; a 19xx/20xx number still is', () => {
-  assert.equal(date(book('haircut 4 november 1100', '4 november')), '2026-11-04');
-  assert.equal(date(book('haircut 4 november, 1100 please', '4 november')), '2026-11-04');
-  assert.equal(reason(book('haircut 4 november 2027', '4 november')), 'calendar_clipped');
+test('Codex R2 HIGH-1: a year the model left out is caught ANYWHERE in the message; a compact time re-asks once (the stated cost of MEDIUM-4)', () => {
+  // corrected in R2b: R2 narrowed the year to 19xx/20xx right after the date, which let other years through (Codex R2 HIGH-1)
+  for (const text of ['haircut 5 november 0000', 'haircut 5 november 2100', 'haircut 5 november 1899', 'haircut 5 november in 2027', 'haircut 5 november, year 2027'])
+    assert.equal(reason(book(text, '5 november')), 'calendar_clipped', text);
+  for (const text of ['haircut 4 november 1100', 'haircut 4 november at 1930', 'haircut 4 november, 2000 please'])
+    assert.equal(reason(book(text, '4 november')), 'calendar_clipped', `${text} — the stated cost`);
+  assert.equal(date(book('haircut 4 november 11:00', '4 november')), '2026-11-04', 'the colon form passes');
+  assert.equal(date(book('haircut 4 november at 19:30', '4 november', '19:30')), '2026-11-04');
+  const resch = turn('move it to 5 november 2100', { dateExpr: '5 november', time: '11:00' }, { intent: 'reschedule', stage: 'booked' });
+  assert.equal(resch.rd.date_resolution.reason, 'calendar_clipped', 'the reschedule lane too');
+});
+
+test('Codex R2 HIGH-2: only "may N of <word>" is exempt — "november 5 of 2027" with an empty extraction never keeps the stored date', () => {
+  const stored = { serviceId: 'haircut', date: '2026-11-04', time: '11:00' };
+  const r = turn('november 5 of 2027 at 11:00', { time: '11:00' }, { stored });
+  assert.equal(r.rd.date_dropped, true); assert.equal(date(r), null);
+  const may = turn('may 2 of us come at 11:00', { time: '11:00' }, { stored });
+  assert.equal(date(may), '2026-11-04', '"may 2 of us" is not a date: the stored date stays');
+});
+
+test('Codex R2 HIGH-3 + MEDIUM-7: a dot pair right after a weekday (no space, a comma, "the", bare) and "today" next to a written date are refused', () => {
+  for (const text of ['haircut thursday,4.11 at 11', 'haircut thursday, 4.11 at 11', 'haircut thursday the 4.11', 'haircut thursday 4.11 at 11'])
+    assert.equal(reason(book(text, 'thursday')), 'calendar_clipped', text);
+  assert.equal(reason(book('haircut today, 5 november', 'today')), 'calendar_clipped');
+});
+
+test('Codex R2 MEDIUM-5: the expression\'s own weekday does not switch off the other weekdays in the message', () => {
+  assert.equal(reason(book('haircut thursday on wednesday 4 november', 'wednesday 4 november')), 'weekday_mismatch');
 });
 
 test('Codex R1 MEDIUM-5: the shop timezone decides the day — 23:30Z on Sunday is already Monday in Vienna', () => {

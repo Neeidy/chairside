@@ -12,6 +12,7 @@
  *   5 the golden set's stage-`new` booking cases, end to end, from their table text and expected JSON.
  *   6 D-4 end to end: the hint, then the existing handoff route with the owner alert (Codex R1 MEDIUM-5).
  *   7 a calendar-date correction with an empty extraction never inherits the stored date (Codex R1 HIGH-2).
+ *   8 D-4 on the reschedule lane: the strike marker is saved and the second unreadable date hands off (Codex R2 MEDIUM-6).
  * WHICH EXPORT: the staged Main if it exists, else the committed one; argv[2] overrides it (mutants).
  */
 const { test } = require('node:test');
@@ -93,6 +94,20 @@ test('7 Codex R1 HIGH-2 end to end: "5 november instead" with an empty extractio
   const o = r.turn('5 november instead at 11:00', answer('book', 0.9, { time: '11:00' }));
   assert.equal(o.reply, 'Which day and time? You can write e.g. "Wednesday at 11:00", "tomorrow at 15:00" or "4 November at 11:00".');
   assert.equal(r.db.conv.slot_date, '');
+});
+
+test('8 D-4 on the RESCHEDULE lane end to end (ruling 2026-11-01, Codex R2 MEDIUM-6): two unreadable new dates → the handoff', () => {
+  const r = makeReplay(EXPORT, { nowISO: RUN2_AT });
+  r.turn("I'd like a haircut on Wednesday at 11:00", answer('book', 0.92, { serviceId: 'haircut', dateExpr: 'wednesday', time: '11:00' }));
+  r.turn('Kim Moss', answer('unknown', 0.3));
+  assert.equal(r.turn('yes', answer('confirm', 0.92)).reply, "You're booked: Haircut, Wednesday 4 Nov 11:00. See you then!");
+  const first = r.turn('move it to someday', answer('reschedule', 0.9, { dateExpr: 'someday', time: '11:00' }));
+  assert.equal(first.reply, 'Sure — what new day and time would you like to move it to?');
+  assert.equal(r.db.conv.last_intent, 'date_reask', 'the strike marker is SAVED (it was lost before the ruling)');
+  const second = r.turn('move it to whenever', answer('reschedule', 0.9, { dateExpr: 'whenever', time: '11:00' }));
+  assert.equal(second.reply, "I'm passing you to a team member — we'll get back to you shortly.");
+  assert.ok(second.path.includes('Mark Handoff')); assert.ok(r.db.alerts.includes('date_handoff'));
+  assert.equal(r.db.appts[0].status, 'booked', 'the booking itself is untouched');
 });
 
 // 5 — the golden set, end to end: every stage-`new` booking case, from its table text and expected JSON.
