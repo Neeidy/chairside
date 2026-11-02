@@ -844,6 +844,7 @@
   - ### R2 recheck and R2b — the fixes for the recheck (2026-11-02; NOT live)
   - ### R3 recheck and R2c — the third Codex round on the same rule (2026-11-02; NOT live)
   - ### R4 recheck — THE DECLARED THRESHOLD IS MET; the build STOPS for a design ruling (2026-11-02; NOT live)
+  - ## R2d — the r4 stop ruled: a structural defence, no more text-side rules (2026-11-02; NOT live)
 
 ### `docs/FLOW-DIAGRAM.md`
   - ## Overview — the lanes
