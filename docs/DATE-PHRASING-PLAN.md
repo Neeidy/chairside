@@ -38,7 +38,9 @@ silent loop.
 - **A weekday that disagrees with the date** (`thursday 4 november`, while 4 November 2026 is a Wednesday) → no date;
   re-ask naming both: "4 November is a Wednesday — did you mean Wednesday 4 November, or a Thursday?" Never pick one.
 - **A day+month already past this year** → the same day next year, only if that falls inside the booking horizon
-  (decision D-2); otherwise re-ask "That date has passed — which date did you mean?".
+  (decision D-2); otherwise re-ask "That date has passed — which date did you mean?" when this year's date is behind us
+  by no more than the horizon, else the too-far re-ask (E1, ruling 2026-11-02 — see "R2e"; until then every such date
+  answered "passed").
 - **A year given** → honoured as given: in the past → re-ask (passed); beyond the horizon → re-ask (too far ahead).
 - **A day that does not exist** (`31 november`, `30.2`) → re-ask, naming it.
 - **Ambiguous numeric forms** (`4/11` could be 4 November or 11 April) → per a config date order (decision D-1); with no
@@ -70,7 +72,8 @@ silent loop.
   1. invalid day/month → `invalid_date` (re-ask);
   2. numeric and ambiguous under D-1 → `ambiguous_numeric` (re-ask naming both readings);
   3. year given: in the past → `date_past`; beyond the horizon → `beyond_horizon`;
-  4. no year: this year's date if today or later, else next year's if inside the horizon, else `date_past`;
+  4. no year: this year's date if today or later, else next year's if inside the horizon, else `date_past` if this
+     year's date is at most the horizon behind us, else `beyond_horizon` (E1, R2e; was `date_past` for all);
   5. a weekday given that is not the date's weekday → `weekday_mismatch` (re-ask naming both);
   6. otherwise → `calendar_date` (resolved by code; the model's own `date` is cross-checked as today:
      `llm_date_ignored` when it differs).
@@ -183,7 +186,8 @@ another dateOrder).
 - `Resolve Date` (staged Main): `parseCalendarDate` (day + month in the four forms of §2, an optional leading weekday,
   an optional four-digit year) and `resolveCalendar` (the order of §3: ambiguous slash → `ambiguous_numeric`; impossible
   day → `invalid_date`; a year given is honoured, past → `date_past`; no year → this year if today or later, else next
-  year only inside the horizon, else `date_past`; a disagreeing weekday → `weekday_mismatch`; else `calendar_date`);
+  year only inside the horizon, else `date_past` (within the horizon behind us; further → `beyond_horizon` since E1,
+  R2e); a disagreeing weekday → `weekday_mismatch`; else `calendar_date`);
   `resolveWithin` — A1 on every resolved date → `beyond_horizon`; D-5 (`anchored_sunday`); the alert map gains the five
   new outcomes; D-4's strike.
 - `Slot Gate`: a dropped date picks its template by outcome (`dateWeekdayMismatch`, `dateAmbiguous`, `datePast`,
@@ -214,7 +218,8 @@ another dateOrder).
    is `date_handoff`. The marker `date_reask` never collides with `name_reask`/`clarify` (tested both ways).
 6. **Observed, by the plan's own rule — for a ruling:** a day + month that passed this year and whose next-year date is
    beyond the horizon re-asks "That date has passed" — e.g. "31 January" said on 1 November (next year's is day 91).
-   True in the plan's words, misleading to a customer who meant next January.
+   True in the plan's words, misleading to a customer who meant next January. **Ruled 2026-11-02 (E1), built in R2e:**
+   such a date answers the too-far reply unless this year's date is at most the horizon behind us.
 7. **The reschedule lane's re-ask is unchanged** (`rescheduleAskSlot`, no hint): the plan scoped the template choice to
    `Slot Gate`. D-4's strike counts there *since R2b* — this item said it already did, which Codex R2 MEDIUM-6 showed
    false (Reschedule Lookup lost the marker); fixed by ruling, see R2b.
@@ -425,7 +430,8 @@ day+month without a year that has passed this year and whose next-year date is b
 (on 3 Nov 2026: 2 February – 2 November, mostly dates just gone). With 30 it also takes the next-year dates 31–90 days
 ahead — on 3 Nov 2026, 1 January – 1 February: "haircut on 15 january" answers "That date has passed — which date did
 you mean?" (replayed). The customer means next January; "We take bookings up to 30 days ahead" (`dateTooFar`) would be the true reply. A one-line change of the outcome
-in `resolveCalendar`; not made, because the rule was approved as written.
+in `resolveCalendar`; not made, because the rule was approved as written. **Ruled 2026-11-02 (E1) and built in R2e**
+(one branch; section "R2e").
 
 ### R2d recheck — Codex r5: 3 HIGH against the defence; the build STOPS (2026-11-02; NOT live)
 **Codex recheck** (contained, pin `7dc3c45`; prompt `prompt-r5.md`, answer verbatim `r5.md`). Question 3 clean: only the
