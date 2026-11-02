@@ -388,7 +388,9 @@ ruling, not after.
 - `chat-replay.test.cjs` test 9 — after a year-bearing confirm ask, ONE turn of eleven kinds in between (nothing, an
   uncertain turn naming another date, an uncertain turn, another date, another time, an empty extraction, another name,
   a question, a "yes" naming another date, a reschedule, a cancel), then "yes": every booking row and calendar event,
-  and every moved slot, is the slot of the LAST confirm ask shown. Both lanes. Test 10 — across the year end.
+  and every moved slot, is the slot of the LAST confirm ask shown — **sequentially, one turn at a time** (Codex r5
+  finding 2 showed that two turns of one sender running CONCURRENTLY break "last"; see "R2d recheck"). Both lanes. Test
+  10 — across the year end. *(Corrected 2026-11-02: this line said "the LAST confirm ask shown" with no bound.)*
 - Mutants for the year in both confirms (dropped, the short format read, the year taken from the clock, the year spread
   to other replies, a move confirm showing another date than the one written) and for the bound (90, 31, 29).
 
@@ -396,14 +398,16 @@ ruling, not after.
 *The model's `dateExpr` can drop part of a date the customer wrote, and the best-effort text-side checks miss some
 phrasings* — r4's "haircut 5 november '27" (resolves to 5 Nov 2026) and "May 5 of our anniversary year, 2027" with an
 empty extraction (keeps the stored date) are the recorded examples; more exist and are not chased. **The defence:** the
-slot that "yes" writes is shown in full, with its year, in the confirm ask immediately before the write — r4 HIGH-1
+slot that "yes" writes is SENT in full, with its year, in the confirm ask of the turn before the write — r4 HIGH-1
 becomes "Haircut, Thursday 5 Nov 2026 11:00 … — shall I book it?" and HIGH-2 re-shows the stored date with its year —
 and the horizon is 30 days, so a date meant for another year is outside it anyway. **What the defence does NOT do,
 stated:** it relies on the customer reading the confirm; a "yes" to a wrong date that was shown books that date. It does
 not cover the recorded confirm-turn behaviour (ARCH-DEC 2026-09-09e; Codex r3 HIGH-3): a "yes" that names another date
 books the slot shown, with the `date_changed_on_confirm` owner alert — the slot written is still the one shown. A plain
 booking confirm stays answerable across an interleaved turn (no freshness check on `confirming`, `handoff.md`); test 9
-shows that the write is still the last slot shown.
+shows that the write is still the last slot shown, in a sequential conversation. **Three further limits, found by Codex
+r5 and NOT in this paragraph when it was first written:** a confirm stage saved BEFORE R2d (its ask had no year), two
+concurrent turns of one sender, and an ask that was saved but never delivered — section "R2d recheck".
 
 **What stays best-effort (ruling point 3), and the removal question answered:** `CAL_IN_TEXT` with its "may N of
 <pronoun>" exemption, the numeric-continuation and omitted-year checks, the weekday scan and the empty-extraction
@@ -422,4 +426,24 @@ day+month without a year that has passed this year and whose next-year date is b
 ahead — on 3 Nov 2026, 1 January – 1 February: "haircut on 15 january" answers "That date has passed — which date did
 you mean?" (replayed). The customer means next January; "We take bookings up to 30 days ahead" (`dateTooFar`) would be the true reply. A one-line change of the outcome
 in `resolveCalendar`; not made, because the rule was approved as written.
+
+### R2d recheck — Codex r5: 3 HIGH against the defence; the build STOPS (2026-11-02; NOT live)
+**Codex recheck** (contained, pin `7dc3c45`; prompt `prompt-r5.md`, answer verbatim `r5.md`). Question 3 clean: only the
+four `jsCode` values differ from `267d9b1`, `Resolve Date`'s executable lines unchanged, every other reply unchanged, the
+horizon holds for every resolved date (day 30 in, day 31 out), 55/55 mutants killed, the hero guard able to fail.
+Question 2: both r4 examples get a year-bearing confirm on the sequential path, as recorded. **Question 1 — three HIGH,
+each a path that writes without a year-bearing ask the customer is known to have seen. That is this round's stop
+condition, so nothing is fixed here; triage and proposals follow, for a ruling.**
+
+| # | Codex finding | Triage | Proposal |
+|---|---|---|---|
+| 1 | **A confirm stage saved before R2d** (its ask had no year) is still answerable after the put: a "yes" books it. | **REAL, and concrete:** the NAME-CAPTURE A1 read of 2026-11-01 found one conversation in `confirming` (whether it still is was not re-measured — no store read in this round). A booking confirm has no freshness check, so such a row stays answerable indefinitely. | **(b) recommended:** on the confirm turn, write only if the stored ask equals the year-bearing ask rebuilt from the stored slots, otherwise re-show the year-bearing ask. It is a check on OUR OWN last reply, not on the customer's words — no text-side rule. To verify first: that `conversations.computed_reply` is written in the same `Save State` as the stage and holds exactly the ask that was sent. Cost: the confirm path nodes join the edit → another Codex round. (a) A precondition alone (zero rows in a confirm stage at the put) would fail on the known row unless that row is changed — a store write. |
+| 2 | **Two concurrent turns of one sender** (different message ids): A reads the stored 5 Nov slot for "yes", B saves and shows 6 Nov, A writes 5 Nov. | **REAL as a counterexample to MY wording** ("the LAST confirm shown"), which was stronger than the ruling. The slot A writes WAS sent with its year and answered "yes" — ruling point (1) holds. It is the recorded concurrency class (ARCH-DEC 2026-08-16, line 96; no lock across turns), with a new consequence. | Correct the wording to "sequentially" (done above, in place) and record it as a bound. Per-sender serialisation is a new design — NOT built. |
+| 3 | **An ask saved but never delivered** (the widget response lost after `Save State`): a later "yes" writes a slot the customer never saw. | **REAL as a counterexample to "shown":** the engine knows what it SENT, not what was displayed. At-most-once delivery is a recorded cost (`booking-integrity.md`); a customer typing "yes" with no ask on screen is unlikely, not impossible. The WhatsApp lane (closed today) keeps the stage on a send failure too. | Restate the defence as "sent in the reply to the turn before the write" (done above, in place) and record the lost reply as a bound. A client acknowledgement before a confirm counts is v2 — NOT built. |
+
+**Sentences still to correct — declared, held for the build round that follows the ruling** (engine comments, not
+changed in a stopped round): `Compute Availability`'s R2d comment ("shown in full before any write") and `Resolve Date`'s
+BEST-EFFORT block ("show the resolved date WITH its year before any write") — both to "sent …, sequentially". The
+committed prompt `prompt-r5.md` is a record of what was asked and stays as written.
+**Containment:** `containment.md` → "R5". **Nothing live:** Main runs the promoted NAME-CAPTURE export.
 

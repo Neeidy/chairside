@@ -204,6 +204,7 @@
 - `docs/codex/date-phrasing/prompt-r2.md`
 - `docs/codex/date-phrasing/prompt-r3.md`
 - `docs/codex/date-phrasing/prompt-r4.md`
+- `docs/codex/date-phrasing/prompt-r5.md`
 - `docs/codex/date-phrasing/prompt.md`
 - `docs/codex/date-phrasing/r1.md`
 - `docs/codex/date-phrasing/r2.md`
@@ -212,6 +213,7 @@
 - `docs/codex/date-phrasing/run-r2.sh`
 - `docs/codex/date-phrasing/run-r3.sh`
 - `docs/codex/date-phrasing/run-r4.sh`
+- `docs/codex/date-phrasing/run-r5.sh`
 - `docs/codex/date-phrasing/run.sh`
 
 ### docs/codex/name-capture
@@ -845,6 +847,7 @@
   - ### R3 recheck and R2c — the third Codex round on the same rule (2026-11-02; NOT live)
   - ### R4 recheck — THE DECLARED THRESHOLD IS MET; the build STOPS for a design ruling (2026-11-02; NOT live)
   - ## R2d — the r4 stop ruled: a structural defence, no more text-side rules (2026-11-02; NOT live)
+  - ### R2d recheck — Codex r5: 3 HIGH against the defence; the build STOPS (2026-11-02; NOT live)
 
 ### `docs/FLOW-DIAGRAM.md`
   - ## Overview — the lanes
@@ -1428,6 +1431,7 @@
   - ## R2 — the recheck of the R1 fixes
   - ## R3 — the recheck of the R2b fixes
   - ## R4 — the recheck of the R2c fixes
+  - ## R5 — the recheck of the R2d build (the structural defence)
 
 ### `docs/codex/date-phrasing/prompt-r2.md`
   - _(no `##` headings — flat file)_
@@ -1436,6 +1440,9 @@
   - _(no `##` headings — flat file)_
 
 ### `docs/codex/date-phrasing/prompt-r4.md`
+  - _(no `##` headings — flat file)_
+
+### `docs/codex/date-phrasing/prompt-r5.md`
   - _(no `##` headings — flat file)_
 
 ### `docs/codex/date-phrasing/prompt.md`

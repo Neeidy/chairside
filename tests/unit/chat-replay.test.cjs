@@ -16,7 +16,9 @@
  *   7 a calendar-date correction with an empty extraction never inherits the stored date (Codex R1 HIGH-2).
  *   8 D-4 on the reschedule lane: the strike marker is saved and the second unreadable date hands off (Codex R2 MEDIUM-6).
  *   9 R2d (ruling 2026-11-02): the structural guarantee — after a year-bearing confirm ask, whatever one turn comes in
- *     between, a "yes" writes only the slot of the LAST confirm ask shown, on the booking and the reschedule lane alike.
+ *     between, a "yes" writes only the slot of the LAST confirm ask shown, on the booking and the reschedule lane alike —
+ *     SEQUENTIALLY: the replay runs one turn at a time. Two concurrent turns of one sender, a confirm stage saved before
+ *     R2d, and a reply never delivered are outside what it shows (Codex r5; DATE-PHRASING-PLAN "R2d recheck").
  *  10 R2d: across the year end the confirm shows the slot's year (2027 on 20 Dec 2026), and that is what is written.
  * WHICH EXPORT: the staged Main if it exists, else the committed one; argv[2] overrides it (mutants).
  */
