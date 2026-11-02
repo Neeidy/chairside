@@ -111,6 +111,10 @@ export function mountTurnstile(
   let blocked = false;
   let errors = 0;                                       // consecutive failures; a success resets it
   let retryTimer: ReturnType<typeof setTimeout> | undefined;
+  // A challenge ends with ANY outcome or reset, not only with after-interactive: one that failed, timed out or was reset
+  // may never send that callback (unmeasured), and a pause left on would silence the composer's stuck timer for the rest
+  // of the page (code-reviewer R4, third pass). Cloudflare raises it again with before-interactive if it re-asks.
+  const endChallenge = () => onInteractive?.(false);
 
   onChange('pending');
   loadScript()
@@ -127,22 +131,25 @@ export function mountTurnstile(
         // A success ends a block: `blocked` is cleared here. It used to stay set after an error that a retry then
         // cleared, so the NEXT `refresh()` returned early and never asked for a token — the composer sat at
         // "Verifying…" for good after one transient error (DATE-PHRASING R4, 2026-11-02).
-        callback: (t: string) => { token = t; errors = 0; blocked = false; clearTimeout(retryTimer); onChange('ready'); },
+        // Every outcome ends a challenge, not only after-interactive (see endChallenge).
+        callback: (t: string) => { token = t; errors = 0; blocked = false; clearTimeout(retryTimer); onChange('ready'); endChallenge(); },
         'error-callback': () => {
           token = null;
           errors += 1;
           if (errors <= TURNSTILE_MAX_RETRIES) {
             onChange('pending');
+            endChallenge();
             clearTimeout(retryTimer);
-            retryTimer = setTimeout(() => window.turnstile?.reset(widgetId ?? undefined), TURNSTILE_RETRY_MS);
+            retryTimer = setTimeout(() => { endChallenge(); window.turnstile?.reset(widgetId ?? undefined); }, TURNSTILE_RETRY_MS);
             return;
           }
           clearTimeout(retryTimer);                     // the retries are spent: a block, not another attempt
           blocked = true;
           onChange('blocked');
+          endChallenge();
         },
-        'expired-callback': () => { token = null; onChange('pending'); window.turnstile?.reset(widgetId ?? undefined); },
-        'timeout-callback': () => { token = null; onChange('pending'); window.turnstile?.reset(widgetId ?? undefined); },
+        'expired-callback': () => { token = null; onChange('pending'); endChallenge(); window.turnstile?.reset(widgetId ?? undefined); },
+        'timeout-callback': () => { token = null; onChange('pending'); endChallenge(); window.turnstile?.reset(widgetId ?? undefined); },
         theme: 'light',
         appearance: 'interaction-only',
         'before-interactive-callback': () => { slot.classList.add('is-interactive'); onInteractive?.(true); },
@@ -160,6 +167,7 @@ export function mountTurnstile(
       if (blocked) return;
       clearTimeout(retryTimer);   // a retry pending from an earlier failure would abort the attempt this reset starts
       onChange('pending');
+      endChallenge();
       if (widgetId && window.turnstile) window.turnstile.reset(widgetId);
     },
   };

@@ -133,10 +133,13 @@ export function TurnstileWidget({
         if (!window.turnstile) throw new Error('turnstile_unavailable');
         idRef.current = window.turnstile.render(hostRef.current, {
           sitekey: siteKey,
-          callback: (token: string) => { onToken(token); onState('ready'); },
-          'error-callback': () => { onToken(null); onState('error'); },
-          'expired-callback': () => { onToken(null); window.turnstile?.reset(idRef.current ?? undefined); },
-          'timeout-callback': () => { onToken(null); window.turnstile?.reset(idRef.current ?? undefined); },
+          // Every outcome ends a challenge, not only after-interactive: a challenge that failed, timed out or was reset
+          // may never send that callback (unmeasured), and a pause left on would silence the stuck timer for the rest of
+          // the page (code-reviewer R4, third pass). Cloudflare raises it again with before-interactive if it re-asks.
+          callback: (token: string) => { onToken(token); onState('ready'); onInteractive?.(false); },
+          'error-callback': () => { onToken(null); onState('error'); onInteractive?.(false); },
+          'expired-callback': () => { onToken(null); onInteractive?.(false); window.turnstile?.reset(idRef.current ?? undefined); },
+          'timeout-callback': () => { onToken(null); onInteractive?.(false); window.turnstile?.reset(idRef.current ?? undefined); },
           theme: 'light',
           appearance: 'interaction-only',
           'before-interactive-callback': () => { setInteractive(true); onInteractive?.(true); },
@@ -163,6 +166,7 @@ export function TurnstileWidget({
   useEffect(() => {
     if (!mounted || resetSignal === 0) return;
     onToken(null);
+    onInteractive?.(false);   // a reset ends any challenge on screen (see the callbacks above)
     window.turnstile?.reset(idRef.current ?? undefined);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetSignal]);

@@ -127,3 +127,14 @@ test('an interactive challenge is reported to the composer, start and end (its s
   ts.challenge(true); ts.challenge(false);
   assert.deepEqual(challenge, [true, false]);
 });
+
+test('every outcome ends a challenge, not only after-interactive (it may never come): a failure, a success, a refresh', async () => {
+  const { ts, h, challenge } = await mount();
+  ts.challenge(true); ts.error();
+  assert.equal(challenge.at(-1), false, 'a failure during the challenge ends it');
+  ts.challenge(true); ts.pass('t1');
+  assert.equal(challenge.at(-1), false, 'a success ends it');
+  ts.challenge(true); h.refresh();
+  assert.equal(challenge.at(-1), false, 'our reset ends it');
+  ts.pass('t2');                                 // no timer outlives the test
+});

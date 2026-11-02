@@ -76,7 +76,8 @@ export function LiveChatPanel({ config, endpoint }: { config: ClientConfig; endp
   // after VERIFY_STUCK_MS the panel says so, and the arrival of a token takes it away. Re-armed by every reset.
   const waiting = waitingForToken(tsRendered, !!token, isBlocked(!!token, tsState, tsErrors), tsInteractive);
   useEffect(() => {
-    if (!waiting) { setStuck(false); return; }
+    setStuck(false);   // a token, a block, a challenge or a new reset: any earlier stall is over (the snippet does the same)
+    if (!waiting) return;
     const id = setTimeout(() => setStuck(true), VERIFY_STUCK_MS);
     return () => clearTimeout(id);
   }, [waiting, resetSignal]);

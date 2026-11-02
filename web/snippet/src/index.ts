@@ -216,7 +216,7 @@ function boot(selfSrc: string | null) {
    *     turnstile.ts  'pending': at mount, a failure being retried (R4), `expired-callback`, `timeout-callback`, `refresh`
    *     turnstile.ts  'blocked': `error-callback` once the retries are spent, the script-load `.catch`
    *   (named by callback, not by line: the line-number form went stale in the commit that last rewrote it — R4 review)
-   *     index.ts    setGate('pending') at mount and on every send   ·   'blocked' in the refresh catch
+   *     index.ts    setGate('pending') at mount, on every send and when a challenge starts or ends   ·   'blocked' in the refresh catch
    * One producer of `ready`, and `pending` has no timeout of its own, so a `reset()` whose callback
    * never arrives leaves the composer dead behind "Verifying…" with nothing on screen. That is the
    * dead composer `tests/snippet/DRILLS.md` lists as a MUST-NOT-RUN.
@@ -228,13 +228,15 @@ function boot(selfSrc: string | null) {
    * verification code. Its negative control HAD been run and HAD passed; it swept only the `sending`
    * axis, and the defect was on an axis nobody had thought to vary.
    *
-   * THREE CONDITIONS, each answering one axis:
+   * FOUR CONDITIONS, each answering one axis (the fourth, `!interactive`, since R4):
    *   `mounted`   — Turnstile has actually been asked for a token. Without it the timer measures the
    *                 visitor's browsing speed, not Cloudflare's.
    *   `!sending`  — an in-flight send also parks the gate at `pending`, but that wait belongs to the
    *                 ENGINE (up to the 60 s transport timeout) and already shows a typing indicator.
    *   one-shot, RE-ARMED on `ready` — say it once per stall, not once per page. The first version
    *                 burned its only shot on the false alarm and then had nothing left for the real one.
+   *   `!interactive` — a challenge on screen is the visitor solving it, not a stall; "reload the page"
+   *                 would throw it away. Paused while it is up; the pause ends with ANY outcome (turnstile.ts).
    *
    * ⚠ Scope, unchanged and honest: this does not REPAIR the wait — only Cloudflare can. It turns a
    * silent no-exit into a stated one. Two different thresholds; only the second is crossed here.
@@ -403,8 +405,9 @@ function boot(selfSrc: string | null) {
         mounted = true;
         ts = mountTurnstile(slot, endpoint.turnstileSiteKey, setGate, (on) => {
           interactive = on;
-          if (on) clearTimeout(gateTimer);
-          else if (gate === 'pending') setGate('pending');   // the challenge ended without a token yet: the wait restarts
+          // Re-applying 'pending' clears the timer and any "Still verifying" placeholder, and re-arms only while no
+          // challenge is up — the same call pauses (on) and restarts (off) the wait.
+          if (gate === 'pending') setGate('pending');
         });
       }
       // A disabled input cannot take focus, and the composer is disabled until Turnstile yields a

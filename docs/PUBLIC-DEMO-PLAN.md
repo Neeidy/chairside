@@ -527,9 +527,13 @@ five older `*.vercel.app` names → `302`; `<project>-<suffix>.vercel.app` → `
 **For the owner (a real Turnstile token, which this machine's headless browser cannot mint):** on
 `barber-demo.<apex>`, open the chat — expected: no Turnstile box, the composer opens, a message is answered; if Cloudflare
 does challenge, the box appears inside the panel and is solvable.
-**`security-auditor` LOW-A — moot since R3-3:** it noted that if Turnstile did not fire `after-interactive` the spacing
-would stay. Since R3-3 the spacing stays after every challenge by design and no `after-interactive` callback is
-registered, so there is no longer a state it could get stuck in.
+**`security-auditor` LOW-A — moot since R3-3 for the SPACING; live again since DATE-PHRASING R4 for the stuck timer:** it
+noted that if Turnstile did not fire `after-interactive` the spacing would stay. Since R3-3 the spacing stays after every
+challenge by design. R4 (2026-11-02) registers `after-interactive` again on both render sites — to pause the 20 s
+stuck timer while a challenge is up — so the same unmeasured question came back with a worse cost (a silenced timer,
+`code-reviewer`, third pass). The pause is therefore ended by EVERY outcome and every reset of ours, not by that
+callback alone. *(Said "no `after-interactive` callback is registered, so there is no longer a state it could get stuck
+in" until R4.)*
 
 **R3 amendment — the spacing stays after interaction (ruling R3-3, 2026-11-01; committed, NOT deployed — the site is
 redeployed after the NAME-CAPTURE promotion).** Both render sites drop the `after-interactive-callback`; the
