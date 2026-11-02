@@ -103,11 +103,17 @@ DATE_PHRASING_GATE_EDITS = {
     'messageTemplates.dateInvalid': 'That date is not on the calendar — which date did you mean?',
     'messageTemplates.dateTooFar': 'We take bookings up to {days} days ahead — which date did you mean?',
 }
+# N1 R1 (docs/N1-CONFIRM-NO-PLAN.md §3.4, §3.5; ruling D-5): the two booking-confirm decline templates.
+N1_GATE_EDITS = {
+    'messageTemplates.bookingDeclined': 'No problem — nothing is booked. What would you like to change: the service, the day, the time or the name?',
+    'messageTemplates.bookingDropped': "Okay — nothing is booked. Message me any time you'd like to book.",
+}
 APPROVED_DELTAS = {
     # A key may hold a LIST of approved deltas: a file is approved when it is exactly ONE of them. Main holds the 7-2 Tur 2
     # edit (live since 7-2 R3; kept because its fixtures exercise this tool — applying it again cannot pass `compare`,
     # whose committed side no longer has those nodes), the NAME-CAPTURE R1 edit (docs/NAME-CAPTURE-PLAN.md §11; promoted
-    # 2026-11-01, kept for the same reason) and the DATE-PHRASING R1 edit (parameters only + Load Config's gate edits).
+    # 2026-11-01, kept for the same reason), the DATE-PHRASING R1 edit (parameters only + Load Config's gate edits;
+    # promoted 2026-11-02) and the N1 R1 edit (three nodes, a sticky, the edge swap, two gate edits).
     'main': [{
         'add_nodes': {'Tag Turnstile Unavailable', 'Sticky — Tag Turnstile Unavailable'},
         'remove_nodes': {'Record Processed', 'Build Dedupe-Marker Alert'},
@@ -126,6 +132,17 @@ APPROVED_DELTAS = {
     }, {
         'add_nodes': set(), 'remove_nodes': set(), 'add_edges': set(), 'remove_edges': set(), 'settings': {},
         'gate_edits': {'Load Config': DATE_PHRASING_GATE_EDITS},
+    }, {
+        # N1 R1 (docs/N1-CONFIRM-NO-PLAN.md §4, §11; D-6 as amended 2026-11-03): the booking-confirm decline branch on
+        # Abort Reschedule?'s false output, and Load Config's two templates.
+        'add_nodes': {'Classify Confirm Reply', 'Booking Declined?', 'Build Booking-Declined State', 'Sticky — Booking declined'},
+        'remove_nodes': set(),
+        'add_edges': {'Abort Reschedule?|1|Classify Confirm Reply|0', 'Classify Confirm Reply|0|Booking Declined?|0',
+                      'Booking Declined?|0|Build Booking-Declined State|0', 'Booking Declined?|1|Uncertain Turn?|0',
+                      'Build Booking-Declined State|0|Save State|0'},
+        'remove_edges': {'Abort Reschedule?|1|Uncertain Turn?|0'},
+        'settings': {},
+        'gate_edits': {'Load Config': N1_GATE_EDITS},
     }],
     'owner-actions': {
         'add_nodes': set(),
