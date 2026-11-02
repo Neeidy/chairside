@@ -256,6 +256,25 @@ test('Codex R2 HIGH-1: a year the model left out is caught ANYWHERE in the messa
   assert.equal(resch.rd.date_resolution.reason, 'calendar_clipped', 'the reschedule lane too');
 });
 
+test('Codex R3 HIGH-1 + MEDIUM-4: a year followed by a colon, and a three-digit number, are caught; well-formed times are not', () => {
+  for (const text of ['haircut 5 november 2100: at 11:00', 'haircut 5 november 0000: at 11:00', 'haircut 5 november 1899: please',
+    'haircut 5 november in 2027: at 11:00', 'haircut 5 november 999 at 11:00'])
+    assert.equal(reason(book(text, '5 november')), 'calendar_clipped', text);
+  for (const text of ['haircut 4 november at 11:00', 'haircut 4 november at 11.30', 'haircut 4 november, 9:15 or 10:45'])
+    assert.equal(date(book(text, '4 november')), '2026-11-04', text);
+  // only the numeric-continuation check catches a two-digit year after a dot date: the time strip removes "4.11", and ".27"
+  // has fewer than three digits
+  assert.equal(reason(book('haircut 4.11.27 at 11:00', '4.11')), 'calendar_clipped', '4.11.27');
+  const resch = turn('move it to 5 november 2100: at 11:00', { dateExpr: '5 november', time: '11:00' }, { intent: 'reschedule', stage: 'booked' });
+  assert.equal(resch.rd.date_resolution.reason, 'calendar_clipped', 'the reschedule lane too');
+});
+
+test('Codex R3 HIGH-2: the "may N of" exemption only before a pronoun or possessive — "may 5 of the year 2027" is a date', () => {
+  const stored = { serviceId: 'haircut', date: '2026-11-04', time: '11:00' };
+  assert.equal(turn('may 5 of the year 2027 at 11:00', { time: '11:00' }, { stored }).rd.date_dropped, true);
+  assert.equal(date(book('may 2 of my friends come friday at 11', 'friday')), '2026-11-06', 'a possessive: the modal');
+});
+
 test('Codex R2 HIGH-2: only "may N of <word>" is exempt — "november 5 of 2027" with an empty extraction never keeps the stored date', () => {
   const stored = { serviceId: 'haircut', date: '2026-11-04', time: '11:00' };
   const r = turn('november 5 of 2027 at 11:00', { time: '11:00' }, { stored });
