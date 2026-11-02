@@ -1,9 +1,10 @@
 {
-  "_doc": "DATE-PHRASING R1 (docs/DATE-PHRASING-PLAN.md §4): parameters only — Resolve Date (calendar dates, the A1 horizon, D-5, the D-4 strike) and Slot Gate (the re-ask by reason); Load Config gains exactly the plan's two config keys (business.dateOrder and bot.bookingHorizonDays, inline in their one-line objects) and six templates (gate_edits, checked key-exact).",
+  "_doc": "DATE-PHRASING R1 (docs/DATE-PHRASING-PLAN.md §4): parameters only — Resolve Date (calendar dates, the A1 horizon, D-5, the D-4 strike), Slot Gate (the re-ask by reason) and Reschedule Lookup (carries D-4's marker; ruling 2026-11-01, Codex R2 MEDIUM-6); Load Config gains exactly the plan's two config keys (business.dateOrder and bot.bookingHorizonDays, inline in their one-line objects) and six templates (gate_edits, checked key-exact).",
   "allow": [
     "Resolve Date",
     "Slot Gate",
-    "Load Config"
+    "Load Config",
+    "Reschedule Lookup"
   ],
   "gate_edits": {
     "Load Config": {
