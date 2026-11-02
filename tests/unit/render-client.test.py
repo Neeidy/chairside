@@ -179,7 +179,9 @@ def all_leaves(o, p=''):
 # not hold yet. A render against the committed exports cannot carry them, so they are no A-leak probe until the edit is
 # promoted; tests/unit/render-client-askname.test.py renders them against the staged exports instead. main() asserts each
 # is still ABSENT from the committed literal — after the promotion that case goes red, and this set is emptied.
-PENDING_KEYS = set()
+# N1 R1 (docs/N1-CONFIRM-NO-PLAN.md §4): the two decline templates, staged and not yet promoted. At promotion this set is
+# emptied, and the Build Booking-Declined State fallbacks (the demo's two texts) go on the ALLOW list above, one entry each.
+PENDING_KEYS = {'messageTemplates.bookingDeclined', 'messageTemplates.bookingDropped'}
 
 
 def a_probes():

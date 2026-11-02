@@ -130,6 +130,8 @@
     "askDateTime": "What day and time works for you?",
     "askName": "Which name should the booking be under?",
     "bookingConfirmed": "Booked — {service}, {date} at {time}. See you then.",
+    "bookingDeclined": "No worries — nothing's booked yet. What should I change: service, day, time or name?",
+    "bookingDropped": "Alright — nothing's booked. Write any time you want to book.",
     "handoff": "Let me get one of the barbers to answer that — they'll come back to you shortly.",
     "handoffLocked": "One of the barbers is on this already — they'll reply here shortly.",
     "leadCaptured": "Thanks! We've got your details and someone from the team will reach out soon.",
