@@ -320,3 +320,30 @@ test('a calendar date the customer did not type with a month never resolves: dig
   assert.equal(reason(book('haircut 14.11', '4.11')), 'expr_not_in_text');
   assert.equal(date(book('haircut at 11.30', '11.30')), null, '11.30 read as a date is month 30: invalid, never a booking');
 });
+
+// ── R2d (ruling 2026-11-02): the structural guarantee — both confirm asks show the resolved date WITH its year ──────
+const DEC20 = '2026-12-20T10:00:00Z';   // Sunday 20 Dec 2026: a slot in January is next year, the clock is this year
+const FREE = { calendars: { c: { busy: [] } } };
+const avail = (slots, cal = FREE, nowISO = DEC20) => runNode('Compute Availability',
+  { 'Load Config': { config: CONFIG }, 'Slot Gate': { state: { stage: 'ready', slots } } }, cal, nowISO);
+const reschedAvail = (slots, oldStartUtc, cal = FREE, nowISO = DEC20) => runNode('Compute Reschedule Availability',
+  { 'Load Config': { config: CONFIG }, 'Reschedule Lookup': { state: { stage: 'reschedule_collecting', slots, turn_count: 4 },
+    _reschedule_target: { recordId: 'r-fake', service: 'Haircut', start_utc: oldStartUtc } } }, cal, nowISO);
+
+test('R2d: the booking confirm shows the slot WITH its year (the slot\'s year, not the clock\'s); other replies keep their wording', () => {
+  const s = { serviceId: 'haircut', date: '2027-01-04', time: '11:00', customerName: 'Alex' };
+  assert.equal(avail(s).computed_reply, 'Haircut, Monday 4 Jan 2027 11:00 for Alex — shall I book it? (yes / no)');
+  assert.equal(avail({ ...s, date: '2026-12-21' }).computed_reply, 'Haircut, Monday 21 Dec 2026 11:00 for Alex — shall I book it? (yes / no)');
+  const busy = avail(s, { calendars: { c: { busy: [{ start: '2027-01-04T09:30:00Z', end: '2027-01-04T11:00:00Z' }] } } });
+  assert.equal(busy.availability.status, 'busy'); assert.match(busy.computed_reply, /^Monday 4 Jan 11:00 is taken/, 'the busy reply is unchanged');
+  const past = avail({ ...s, date: '2026-12-15' });
+  assert.equal(past.computed_reply, 'Tuesday 15 Dec 11:00 has already passed — give me a future day and time.', 'the past reply is unchanged');
+});
+
+test('R2d: the reschedule confirm shows BOTH dates WITH their years; the busy reply keeps its wording', () => {
+  const s = { serviceId: 'haircut', date: '2027-01-04', time: '15:00', customerName: 'Alex' };
+  assert.equal(reschedAvail(s, '2026-12-30T10:00:00Z').computed_reply,
+    'Move your Haircut from Wednesday 30 Dec 2026 11:00 to Monday 4 Jan 2027 15:00? Reply "yes" to move it, or anything else to keep it.');
+  const busy = reschedAvail(s, '2026-12-30T10:00:00Z', { calendars: { c: { busy: [{ start: '2027-01-04T13:30:00Z', end: '2027-01-04T15:00:00Z' }] } } });
+  assert.equal(busy.computed_reply, 'Monday 4 Jan 15:00 is taken — a team member will help you find another time.');
+});

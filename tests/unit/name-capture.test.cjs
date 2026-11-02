@@ -192,7 +192,7 @@ test('Slot Gate: service → day/time → NAME → ready (D-1: the name before a
 test('Compute Availability: the confirm names the person; a rejected slot keeps the name', () => {
   const gate = { state: { stage: 'ready', slots: { serviceId: 'haircut', date: DATE, time: '10:00', customerName: 'Alex' } } };
   const ok = run('Compute Availability', { 'Load Config': { config: CFG }, 'Slot Gate': gate }, { calendars: { c: { busy: [] } } });
-  assert.match(ok.computed_reply, /^Haircut, Monday 7 Jan 10:00 for Alex — shall I book it\? \(yes \/ no\)$/);
+  assert.match(ok.computed_reply, /^Haircut, Monday 7 Jan 2030 10:00 for Alex — shall I book it\? \(yes \/ no\)$/);
   const busy = run('Compute Availability', { 'Load Config': { config: CFG }, 'Slot Gate': gate },
     { calendars: { c: { busy: [{ start: `${DATE}T08:30:00Z`, end: `${DATE}T09:30:00Z` }] } } });
   assert.equal(busy.availability.status, 'busy'); assert.equal(busy.state.slots.customerName, 'Alex');

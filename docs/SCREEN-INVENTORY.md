@@ -158,7 +158,7 @@ Hepsi `Answer FAQ` node'u, tek turluk, state yazmaz, çıkış `Send Reply To Or
 |---|---|---|---|---|
 | W10 | Servis sor | `askService` → "Which service would you like? (Haircut / Beard Trim / Haircut + Beard)" | `collecting` | `Slot Gate` |
 | W11 | Tarih/saat sor | `askDateTime` → "What day and time works for you?" | `collecting` | `Slot Gate` |
-| W12 | Müsait → onay iste | **literal**: `"{servis}, {gün} {tarih} {saat} — shall I book it? (yes / no)"` | `confirming` | `Compute Availability` |
+| W12 | Müsait → onay iste | **literal**: `"{servis}, {gün} {tarih} {yıl} {saat} — shall I book it? (yes / no)"` (yıl: DATE-PHRASING R2d, 2026-11-02 — yazmadan önce tarih yılıyla gösterilir) | `confirming` | `Compute Availability` |
 | W13 | **Booked** | `bookingConfirmed` → "You're booked: {service}, {date} {time}. See you then!" | `booked` | `Build Booked State` |
 
 **Chip fırsatı:** W10'un 3 servisi ve W12'nin yes/no'su mockup'ta zaten chip olarak var — korunmalı.
@@ -200,7 +200,7 @@ W22'ye düşer. Design bunu "onay penceresi kapandı" olarak anlatabilmeli.
 | ID | Ekran | Metin | Stage |
 |---|---|---|---|
 | W28 | Yeni slot sor | `rescheduleAskSlot` | değişmez |
-| W29 | Yeni slot onayı | **literal**: `Move your {servis} from {eski} to {yeni}? Reply "yes" to move it, or anything else to keep it.` | `reschedule_confirming` |
+| W29 | Yeni slot onayı | **literal**: `Move your {servis} from {eski} to {yeni}? Reply "yes" to move it, or anything else to keep it.` — `{eski}` ve `{yeni}` ikisi de yılıyla (`{gün} {tarih} {yıl} {saat}`, R2d) | `reschedule_confirming` |
 | W62 | ⭐ YENİ (BULGU-9) — yeni slot okunamadı | **literal**: `I couldn't read that new time — a team member will help you pick one.` | `handoff` |
 | W63 | ⭐ YENİ (BULGU-9) — yeni slot geçmişte | **literal**: `{yeni} has already passed — a team member will help you pick a new time.` | `handoff` |
 | W64 | ⭐ YENİ (BULGU-9) — yeni slot kapalı saatte | **literal**: `We're closed then — a team member will help you pick a time that works.` | `handoff` |

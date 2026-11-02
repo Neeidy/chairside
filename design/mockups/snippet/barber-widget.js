@@ -177,9 +177,9 @@
   '<div class="msg bot" data-step="4">What day and time works for you?<span class="stamp">14:01</span></div></div>' +
   '<!-- MOCK user input -->' +
   '<div class="msg user" data-step="5">Friday at 15:30<span class="stamp">14:02</span></div>' +
-  '<!-- W12 · SOURCE: literal in Compute Availability — `${svcName}, ${fmt} — shall I book it? (yes / no)` -->' +
+  '<!-- W12 · SOURCE: literal in Compute Availability — `${svcName}, ${fmtConfirm} — shall I book it? (yes / no)` -->' +
   '<div class="pair"><div class="typing" data-typing="6" aria-hidden="true"><i></i><i></i><i></i></div>' +
-  '<div class="msg bot" data-step="6">Haircut, Friday 4 Sep 15:30 — shall I book it? (yes / no)' +
+  '<div class="msg bot" data-step="6">Haircut, Friday 4 Sep 2026 15:30 — shall I book it? (yes / no)' +
   '<span class="chips"><span class="chip chip-on">yes</span><span class="chip">no</span></span>' +
   '<span class="stamp">14:02</span></div></div>' +
   '<!-- MOCK user input -->' +

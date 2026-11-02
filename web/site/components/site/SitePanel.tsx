@@ -50,7 +50,7 @@ export function SitePanel() {
         {/* W12 · literal in `Compute Availability` */}
         <div className="pair">
           <div className="typing" data-typing="6" aria-hidden="true"><i /><i /><i /></div>
-          <div className="msg bot" data-step="6">Haircut, Friday 4 Sep 15:30 — shall I book it? (yes / no)
+          <div className="msg bot" data-step="6">Haircut, Friday 4 Sep 2026 15:30 — shall I book it? (yes / no)
             <span className="slots">
               <span className="chip chip-on">yes</span>
               <span className="chip">no</span>

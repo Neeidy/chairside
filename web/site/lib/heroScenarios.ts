@@ -43,9 +43,11 @@ const fill = (tpl: string, vars: Record<string, string>) =>
 export function heroScenarios(cfg: ClientConfig): Scenario[] {
   const svc = cfg.services[0];                       // the demo books the first configured service
   const t = cfg.messageTemplates as Record<string, string>;
-  // Sample slot. The ENGINE formats with Luxon 'cccc d LLL HH:mm' in the shop timezone; these are the
+  // Sample slot. The ENGINE formats with Luxon 'cccc d LLL HH:mm' in the shop timezone — and the confirm ask with
+  // 'cccc d LLL yyyy HH:mm' (DATE-PHRASING R2d, ruling 2026-11-02: the year is shown before any write); these are the
   // approved mockup's sample values, kept so the demo reads like a real Friday afternoon booking.
   const when = 'Friday 4 Sep 15:30';
+  const whenConfirm = 'Friday 4 Sep 2026 15:30';   // scripts/check-hero-engine-text.cjs parses it with the engine's format
   const date = 'Friday 4 Sep';
   const time = '15:30';
 
@@ -55,8 +57,8 @@ export function heroScenarios(cfg: ClientConfig): Scenario[] {
       label: 'Booking',
       bubbles: [
         { from: 'user', text: `Can I get a ${svc.name.toLowerCase()} Friday at 15:30?`, stamp: '14:02' },
-        // W12 — literal in `Compute Availability`: `${svcName}, ${fmt} — shall I book it? (yes / no)`
-        { from: 'bot', text: `${svc.name}, ${when} — shall I book it? (yes / no)`, stamp: '14:02',
+        // W12 — literal in `Compute Availability`: `${svcName}, ${fmtConfirm} — shall I book it? (yes / no)`
+        { from: 'bot', text: `${svc.name}, ${whenConfirm} — shall I book it? (yes / no)`, stamp: '14:02',
           source: 'W12 · literal in Compute Availability', chips: ['yes', 'no'] },
         { from: 'user', text: 'yes', stamp: '14:03' },
         // W13 — messageTemplates.bookingConfirmed, filled in `Build Booked State`

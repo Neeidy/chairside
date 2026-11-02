@@ -147,7 +147,7 @@ liste/tablo görünümüne ihtiyacı var, düz balon taşar.
 | 1. eksik slot | `Slot Gate` | `askService` → "Which service would you like? (Haircut / Beard Trim / Haircut + Beard)" | `collecting` |
 | 2. eksik tarih/saat | `Slot Gate` | `askDateTime` → "What day and time works for you?" | `collecting` |
 | 3. 3 slot tam | `Slot Gate` | (cevap yok, doğrudan müsaitliğe) | `ready` |
-| 4. müsait | `Compute Availability` | "Haircut, Thursday 4 Sep 14:00 — shall I book it? (yes / no)" (**literal, template değil** — tarih/saat örnek) | `confirming` |
+| 4. müsait | `Compute Availability` | "Haircut, Thursday 4 Sep 2025 14:00 — shall I book it? (yes / no)" (**literal, template değil** — tarih/saat örnek; yıl DATE-PHRASING R2d'den beri gösterilir) | `confirming` |
 | 5. "yes" | `Build Event Request` → GCal insert → write-then-verify | `bookingConfirmed` → "You're booked: {service}, {date} {time}. See you then!" | `booked` |
 
 **Çıkışlar (5 farklı sonuç, hepsi gerçek):**

@@ -20,6 +20,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 STAGED = os.path.join(ROOT, 'n8n', 'staged', 'workflow.main.sanitized.json')
 TESTS = [os.path.join(ROOT, 'tests', 'unit', n) for n in ('date-phrasing.test.cjs', 'chat-replay.test.cjs', 'resolve-date.test.cjs')]
 RD, SG, LC, RL = 'Resolve Date', 'Slot Gate', 'Load Config', 'Reschedule Lookup'
+CA, CRA = 'Compute Availability', 'Compute Reschedule Availability'
 MUTANTS = {
     'a weekday elsewhere in the message ignored (Codex R1 HIGH-1)': [(RD, r".filter((k) => occursIn(k, text)).map((k) => DAYS[k])).filter", r".filter((k) => false).map((k) => DAYS[k])).filter")],
     'the expression\'s weekday switches off the message\'s weekdays (Codex R2 MEDIUM-5)': [(RD, r".concat(Object.keys(DAYS).filter((k) => occursIn(k, text))", r".concat(Object.keys(DAYS).filter((k) => c.weekday === null && occursIn(k, text))")],
@@ -67,6 +68,15 @@ MUTANTS = {
     'a new refusal does not alert': [(RD, "weekday_mismatch: 'date_weekday_mismatch', ", '')],
     'Slot Gate: the plain question instead of the hint (D-3)': [(SG, "DATE_REASK[dr.outcome] : 'askDateTimeHint';", "DATE_REASK[dr.outcome] : 'askDateTime';")],
     'Slot Gate: the weekday conflict not named': [(SG, "weekday_mismatch: 'dateWeekdayMismatch', ", '')],
+    # R2d (ruling 2026-11-02): the year in both confirm asks — the structural guarantee
+    'R2d: the booking confirm without the year': [(CA, "const fmtConfirm = start.toFormat('cccc d LLL yyyy HH:mm');", "const fmtConfirm = start.toFormat('cccc d LLL HH:mm');")],
+    'R2d: the booking confirm reads the short format': [(CA, "${svcName}, ${fmtConfirm}", "${svcName}, ${fmt}")],
+    'R2d: the booking confirm takes the year from the clock, not the slot': [(CA, "const fmtConfirm = start.toFormat('cccc d LLL yyyy HH:mm');", "const fmtConfirm = start.toFormat('cccc d LLL') + ' ' + now.toFormat('yyyy') + ' ' + start.toFormat('HH:mm');")],
+    'R2d: the year spread to the other booking replies (busy, past)': [(CA, "const fmt = start.toFormat('cccc d LLL HH:mm');\n", "const fmt = start.toFormat('cccc d LLL yyyy HH:mm');\n")],
+    'R2d: the reschedule confirm\'s new date without the year': [(CRA, "const newWhen = start.toFormat('cccc d LLL yyyy HH:mm');", "const newWhen = start.toFormat('cccc d LLL HH:mm');")],
+    'R2d: the reschedule confirm\'s old date without the year': [(CRA, ".setZone(tz).toFormat('cccc d LLL yyyy HH:mm');", ".setZone(tz).toFormat('cccc d LLL HH:mm');")],
+    'R2d: the reschedule confirm shows a date other than the one "yes" writes': [(CRA, "to ${newWhen}?", "to ${start.plus({ days: 1 }).toFormat('cccc d LLL yyyy HH:mm')}?")],
+    'R2d: the year spread to the reschedule busy reply': [(CRA, "const fmt = start.toFormat('cccc d LLL HH:mm');\n", "const fmt = start.toFormat('cccc d LLL yyyy HH:mm');\n")],
     'Slot Gate: the template values not filled': [(SG, "return t[key] ? fill(t[key], dr.vars) : t.askDateTime;", 'return t[key] ? t[key] : t.askDateTime;')],
     'Load Config: another horizon (900)': [(LC, 'bookingHorizonDays: 90 }', 'bookingHorizonDays: 900 }')],
     'Load Config: MDY': [(LC, 'dateOrder: "DMY" }', 'dateOrder: "MDY" }')],
