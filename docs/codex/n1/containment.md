@@ -22,3 +22,15 @@ file).
   the ordinary command.
 - Codex reported "no tracked files were changed".
 - The export and the Codex home are deleted after this record is pushed (they hold the login copy).
+
+## Pass 2 — the recheck of the pass-1 fixes (the last pass, by ruling)
+Same harness, run by `docs/codex/n1/run-p2.sh` (the pass-1 runner with the prompt path changed). Pin `a0779a7` (409
+files), prompt 37 lines. Mount-check controls: one extra mount → 97, as intended → 0. Then: mount check OK, Codex exit 0,
+container exit 0, 118 container seconds. Answer verbatim as `p2.md`, byte-compared with the run's output file.
+- `scripts/codex-containment.py`: commands 14 · passed 12 · flags 4, read one by one: three JavaScript regex literals
+  (`/[a-z]/i`, `/[a-z]/.test`, `/[a-z]/g`) read as paths, and a `require('../tests/unit/chat-replay.lib.cjs')` from a
+  probe under the run's own `.audit-n1-p2/` — all inside the working copy.
+- The separate scan of the 14 command lines: 0 hits; its positive control matched the four forbidden shapes and not the
+  ordinary command.
+- The pass-1 login copy was deleted after the pass-1 record was pushed (its absence read back); the pass-2 one is deleted
+  after this record is pushed.
