@@ -203,11 +203,14 @@
 - `docs/codex/date-phrasing/containment.md`
 - `docs/codex/date-phrasing/prompt-r2.md`
 - `docs/codex/date-phrasing/prompt-r3.md`
+- `docs/codex/date-phrasing/prompt-r4.md`
 - `docs/codex/date-phrasing/prompt.md`
 - `docs/codex/date-phrasing/r1.md`
 - `docs/codex/date-phrasing/r2.md`
+- `docs/codex/date-phrasing/r3.md`
 - `docs/codex/date-phrasing/run-r2.sh`
 - `docs/codex/date-phrasing/run-r3.sh`
+- `docs/codex/date-phrasing/run-r4.sh`
 - `docs/codex/date-phrasing/run.sh`
 
 ### docs/codex/name-capture
@@ -838,6 +841,7 @@
   - ## R1 — built offline (2026-11-01; NOT live)
   - ## R2 — Codex and the fixes (2026-11-01; NOT live)
   - ### R2 recheck and R2b — the fixes for the recheck (2026-11-02; NOT live)
+  - ### R3 recheck and R2c — the third Codex round on the same rule (2026-11-02; NOT live)
 
 ### `docs/FLOW-DIAGRAM.md`
   - ## Overview — the lanes
@@ -1419,11 +1423,15 @@
 ### `docs/codex/date-phrasing/containment.md`
   - ## R1 — the audit of the R1 head
   - ## R2 — the recheck of the R1 fixes
+  - ## R3 — the recheck of the R2b fixes
 
 ### `docs/codex/date-phrasing/prompt-r2.md`
   - _(no `##` headings — flat file)_
 
 ### `docs/codex/date-phrasing/prompt-r3.md`
+  - _(no `##` headings — flat file)_
+
+### `docs/codex/date-phrasing/prompt-r4.md`
   - _(no `##` headings — flat file)_
 
 ### `docs/codex/date-phrasing/prompt.md`
@@ -1435,6 +1443,9 @@
   - ### Short summary
 
 ### `docs/codex/date-phrasing/r2.md`
+  - _(no `##` headings — flat file)_
+
+### `docs/codex/date-phrasing/r3.md`
   - _(no `##` headings — flat file)_
 
 ### `docs/codex/name-capture/containment.md`

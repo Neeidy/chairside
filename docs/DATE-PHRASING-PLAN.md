@@ -279,11 +279,13 @@ delta through `diff-workflow-copy --phase edit` OK.
 closed, MEDIUM-5's mutants killed, the D-4 service note fixed, no unrelated change — and **3 HIGH, 4 MEDIUM** new, every
 one real:
 - **HIGH-1 — R2's MEDIUM-4 narrowing re-opened year clipping:** "5 november 0000/2100/1899" extracted as "5 november"
-  resolved to this year (the reschedule lane too). **Fixed:** while the expression carries no year, ANY standalone 3–4
-  digit number in the message that is not part of a colon time refuses (`calendar_clipped`). **STATED COST:** a compact
-  time ("4 november 1100", "… at 1930") re-asks once; "11:00" passes.
+  resolved to this year (the reschedule lane too). **Fixed** — *as R2c restated it:* while the expression carries no
+  year, the message with its well-formed times taken out must hold no number of three or more digits (R2b's "not part
+  of a colon time" let "2100: at 11:00" through — Codex R3 HIGH-1). **STATED COST:** a compact time ("4 november 1100",
+  "… at 1930") re-asks; "11:00" passes.
 - **HIGH-2 — the "<month> N of" exemption kept a stale date:** "november 5 of 2027" with an empty extraction inherited
-  the stored date. **Fixed:** only the modal "may N of <word>" is exempt.
+  the stored date. **Fixed:** only the modal "may N of …" is exempt — *R2b allowed any word after "of", which let "may 5
+  of the year 2027" through (Codex R3 HIGH-2); R2c allows only a pronoun or possessive.*
 - **HIGH-3 — "thursday,4.11" (no space after the comma) was not detected** and booked the Thursday. **Fixed:** a dot pair
   right after a weekday with or without a space, a comma or "the". **Bound (restated):** a dot pair separated from the
   weekday by other words ("thursday at 4.11") is not detected.
@@ -302,3 +304,30 @@ one real:
 `resolve-date` 150/150 on the staged export · NAME-CAPTURE on the staged export: `name-capture` 34/34, mutants 50/50,
 `validate-intent` 37/37, `main-tur2` 38/38 · the staged export + delta (four allowed nodes) through
 `diff-workflow-copy --phase edit` OK.
+
+### R3 recheck and R2c — the third Codex round on the same rule (2026-11-02; NOT live)
+**Codex recheck** (contained, pin `e803474`; prompt `prompt-r3.md`, answer verbatim `r3.md`): HIGH-3 and MEDIUM-5/6/7
+closed, Reschedule Lookup exactly as ruled, no unrelated change — and **3 HIGH, 1 MEDIUM**:
+- **HIGH-1 — "5 november 2100: at 11:00"** (a year followed by a colon) resolved to this year in both lanes. **Fixed,
+  structurally:** the message's well-formed times ("11:00", "11.30") are taken out first; then any number of three or
+  more digits refuses while the expression carries no year. No more year shapes to enumerate.
+- **HIGH-2 — "may 5 of the year 2027"** matched the modal exemption. **Fixed:** the exemption applies only before a
+  pronoun or possessive (us, them, you, we, my, our, your, his, her, their).
+- **HIGH-3 — the confirm turn books the stored slot even when the message names another date.** Codex marks it itself as
+  **pre-existing and recorded** (Resolve Date's header; ARCH-DEC 2026-09-09e, "no veto": the confirm books the slot the
+  customer was SHOWN, and a different date said on that turn raises `date_changed_on_confirm` to the owner). Not changed
+  in this round — outside the approved plan; it stands as recorded, now with DATE-PHRASING's dates in it.
+- **MEDIUM-4 — a three-digit number was protected but untested.** A test and a mutant now pin it.
+- A fourth mutant became necessary: with the structural year rule, a four-digit year after a dot date is caught twice,
+  so only a two-digit year ("4.11.27") still depends on the numeric-continuation check — a test pins that.
+
+**Re-run after R2c** *(terminal-measured)*: `date-phrasing` 32/32 (30 red on the committed export) · `chat-replay` 9/9
+(5 red on the pre-edit export) · mutants 44/44 · `resolve-date` 150/150 on the staged export (N1-d stays a Friday) ·
+NAME-CAPTURE on the staged export: 34/34, mutants 50/50, `validate-intent` 37/37, `main-tur2` 38/38 · the staged export +
+delta through `diff-workflow-copy --phase edit` OK.
+
+**THRESHOLD, declared before the next measurement (`make-the-error-cheap`):** this is the third adjustment of the
+text-detection rules (`CAL_IN_TEXT`, the year check). If the R2c recheck finds another HIGH in the same class, the rule
+is NOT tuned a fourth time: the next step is a ruling on a design change (for example, refusing every message whose text
+holds a digit or a month name unless the expression parses as a calendar date covering ALL of them), with its cost
+measured first.
