@@ -321,6 +321,10 @@
 - `tests/run-d11.sh`
 - `tests/run-regression.sh`
 
+### tests/browser
+
+- `tests/browser/turnstile-gate.drill.mjs`
+
 ### tests/contract
 
 - `tests/contract/airtable-shape.test.cjs`
@@ -427,6 +431,7 @@
 - `tests/unit/seed-workflow.test.py`
 - `tests/unit/settings-parity.test.py`
 - `tests/unit/staged-sanitised.test.py`
+- `tests/unit/turnstile-gate-mutants.py`
 - `tests/unit/turnstile-window.test.py`
 - `tests/unit/validate-intent.test.cjs`
 - `tests/unit/workflow-step.test.py`
@@ -857,6 +862,8 @@
   - ### R2e recheck — Codex r6: 1 HIGH on the precondition's stated window; the build STOPS before any live step (2026-11-02; NOT live)
   - ## R3 — LIVE: the Main put with the in-flight precondition, the site redeploy; STOPPED for the owner run (2026-11-02)
   - ## R4 — the owner's run read back, PROMOTED; DATE-PHRASING CLOSED (2026-11-02)
+  - ### R4 — the "couldn't verify this browser" line the owner saw: diagnosed, fixed on both render sites, redeployed (2026-11-02)
+  - ### Definition of Done — DATE-PHRASING
 
 ### `docs/FLOW-DIAGRAM.md`
   - ## Overview — the lanes
@@ -1103,6 +1110,7 @@
   - ### schemas
   - ### scripts
   - ### tests
+  - ### tests/browser
   - ### tests/contract
   - ### tests/contract/fixtures
   - ### tests/db

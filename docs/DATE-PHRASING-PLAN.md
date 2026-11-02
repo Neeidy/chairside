@@ -10,6 +10,8 @@
 > turn order" wording, a read-only deploy precondition instead of a confirm-turn check, three recorded bounds. Section
 > "R2e" at the end. **Codex r6: 1 HIGH on the precondition's window → closed by procedure (ruling R-c). R3 LIVE 2026-11-02
 > (Main put + site redeploy; section "R3"); the owner's run and promotion follow.**
+> **R4 (2026-11-02): the owner's run read back, PROMOTED (`c22da47`), the Turnstile false notice fixed on both render
+> sites and redeployed — DATE-PHRASING CLOSED (section "R4", its DoD table; README/case-study recorded open).**
 > **Trigger:** the NAME-CAPTURE R3 owner run of 2026-11-01 (`docs/NAME-CAPTURE-PLAN.md` → "The owner run of
 > 2026-11-01"). "I'd like a haircut on Wednesday 4 November at 11:00" was extracted correctly by the model
 > (`date` 2026-11-04, `dateExpr` "wednesday 4 november") and dropped by `Resolve Date` (reason `unparsed`), so the bot
@@ -663,3 +665,61 @@ commit.
 
 **Carried, not closed here:** N1 (a "no" at the booking confirm has no designed path) · v2: a freshness check on the
 booking confirm · the widget's device-local stamps (display finding).
+
+### R4 — the "couldn't verify this browser" line the owner saw: diagnosed, fixed on both render sites, redeployed (2026-11-02)
+**Cause, found in the code and reproduced (not Cowork's hypothesis, which named a sticky blocked flag on the site):**
+the site panel's `submit` answered a send made with no Turnstile token in hand with `FRONTEND_TEXT.blocked` and kept
+the draft. A token is single-use, so after EVERY send there is a gap while the next one is minted; the owner's "yes",
+typed straight after the year-bearing confirm, landed in that gap. That fits everything read in step 1: no execution
+between 4853 and 4854, no Turnstile refusal, and the "yes" sent a moment later with the new token. Cowork's sticky-flag
+hypothesis is real **on the snippet**: its `error-callback` set `blocked`, no success ever cleared it, and the next
+`refresh()` returned early, so after one transient error no new token was ever asked for.
+
+**Fix** (`87726af`, review rounds `8cd936a`, `677eb9c`, `9ee5b9e`; frontend only, both render sites; full record in
+`docs/ARCHITECTURE-DECISIONS.md`, 2026-11-02): a missing token only holds the send; the notice is state-bound and shows
+only while no token can be obtained (the script did not load or render, or a failure and both retries failed) and a
+token takes it away; a wait that never ends is said after 20 s, paused during an interactive challenge; the snippet has
+the same retry-before-block policy and no sticky flag. **Declared:** the round went through four review passes
+(`code-reviewer` ×4, `security-auditor` ×4); each found real gaps in the fix itself (a script that never loads, one that
+loads empty, a retry that never answers, a pause that could outlive its challenge) and each was closed with a drill case
+and mutants before the push. The local snippet bundle (`web/site/public/barber-widget.js`, gitignored) was rebuilt in
+`web/` with the snippet's own esbuild step (`npm run build -w @salon/snippet`), because `check-all`'s freshness check
+compares it with the source — **declared**: not an install, not `next build`, nothing under `web/dashboard` touched;
+every site build ran in the isolated copy (OPS-10).
+
+**Evidence** *(terminal-measured; drill output in the session scratchpad, not committed)*:
+- `tests/browser/turnstile-gate.drill.mjs` (headless Chromium; a stubbed `api.js` driving pass/error/challenge/timeout;
+  the engine answered in the browser; every other page-frame request to a foreign host failed and counted — shown able
+  to count): **15/15 on the site and on the snippet** on the fixed build; on the pre-fix code (`cac19e5`), with the
+  14-case version, **site 3/14, snippet 9/14**.
+- Cloudflare's always-pass TEST key, two sends back to back: the pre-fix site drew the line (`noticeAfterQuickSend:
+  true`) — the owner's case with the real script; the fixed site and snippet did not. The always-block key: the notice
+  shown on both surfaces, nothing sent — **a real block is not hidden**.
+- Unit tests in both packages' `check` (site 9, snippet 10), 33 mutants killed (`tests/unit/turnstile-gate-mutants.py`),
+  `check-all` 0, NAME-CAPTURE and DATE-PHRASING suites untouched and green.
+- **Redeploy** (⚠ ONAY 1 of the R4 brief) 18:46 Vienna from `3c8c41a`: READY, production; the deployment URL → 302;
+  `barber-demo.<apex>` `/` and `/privacy` → 200; the hero unchanged (the year-bearing confirm, the yearless booked /
+  cancel bubbles); the served `barber-widget.js` byte-identical to the local build of the same commit; the new gate code
+  present in the site's bundle; the previous deployment recorded as the rollback target; the token in no file outside
+  its 0600 file. Turnstile dummy token → 403 before and after.
+- **The window, 17:05 → 18:47 Vienna:** Main executions 4864 and 4866 (probes), Reminders 4865 (its schedule); no
+  error status, no alert class, no LLM spend, no chat message.
+
+**Unmeasured, stated:** Cloudflare's own default retry runs beside ours, so "two retries" means three error-callbacks
+from any source; whether Cloudflare re-raises before-interactive when it re-asks. **What the owner can check:** the same
+two quick messages on `barber-demo.<apex>` — no "couldn't verify" line between them.
+
+### Definition of Done — DATE-PHRASING
+| Item | Status | Evidence |
+|---|---|---|
+| Built | ✅ | R1–R2e staged, live since the R3 put, promoted at `c22da47` |
+| Tested (happy + key edge) | ✅ | the §8 table above; the owner's live run A and B; Codex r1–r6 |
+| Cleaned | ✅ | `n8n/staged/` empty; the pre-put snapshot and the parity mirror deleted, absence read back |
+| Sanitized (secrets and PII) | ✅ | `security-auditor` GO before every push of the round; the second customer's name appears nowhere |
+| README / case-study | ⚠ open | the README's flow line ("book → collect service/date/time") is still true; the date rules are not described there — carried to the Phase 7 README/case-study pass, **recorded as a gap, not counted as closed** |
+| Pushed | ✅ | origin/main = the records commit of this round |
+| Resume-point memory written AND read back | ✅ | the progress memory, read back in this round |
+
+**DATE-PHRASING is CLOSED** (one DoD item recorded as open, above). **Carried:** N1 (a "no" at the booking confirm has
+no designed path) · v2: a freshness check on the booking confirm · the widget's device-local stamps · Cloudflare's
+default retry beside ours (measure, then decide whether to set `retry`).
