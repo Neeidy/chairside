@@ -17,7 +17,10 @@ import sys
 import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-STAGED = os.path.join(ROOT, 'n8n', 'staged', 'workflow.main.sanitized.json')
+# The staged edit while it exists; after its promotion (DATE-PHRASING R4, 2026-11-02) the committed export carries it,
+# and the mutants keep running against that — as tests/unit/name-capture-mutants.py does.
+_STAGED = os.path.join(ROOT, 'n8n', 'staged', 'workflow.main.sanitized.json')
+STAGED = _STAGED if os.path.exists(_STAGED) else os.path.join(ROOT, 'n8n', 'workflow.main.sanitized.json')
 TESTS = [os.path.join(ROOT, 'tests', 'unit', n) for n in ('date-phrasing.test.cjs', 'chat-replay.test.cjs', 'resolve-date.test.cjs')]
 RD, SG, LC, RL = 'Resolve Date', 'Slot Gate', 'Load Config', 'Reschedule Lookup'
 CA, CRA = 'Compute Availability', 'Compute Reschedule Availability'
