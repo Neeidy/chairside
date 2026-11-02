@@ -212,7 +212,8 @@ another dateOrder).
    beyond the horizon re-asks "That date has passed" — e.g. "31 January" said on 1 November (next year's is day 91).
    True in the plan's words, misleading to a customer who meant next January.
 7. **The reschedule lane's re-ask is unchanged** (`rescheduleAskSlot`, no hint): the plan scoped the template choice to
-   `Slot Gate`. D-4's strike does count there.
+   `Slot Gate`. D-4's strike counts there *since R2b* — this item said it already did, which Codex R2 MEDIUM-6 showed
+   false (Reschedule Lookup lost the marker); fixed by ruling, see R2b.
 8. **Test files that assumed the staged Main is NAME-CAPTURE** were generalised: `workflow-step.test.py`'s CLI gate case
    (any staged edit's first own-line template key), `render-client-askname.test.py`'s control (skipped once the committed
    literal holds `askName`, not when no staged file exists). `resolve-date.test.cjs` reads the staged export when one
@@ -241,10 +242,12 @@ asks exactly whether the model can steer the date):
   weekday not right before the date ("thursday on 4 november") was not seen either. **Fixed:** when the customer's text
   carries an explicit calendar date (`CAL_IN_TEXT`: a month name with a day; a slash pair; a dot pair only with a
   trailing dot, a year or a weekday right before it), an expression that is not a calendar date — a weekday,
-  today/tomorrow, an ISO date — is refused (`calendar_clipped`); a weekday ANYWHERE in the message counts against the
-  date. **Stated costs:** "may 2 people come friday" re-asks once ("<month> N of" is exempt, so the recorded case
-  "may 2 of us come friday" (resolve-date N1-d) stays a Friday — the first version of this fix broke it and the
-  existing suite caught it); another weekday mentioned for another reason ("I can't do thursday, 4 november") re-asks;
+  today/tomorrow, an ISO date — is refused (`calendar_clipped`); a weekday anywhere in the message counts against the
+  date *(corrected at R2b: only while the expression carried no weekday of its own — Codex R2 MEDIUM-5)*. **Stated
+  costs:** "may 2 people come friday" re-asks once (the recorded case "may 2 of us come friday" (resolve-date N1-d) stays
+  a Friday — the first version of this fix broke it and the existing suite caught it; *the exemption was "<month> N of"
+  here until R2b narrowed it to "may N of <word>" — Codex R2 HIGH-2*); another weekday mentioned for another reason
+  ("I can't do thursday, 4 november") re-asks;
   a time written right after a weekday ("friday 9.10") counts as a dot date and re-asks once (measured). **Bound:** a bare
   dot pair NOT directly after a weekday ("thursday at 4.11", "thursday, the 4.11") is not detected — a bare "9.10" is
   too often a time — so there the weekday alone resolves (measured: "friday at 9.10" → the Friday).
@@ -252,8 +255,9 @@ asks exactly whether the model can steer the date):
   kept the stored 4 November. **Fixed:** the empty-extraction backstop (`day_named_not_extracted`) now sees a calendar
   date too, so the date is dropped and the hint re-asks (and D-4 counts it).
 - **MEDIUM-3 — year "0000" was read as no year** (a truthiness check). **Fixed:** a year given is `!== null`.
-- **MEDIUM-4 — a compact time ("4 november 1100") was taken for a trimmed year.** **Fixed:** only a 19xx/20xx number
-  that is not a time counts as a year.
+- **MEDIUM-4 — a compact time ("4 november 1100") was taken for a trimmed year.** R2 narrowed the year check to a
+  19xx/20xx number right after the date; **R2b reversed that**, because it let "5 november 2100", "… 0000" and "… in
+  2027" resolve to this year (Codex R2 HIGH-1). The compact-time refusal is now a STATED COST (R2b, below).
 - **MEDIUM-5 — three properties no test could fail:** the shop clock read in UTC, the horizon skipped for relative
   days, the handoff route cut. **Fixed:** a test at 23:30Z on Sunday (already Monday in Vienna: "this sunday" is the
   current week, 1 November is past); a 1-day horizon refusing a weekday and D-5's date; D-4 end to end in the replay
@@ -269,3 +273,32 @@ asks exactly whether the model can steer the date):
 36/36 (Codex's three survivors among them) · `resolve-date` 150/150 on the staged export (N1-d included) · NAME-CAPTURE on
 the staged export: `name-capture` 34/34, mutants 50/50, `validate-intent` 37/37, `main-tur2` 38/38 · the staged export +
 delta through `diff-workflow-copy --phase edit` OK.
+
+### R2 recheck and R2b — the fixes for the recheck (2026-11-02; NOT live)
+**Codex recheck** (contained, pin `719ac88`; prompt `prompt-r2.md`, answer verbatim `r2.md`): the R1 counterexamples
+closed, MEDIUM-5's mutants killed, the D-4 service note fixed, no unrelated change — and **3 HIGH, 4 MEDIUM** new, every
+one real:
+- **HIGH-1 — R2's MEDIUM-4 narrowing re-opened year clipping:** "5 november 0000/2100/1899" extracted as "5 november"
+  resolved to this year (the reschedule lane too). **Fixed:** while the expression carries no year, ANY standalone 3–4
+  digit number in the message that is not part of a colon time refuses (`calendar_clipped`). **STATED COST:** a compact
+  time ("4 november 1100", "… at 1930") re-asks once; "11:00" passes.
+- **HIGH-2 — the "<month> N of" exemption kept a stale date:** "november 5 of 2027" with an empty extraction inherited
+  the stored date. **Fixed:** only the modal "may N of <word>" is exempt.
+- **HIGH-3 — "thursday,4.11" (no space after the comma) was not detected** and booked the Thursday. **Fixed:** a dot pair
+  right after a weekday with or without a space, a comma or "the". **Bound (restated):** a dot pair separated from the
+  weekday by other words ("thursday at 4.11") is not detected.
+- **MEDIUM-4 — compact evening times refused:** now the stated cost above (HIGH-1 wins: a refusal is cheap, a wrong year
+  is not).
+- **MEDIUM-5 — the expression's own weekday switched off the message's other weekdays:** both are now checked.
+- **MEDIUM-6 — D-4 never fired on the reschedule lane:** Reschedule Lookup rebuilt the state from Validate Intent
+  (upstream of Resolve Date) and dropped the marker. **Ruling (Yigitcan, 2026-11-02, answering the build's question):
+  carry the marker** — a one-line edit of Reschedule Lookup (only `last_intent` is taken from Resolve Date's output);
+  it joins the delta's allow list (four nodes). Tested end to end in the replay.
+- **MEDIUM-7 — two regressions survived:** the weekday-adjacent dot detector removed, and "today" exempted. Both now
+  mutants, killed; tests added for the bare "thursday 4.11" and "today, 5 november".
+
+**Re-run after R2b** *(terminal-measured)*: `date-phrasing` 30/30 (28 of 30 red on the committed export) ·
+`chat-replay` 9/9 (5 of 9 red on the pre-edit export) · mutants 42/42 (the recheck's two survivors among them) ·
+`resolve-date` 150/150 on the staged export · NAME-CAPTURE on the staged export: `name-capture` 34/34, mutants 50/50,
+`validate-intent` 37/37, `main-tur2` 38/38 · the staged export + delta (four allowed nodes) through
+`diff-workflow-copy --phase edit` OK.

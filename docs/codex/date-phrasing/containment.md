@@ -20,3 +20,14 @@ output file). The export and the Codex home are deleted after this record is pus
   network tools, history-widening git options): 0 hits; its positive control matched the four forbidden shapes and not
   the ordinary command.
 - Codex reported "no tracked files were changed".
+
+## R2 — the recheck of the R1 fixes
+Same harness, run by `docs/codex/date-phrasing/run-r2.sh` (the R1 runner with the prompt path changed). Pin `719ac88`
+(379 files), prompt 42 lines. Mount-check controls: one extra mount → 97, as intended → 0. Then: mount check OK, Codex
+exit 0, container exit 0, 272 container seconds. Answer verbatim as `r2.md`, byte-compared with the run's output file.
+- `scripts/codex-containment.py`: commands 24 · passed 20 · flags 5, read one by one: four `require('../…')` (luxon, the
+  chat-replay library) from probes the run wrote under its own `.audit-r2/` — inside the working copy; one "unparseable
+  shell script", a heredoc editing its own `.audit-r2/extra-mutants.py`.
+- The separate scan of the 24 command lines: 0 hits; its positive control matched the four forbidden shapes and not the
+  ordinary command.
+- The R1 export and Codex home were deleted after the R1 records were pushed; the R2 ones are deleted after these.
