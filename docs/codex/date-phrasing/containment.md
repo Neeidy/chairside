@@ -52,3 +52,16 @@ exit 0, container exit 0, 200 container seconds. Answer verbatim as `r4.md`, byt
 - The separate scan of the 14 command lines: 0 hits; its positive control matched the four forbidden shapes and not the
   ordinary command.
 - The R3 export and Codex home were deleted after the R3 records were pushed; the R4 ones are deleted after these.
+
+## R5 — the recheck of the R2d build (the structural defence)
+Same harness, run by `docs/codex/date-phrasing/run-r5.sh` (the R4 runner with the prompt path changed). Pin `7dc3c45`
+(388 files), prompt 51 lines. Mount-check controls: one extra mount → 97, as intended → 0. Then: mount check OK, Codex
+exit 0, container exit 0, 282 container seconds. Answer verbatim as `r5.md`, byte-compared with the run's output file.
+- `scripts/codex-containment.py`: commands 22 · passed 19 · flags 7, read one by one: the "absolute path" `/` and `//`
+  tokens are string literals inside the run's own heredoc probes (a `.replace('/','_')`, JavaScript `//` comments, a
+  `split('//')`) — no path; every file the probes opened is inside the working copy (`n8n/staged/…`, `.audit-r2d/`).
+- The separate scan of the 22 command lines: 0 hits; its positive control matched the four forbidden shapes and not the
+  ordinary command.
+- Codex reported "No tracked files changed".
+- The R4 export and Codex home were deleted after the R4 records were pushed; the R5 ones are deleted after these.
+
