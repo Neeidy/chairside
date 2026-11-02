@@ -616,3 +616,50 @@ identical replies):** on `barber-demo.<apex>`, a real Turnstile token.
 
 **Next round:** read the owner's run back (executions and the store, read-only), then promotion (staged → committed,
 both parity guards 0 against the committed exports, the snapshot deleted).
+
+## R4 — the owner's run read back, PROMOTED; DATE-PHRASING CLOSED (2026-11-02)
+*(Read-only: n8n executions by GET, the store as `salon_ro` in a READ ONLY transaction; names other than the fixture are
+not printed or written. Terminal-measured, output not committed.)*
+
+**When:** executions 4852–4862, **2026-11-02 16:56:38–16:58:37 Vienna** by the server's clock. The brief's "2026-11-03
+~07:56" is the widget's device-local reading (bubble stamps use the visitor's device clock — a display finding already
+on record); the server's time is the one used here.
+
+**Conversation A (4852–4858), as the script expects:** the bare name filled (4853) and the year-bearing confirm sent
+("Haircut, Thursday 12 Nov 2026 11:00 for Mara O'Test — shall I book it? (yes / no)"); "yes" (4854) → `Book Appointment`
+(calendar title "Haircut — Mara O'Test (bot)", 12 Nov 11:00 Vienna, confirmed) → `Write Appointment`; the move (4855
+ask with both years, 4856 "yes") → the reschedule insert, verify, race gate won, `Update Appointment (Reschedule)`,
+`Delete Old Event (Reschedule)` → classified, done; the cancel (4857–4858) → `Delete Booking Event` →
+`Update Appointment Cancelled`. Store: ONE appointment row — 13 Nov 14:00Z (15:00 Vienna), `cancelled`, `customer_name`
+the fixture name kept through the move and the cancel; the conversation `cancelled`. No node error in any of the seven.
+**The "couldn't verify this browser" line he saw between 4853 and his "yes" never reached the engine:** no execution
+exists between 4853 (15:56:47Z) and 4854 (15:57:01Z), and none of 4852–4862 is a Turnstile refusal. It was drawn by
+the page itself — diagnosed below.
+
+**Conversation B (4859–4862):** "Haircut on Thursday 11 November at 11:00" → `weekday_mismatch` → "11 November is a
+Wednesday — did you mean Wednesday 11 November, or a Thursday?" with its owner alert (`date_weekday_mismatch`, sent to
+Telegram — by design, the class pings); "Wednesday 11 November at 11:00" → `calendar_date` → the name ask; the name →
+the year-bearing confirm; **"yes" (past the script's planned stop) → booked**: calendar event "Haircut — <name-B> (bot)",
+11 Nov 11:00 Vienna, the row `booked`, the conversation `booked`. Left untouched (demo data, by the brief).
+**Correction to R3's last paragraph:** it said B's row would stand in `confirming` and make a later put's F1 count 1.
+B was answered, so its conversation is `booked`; the F1 control now reads booked 1 · cancelled 3 · collecting 1 ·
+confirming 1 (the old nameless row) · new 2.
+
+**Promotion (`c22da47`):** the staged Main became the committed export; `n8n/staged/` is empty; the DATE-PHRASING
+mutants fall back to the committed export (as NAME-CAPTURE's do) — 60/60 killed against it. Both parity guards against
+the COMMITTED exports, run after the commit (they read the index): content 5/5 exports match the live instance, the
+active set exactly the five listed; structural 192/192 nodes, 274/274 connections. `check-all` 0 before and after the
+commit.
+
+**§8 acceptance criteria:**
+
+| Criterion | Status | Evidence |
+|---|---|---|
+| Every in-scope form resolves to the right ISO date in the shop's timezone (year-end, leap day); out-of-scope forms re-ask | ✅ | `date-phrasing.test.cjs` (in-scope forms, year end, 29 February, Vienna clock), `resolve-date.test.cjs` 150/150; live: "12 November", "Friday 13 November", "Wednesday 11 November" resolved by code (4852, 4855, 4860) |
+| `thursday 4 november` never books: a re-ask naming Wednesday | ✅ | the weekday-mismatch tests; live: B's "Thursday 11 November" (4859) re-asked naming Wednesday |
+| `4/11` follows D-1; no order + both ≤ 12 → a re-ask naming both | ✅ | the D-1 test (DMY, MDY, no order) — offline only |
+| A dropped date re-asks with the forms named; a second drop hands off with an owner alert | ✅ offline | D-3 and D-4 tests and mutants — **not driven live** (the owner's run had no dropped date); recorded, not counted as live evidence |
+| Tests green with mutants killed, the owner script replayed, `check-all` 0, Codex on CRT #12 with no open HIGH/MEDIUM | ✅ | date-phrasing 35/35, chat-replay 11/11, mutants 60/60, the owner script replayed and then run live (above); Codex r1–r6: every HIGH/MEDIUM fixed, ruled a bound (r4 class, r5 2–3) or — r6's one HIGH — closed by procedure (ruling R-c) |
+
+**Carried, not closed here:** N1 (a "no" at the booking confirm has no designed path) · v2: a freshness check on the
+booking confirm · the widget's device-local stamps (display finding).

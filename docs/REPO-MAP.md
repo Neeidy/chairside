@@ -850,6 +850,7 @@
   - ## R2e — the r5 stop ruled: two small fixes, a deploy precondition, three bounds (2026-11-02; NOT live until R3)
   - ### R2e recheck — Codex r6: 1 HIGH on the precondition's stated window; the build STOPS before any live step (2026-11-02; NOT live)
   - ## R3 — LIVE: the Main put with the in-flight precondition, the site redeploy; STOPPED for the owner run (2026-11-02)
+  - ## R4 — the owner's run read back, PROMOTED; DATE-PHRASING CLOSED (2026-11-02)
 
 ### `docs/FLOW-DIAGRAM.md`
   - ## Overview — the lanes
