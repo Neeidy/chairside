@@ -205,6 +205,7 @@
 - `docs/codex/date-phrasing/prompt-r3.md`
 - `docs/codex/date-phrasing/prompt-r4.md`
 - `docs/codex/date-phrasing/prompt-r5.md`
+- `docs/codex/date-phrasing/prompt-r6.md`
 - `docs/codex/date-phrasing/prompt.md`
 - `docs/codex/date-phrasing/r1.md`
 - `docs/codex/date-phrasing/r2.md`
@@ -215,6 +216,7 @@
 - `docs/codex/date-phrasing/run-r3.sh`
 - `docs/codex/date-phrasing/run-r4.sh`
 - `docs/codex/date-phrasing/run-r5.sh`
+- `docs/codex/date-phrasing/run-r6.sh`
 - `docs/codex/date-phrasing/run.sh`
 
 ### docs/codex/name-capture
@@ -850,6 +852,7 @@
   - ## R2d — the r4 stop ruled: a structural defence, no more text-side rules (2026-11-02; NOT live)
   - ### R2d recheck — Codex r5: 3 HIGH against the defence; the build STOPS (2026-11-02; NOT live)
   - ## R2e — the r5 stop ruled: two small fixes, a deploy precondition, three bounds (2026-11-02; NOT live until R3)
+  - ### R2e recheck — Codex r6: 1 HIGH on the precondition's stated window; the build STOPS before any live step (2026-11-02; NOT live)
 
 ### `docs/FLOW-DIAGRAM.md`
   - ## Overview — the lanes
@@ -1434,6 +1437,7 @@
   - ## R3 — the recheck of the R2b fixes
   - ## R4 — the recheck of the R2c fixes
   - ## R5 — the recheck of the R2d build (the structural defence)
+  - ## R6 — the recheck of the R2e diff (E1, the comment wording, the F1 precondition's premise)
 
 ### `docs/codex/date-phrasing/prompt-r2.md`
   - _(no `##` headings — flat file)_
@@ -1445,6 +1449,9 @@
   - _(no `##` headings — flat file)_
 
 ### `docs/codex/date-phrasing/prompt-r5.md`
+  - _(no `##` headings — flat file)_
+
+### `docs/codex/date-phrasing/prompt-r6.md`
   - _(no `##` headings — flat file)_
 
 ### `docs/codex/date-phrasing/prompt.md`

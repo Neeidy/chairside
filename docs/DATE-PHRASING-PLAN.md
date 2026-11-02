@@ -8,7 +8,7 @@
 > Section "R2d" at the end. Still NOT live.
 > **R2e (ruling 2026-11-02):** the r5 stop ruled — E1 (too far, not "passed", for a date far behind us), the "sent, in
 > turn order" wording, a read-only deploy precondition instead of a confirm-turn check, three recorded bounds. Section
-> "R2e" at the end.
+> "R2e" at the end. **Codex r6: 1 HIGH on the precondition's window → STOPPED before any live step ("R2e recheck").**
 > **Trigger:** the NAME-CAPTURE R3 owner run of 2026-11-01 (`docs/NAME-CAPTURE-PLAN.md` → "The owner run of
 > 2026-11-01"). "I'd like a haircut on Wednesday 4 November at 11:00" was extracted correctly by the model
 > (`date` 2026-11-04, `dateExpr` "wednesday 4 november") and dropped by `Resolve Date` (reason `unparsed`), so the bot
@@ -497,8 +497,10 @@ stricter. **Why a nameless `confirming` row may stay:** `Build Event Request` re
 empty or blank) with an empty event id tagged `name_missing` — `tests/unit/name-capture.test.cjs:207` — and that refusal
 reaches `Event ID Valid?` false → `Mark Handoff` → `Save State` + `Build Owner Alert` —
 `tests/unit/name-capture.test.cjs:226`. The read also prints every stage's row count and the nameless `confirming` rows,
-so it is shown able to go non-empty. **Recorded bound:** the seconds between that read and the put — a conversation that
-enters a confirm stage on the PROMOTED engine in that gap gets an ask without a year and can be answered after the put.
+so it is shown able to go non-empty. **Recorded bound — TOO NARROW as first written (Codex r6 HIGH, "R2e recheck"):** it said
+"the seconds between that read and the put". The window also holds every execution of the PROMOTED engine that started
+before the put and finishes after it: such a turn can save a confirm stage with an ask without a year AFTER the put. The
+amendment proposed for a ruling is in "R2e recheck".
 **Named v2 item:** a freshness check on the booking confirm (`confirming` has none; only cancel and reschedule do).
 
 **F2 and F3 — recorded bounds (the wording of "R2d recheck", accepted):** two concurrent turns of one sender can write a
@@ -513,3 +515,22 @@ reschedule lane), negative control: the same suite against the pre-E1 staged exp
 E1; DATE-PHRASING mutants 60/60 (five new: E1 removed, E1 without its reach, the reach one day shorter and longer, the
 too-far reply without its day count); NAME-CAPTURE mutants 50/50; `check-all` 0. The owner script replayed at four run
 instants (2–10 Nov 2026) gives identical replies to R2d's.
+
+### R2e recheck — Codex r6: 1 HIGH on the precondition's stated window; the build STOPS before any live step (2026-11-02; NOT live)
+**Codex recheck** (contained, pin `cdc2290`; prompt `prompt-r6.md`, answer verbatim `r6.md`). **Clean:** E1 is correct
+in both directions and at the 30/31-day boundary; a differential run of 2,160 cases against `3d445dd` changed 408
+results, every one `date_past` → `beyond_horizon`, none acquired a date; the too-far reply always carries its day count;
+the export differs from `3d445dd` only in the three `jsCode` values, whose executable lines are E1's branch and nothing
+else; 60/60 and 50/50 mutants killed; the nameless-confirm premise of F1 holds (null, empty, spaces, tab/newline, with a
+model-supplied name: `name_missing` → `Mark Handoff`, 0 inserts, 0 appointment writes). **The brief's stop condition
+"Codex HIGH on the diff" is met, so no live step was taken.**
+
+| # | Codex finding | Triage | Proposal (for a ruling) |
+|---|---|---|---|
+| HIGH | **An execution of the PROMOTED engine already running at the put** (waiting on availability, its row still `collecting`) resumes AFTER the put, saves `confirming` and sends an ask without a year; the customer's next sequential "yes" runs the staged engine and books it. Both counts read 0 before the put. Offline execution-snapshot probe with stubbed services, not a live test. | **REAL — the recorded bound was too narrow, and it is my sentence:** "the seconds between that read and the put" omits the executions that started before the put and finish after it. n8n runs an execution on the graph it started with; the put deactivates → replaces → activates Main, it does not stop running executions. The window is bounded by the longest Main execution (the LLM call's 60 s timeout plus the 15 s calls), not by the read-to-put gap. | **Amend the precondition, read-only, no engine change:** (1) the count before the put, as ruled; (2) the put; (3) wait until NO Main execution that started before the reactivation is still running (n8n executions API, GET, by status and start time); (4) the SAME count again. 0 → proceed to the site redeploy. >0 → roll back Main to its snapshot (the old engine then answers its own yearless ask — consistent), roll back nothing on the site (not yet deployed), STOP and report the rows' age. The residual window then closes at (4). **To verify first (a GET, before the round):** that the instance's executions API filters by `running` status and returns the start time. |
+
+**Codex's side note, recorded, not a finding:** a `cancel_confirming` row is not covered by the two counts; a "yes" to it
+deletes the event and marks the appointment cancelled. It writes no new date, so it is outside the date-confirm
+precondition, and the cancel confirm has its own freshness check (`Confirm Fresh?`).
+**Containment:** `containment.md` → "R6". **Nothing live:** Main runs the promoted NAME-CAPTURE export; the site was not
+redeployed.
