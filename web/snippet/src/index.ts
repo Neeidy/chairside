@@ -212,8 +212,10 @@ function boot(selfSrc: string | null) {
    * THE WAIT NEEDS A WAY OUT — and the way out must not speak before there is anything to wait for.
    *
    * The gap, structurally (the search, shown, because this is a claim about shape):
-   *     turnstile.ts:128  callback: (t) => { token = t; …; onChange('ready'); }   ← the ONLY 'ready'
-   *     turnstile.ts:113/133/141/142/157 'pending' (133: a failure being retried, R4)   ·   139/148 'blocked'
+   *     turnstile.ts  `callback`                                   ← the ONLY 'ready'
+   *     turnstile.ts  'pending': at mount, a failure being retried (R4), `expired-callback`, `timeout-callback`, `refresh`
+   *     turnstile.ts  'blocked': `error-callback` once the retries are spent, the script-load `.catch`
+   *   (named by callback, not by line: the line-number form went stale in the commit that last rewrote it — R4 review)
    *     index.ts    setGate('pending') at mount and on every send   ·   'blocked' in the refresh catch
    * One producer of `ready`, and `pending` has no timeout of its own, so a `reset()` whose callback
    * never arrives leaves the composer dead behind "Verifying…" with nothing on screen. That is the
@@ -243,8 +245,13 @@ function boot(selfSrc: string | null) {
   let mounted = false;
   let gateTimer: ReturnType<typeof setTimeout> | undefined;
   let stuckShown = false;
+  // An interactive challenge on screen is not a stall: the visitor is solving it, and "reload the page" would throw it
+  // away. The timer pauses while it is up and restarts when it ends without a token (R4 review, Y1).
+  let interactive = false;
+  let gate: 'pending' | 'ready' | 'blocked' = 'pending';
 
   function setGate(state: 'pending' | 'ready' | 'blocked') {
+    gate = state;
     const ok = state === 'ready';
     input.disabled = !ok;
     sendBtn.disabled = !ok || sending;
@@ -266,7 +273,7 @@ function boot(selfSrc: string | null) {
       // exactly as long as it matters (6b carry-over, closed in CP 6c-3).
       root.querySelectorAll('.retry-note').forEach((n) => n.remove());
     }
-    if (state === 'pending' && !sending && mounted) {
+    if (state === 'pending' && !sending && mounted && !interactive) {
       gateTimer = setTimeout(() => {
         input.placeholder = 'Still verifying — reload the page';
         if (!stuckShown) { stuckShown = true; bubble('system', FRONTEND_TEXT.verifyStuck); }
@@ -392,7 +399,14 @@ function boot(selfSrc: string | null) {
       injectDisplayFont(origin);
       // Mount Turnstile only once, and only after the panel is open — the slot needs a real box before
       // Cloudflare draws into it (see turnstile.ts, finding 3).
-      if (!mounted) { mounted = true; ts = mountTurnstile(slot, endpoint.turnstileSiteKey, setGate); }
+      if (!mounted) {
+        mounted = true;
+        ts = mountTurnstile(slot, endpoint.turnstileSiteKey, setGate, (on) => {
+          interactive = on;
+          if (on) clearTimeout(gateTimer);
+          else if (gate === 'pending') setGate('pending');   // the challenge ended without a token yet: the wait restarts
+        });
+      }
       // A disabled input cannot take focus, and the composer is disabled until Turnstile yields a
       // token — so focusing it unconditionally leaves a keyboard user stranded outside the panel
       // (measured: focus stayed on the launcher and the next Tab left the widget entirely).

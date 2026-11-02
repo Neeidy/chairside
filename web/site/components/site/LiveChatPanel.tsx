@@ -17,7 +17,7 @@ import {
   type ChatReply, type EndpointConfig,
 } from '@salon/shared/chat';
 import { TurnstileWidget } from './TurnstileWidget';
-import { composerGate, shouldRetry, waitingForToken, VERIFY_STUCK_MS, type TurnstileState } from '../../lib/turnstileGate';
+import { composerGate, isBlocked, shouldRetry, waitingForToken, VERIFY_STUCK_MS, type TurnstileState } from '../../lib/turnstileGate';
 import { lockLineDecision } from '../../lib/lockedOnce';
 import { MESSAGE_TEXT_DAYS } from '../../lib/retention';   // no config import: a client component
 
@@ -51,6 +51,7 @@ export function LiveChatPanel({ config, endpoint }: { config: ClientConfig; endp
   // 'error' is not a change React re-runs an effect for — the old retry counter advanced only once (measured, R4).
   const [tsErrors, setTsErrors] = useState(0);
   const [tsRendered, setTsRendered] = useState(false);
+  const [tsInteractive, setTsInteractive] = useState(false);
   const [stuck, setStuck] = useState(false);
   const [resetSignal, setResetSignal] = useState(0);
   const sessionId = useRef<string>('');
@@ -73,7 +74,7 @@ export function LiveChatPanel({ config, endpoint }: { config: ClientConfig; endp
   }, [tsState, tsErrors]);
   // A wait for a token that never ends (a reset whose callback never comes) must not leave a silent, greyed-out send:
   // after VERIFY_STUCK_MS the panel says so, and the arrival of a token takes it away. Re-armed by every reset.
-  const waiting = waitingForToken(tsRendered, !!token, tsState);
+  const waiting = waitingForToken(tsRendered, !!token, isBlocked(!!token, tsState, tsErrors), tsInteractive);
   useEffect(() => {
     if (!waiting) { setStuck(false); return; }
     const id = setTimeout(() => setStuck(true), VERIFY_STUCK_MS);
@@ -174,6 +175,7 @@ export function LiveChatPanel({ config, endpoint }: { config: ClientConfig; endp
         onToken={setToken}
         onState={onTsState}
         onRendered={() => setTsRendered(true)}
+        onInteractive={setTsInteractive}
         resetSignal={resetSignal}
       />
 

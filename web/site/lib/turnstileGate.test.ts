@@ -11,7 +11,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 const g = await import(process.env.TURNSTILE_GATE_MODULE ?? './turnstileGate.ts');
-const { composerGate, shouldRetry, waitingForToken, TURNSTILE_MAX_RETRIES, VERIFY_STUCK_MS,
+const { composerGate, isBlocked, shouldRetry, waitingForToken, TURNSTILE_MAX_RETRIES, VERIFY_STUCK_MS,
   BLOCKED_PLACEHOLDER, RETRYING_PLACEHOLDER, STUCK_PLACEHOLDER, DEFAULT_PLACEHOLDER } = g;
 
 test('the gap after a send (no token yet, nothing failed) holds the send and shows no notice — the owner run', () => {
@@ -55,13 +55,24 @@ test('stuck: a wait that outlasted the timer says so; a token or a block takes p
   assert.equal(b.blocked, true); assert.equal(b.stuck, false); assert.equal(b.placeholder, BLOCKED_PLACEHOLDER);
 });
 
-test('the stuck timer runs only while Turnstile has been rendered, no token is in hand, and nothing has failed', () => {
-  assert.equal(waitingForToken(true, false, 'ready'), true, 'after a send: the reset is pending');
-  assert.equal(waitingForToken(true, false, 'loading'), true, 'the first token after render');
-  assert.equal(waitingForToken(false, false, 'loading'), false, 'not rendered: the visitor has not opened the panel');
-  assert.equal(waitingForToken(true, true, 'ready'), false, 'a token in hand');
-  assert.equal(waitingForToken(true, false, 'error'), false, 'a failure has its own retry and notice');
-  assert.equal(waitingForToken(true, false, 'unavailable'), false);
+test('the stuck timer runs while Turnstile is rendered, no token is in hand, nothing is blocked and no challenge is up', () => {
+  assert.equal(waitingForToken(true, false, false, false), true, 'after a send, the first token, or a retry: waiting');
+  assert.equal(waitingForToken(false, false, false, false), false, 'not rendered: the visitor has not opened the panel');
+  assert.equal(waitingForToken(true, true, false, false), false, 'a token in hand');
+  assert.equal(waitingForToken(true, false, true, false), false, 'a block is already on screen');
+  assert.equal(waitingForToken(true, false, false, true), false, 'an interactive challenge is up: the visitor is solving it');
+});
+
+test('a retry whose reset never answers is a wait like any other (code-reviewer R1): not blocked, so the timer runs', () => {
+  for (let errors = 1; errors <= TURNSTILE_MAX_RETRIES; errors++) {
+    const blocked = isBlocked(false, 'error', errors);
+    assert.equal(blocked, false, `errors=${errors}`);
+    assert.equal(waitingForToken(true, false, blocked, false), true, `errors=${errors}`);
+    assert.equal(composerGate(false, 'error', errors, true).placeholder, STUCK_PLACEHOLDER, 'the stall is said over "retrying…"');
+  }
+  assert.equal(isBlocked(false, 'error', TURNSTILE_MAX_RETRIES + 1), true);
+  assert.equal(isBlocked(false, 'unavailable', 0), true);
+  assert.equal(isBlocked(true, 'unavailable', 0), false);
 });
 
 test('retry: once per failure up to the limit, never after it, never without a failure', () => {

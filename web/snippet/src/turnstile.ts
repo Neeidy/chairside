@@ -103,6 +103,8 @@ export function mountTurnstile(
   slot: HTMLElement,
   siteKey: string,
   onChange: (state: 'pending' | 'ready' | 'blocked') => void,
+  /** True while Cloudflare shows an interactive challenge, false when it ends — the composer's stuck timer pauses. */
+  onInteractive?: (on: boolean) => void,
 ): TurnstileHandle {
   let token: string | null = null;
   let widgetId: string | null = null;
@@ -143,7 +145,8 @@ export function mountTurnstile(
         'timeout-callback': () => { token = null; onChange('pending'); window.turnstile?.reset(widgetId ?? undefined); },
         theme: 'light',
         appearance: 'interaction-only',
-        'before-interactive-callback': () => { slot.classList.add('is-interactive'); },
+        'before-interactive-callback': () => { slot.classList.add('is-interactive'); onInteractive?.(true); },
+        'after-interactive-callback': () => { onInteractive?.(false); },   // the spacing stays (ruling R3-3)
       });
     })
     .catch(() => { token = null; blocked = true; onChange('blocked'); });
@@ -155,6 +158,7 @@ export function mountTurnstile(
       // Do not overwrite a real failure with "Verifying…": if the challenge is blocked, the visitor
       // needs the honest message to stay on screen rather than an optimistic one that never resolves.
       if (blocked) return;
+      clearTimeout(retryTimer);   // a retry pending from an earlier failure would abort the attempt this reset starts
       onChange('pending');
       if (widgetId && window.turnstile) window.turnstile.reset(widgetId);
     },

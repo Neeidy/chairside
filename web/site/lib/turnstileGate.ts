@@ -36,10 +36,15 @@ export interface ComposerGate {
   placeholder: string;
 }
 
+/** No token can be obtained: the script could not load or render, or Turnstile failed and so did our retries. */
+export function isBlocked(hasToken: boolean, state: TurnstileState, errors: number, maxRetries: number = TURNSTILE_MAX_RETRIES): boolean {
+  return !hasToken && (state === 'unavailable' || (state === 'error' && errors > maxRetries));
+}
+
 /** `errors` counts consecutive Turnstile failures (a success resets it); `stuckTimedOut` is the panel's stuck timer. */
 export function composerGate(hasToken: boolean, state: TurnstileState, errors: number, stuckTimedOut = false,
   maxRetries: number = TURNSTILE_MAX_RETRIES): ComposerGate {
-  const blocked = !hasToken && (state === 'unavailable' || (state === 'error' && errors > maxRetries));
+  const blocked = isBlocked(hasToken, state, errors, maxRetries);
   const stuck = !hasToken && !blocked && stuckTimedOut;
   const placeholder = blocked ? BLOCKED_PLACEHOLDER
     : stuck ? STUCK_PLACEHOLDER
@@ -56,8 +61,11 @@ export function shouldRetry(state: TurnstileState, errors: number, maxRetries: n
 /**
  * Whether the panel is WAITING for a token and the stuck timer should run: Turnstile has been rendered (before that
  * the timer would measure how long the visitor took to open the panel — the snippet's first attempt made exactly that
- * mistake), no token is in hand, and no failure is being handled (that has its own retry and notice).
+ * mistake), no token is in hand, no block is already on screen, and no interactive challenge is up (a visitor solving
+ * the checkbox is not stuck — telling them to reload would throw the challenge away). A failure being retried COUNTS:
+ * a retry's reset whose callback never comes is a stall like any other (`code-reviewer` R4 re-review, R1); every reset
+ * re-arms the timer, so the 20 s run from the latest one.
  */
-export function waitingForToken(rendered: boolean, hasToken: boolean, state: TurnstileState): boolean {
-  return rendered && !hasToken && (state === 'loading' || state === 'ready');
+export function waitingForToken(rendered: boolean, hasToken: boolean, blocked: boolean, interactive: boolean): boolean {
+  return rendered && !hasToken && !blocked && !interactive;
 }

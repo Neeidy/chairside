@@ -22,6 +22,7 @@ function fakeTurnstile() {
     },
     pass: (t: string) => w[0].opts.callback(t),
     error: () => w[0].opts['error-callback'](),
+    challenge: (on: boolean) => w[0].opts[on ? 'before-interactive-callback' : 'after-interactive-callback'](),
     resets: () => (w[0] ? w[0].resets : 0),
     rendered: () => w.length,
   };
@@ -35,10 +36,11 @@ async function mount() {
   (globalThis as unknown as { window: unknown }).window = { turnstile: ts.api };
   const { mountTurnstile } = await import(process.env.SNIPPET_TURNSTILE_MODULE ?? '../src/turnstile.ts');
   const states: string[] = [];
-  const h = mountTurnstile(slot as unknown as HTMLElement, 'test-key', (s: string) => states.push(s));
+  const challenge: boolean[] = [];
+  const h = mountTurnstile(slot as unknown as HTMLElement, 'test-key', (s: string) => states.push(s), (on: boolean) => challenge.push(on));
   for (let i = 0; i < 5 && !ts.rendered(); i++) await tick();
   assert.equal(ts.rendered(), 1, 'rendered once');
-  return { ts, h, states };
+  return { ts, h, states, challenge };
 }
 
 test('one failure is retried, not a block: pending, our own reset after the retry delay, then a success and the next token', async () => {
@@ -80,6 +82,7 @@ test('after a block, a success ends it, and the next single failure is retried a
   assert.equal(ts.resets(), r0 + 1, 'refresh reset the widget — the block did not outlive the success');
   ts.error();
   assert.equal(states.at(-1), 'pending', 'the count started again');
+  ts.pass('t2');                                 // ends the pending retry: no timer outlives the test into the next one
 });
 
 test('the ordinary path: a token, a refresh after the send, the next token', async () => {
@@ -100,4 +103,27 @@ test('the Turnstile script does not load (a blocker, a network policy): blocked,
   assert.equal(states.at(-1), 'blocked'); assert.equal(h.token(), null);
   h.refresh();
   assert.equal(states.at(-1), 'blocked', 'no optimistic "Verifying…" over a script that never loaded');
+});
+
+test('a success inside the retry delay cancels the pending retry (no reset that would abort the new token)', async () => {
+  const { ts, h, states } = await mount();
+  ts.error();
+  ts.pass('t1');
+  await wait(2600);
+  assert.equal(ts.resets(), 0); assert.equal(states.at(-1), 'ready'); assert.equal(h.token(), 't1');
+});
+
+test('a refresh while a retry is pending resets once, and the stale retry does not reset again', async () => {
+  const { ts, h } = await mount();
+  ts.error();                                    // a retry is scheduled
+  h.refresh();                                   // a send finished meanwhile: its own reset
+  assert.equal(ts.resets(), 1);
+  await wait(2600);
+  assert.equal(ts.resets(), 1, 'the pending retry was cancelled by the refresh');
+});
+
+test('an interactive challenge is reported to the composer, start and end (its stuck timer pauses meanwhile)', async () => {
+  const { ts, challenge } = await mount();
+  ts.challenge(true); ts.challenge(false);
+  assert.deepEqual(challenge, [true, false]);
 });

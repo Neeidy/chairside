@@ -50,6 +50,7 @@ export function TurnstileWidget({
   onToken,
   onState,
   onRendered,
+  onInteractive,
   resetSignal,
 }: {
   siteKey: string;
@@ -57,6 +58,8 @@ export function TurnstileWidget({
   onState: (s: TurnstileState) => void;
   /** Called once Turnstile has been asked for a token — the panel's stuck timer starts from here, not from page load. */
   onRendered?: () => void;
+  /** True while Cloudflare shows an interactive challenge, false when it ends — the stuck timer pauses meanwhile. */
+  onInteractive?: (on: boolean) => void;
   /** Increment to mint a fresh token after a send. */
   resetSignal: number;
 }) {
@@ -123,7 +126,11 @@ export function TurnstileWidget({
       .then(async () => {
         if (cancelled || !hostRef.current) return;
         await whenVisible(hostRef.current);
-        if (cancelled || !hostRef.current || !window.turnstile) return;
+        if (cancelled || !hostRef.current) return;
+        // The script loaded but defined nothing (a blocker serving an empty stub, a script that threw): as unavailable
+        // as one that never loaded. It used to return here silently — the panel sat in 'loading' with a greyed-out
+        // send and no word on screen (security-auditor + code-reviewer, R4 re-review).
+        if (!window.turnstile) throw new Error('turnstile_unavailable');
         idRef.current = window.turnstile.render(hostRef.current, {
           sitekey: siteKey,
           callback: (token: string) => { onToken(token); onState('ready'); },
@@ -132,7 +139,9 @@ export function TurnstileWidget({
           'timeout-callback': () => { onToken(null); window.turnstile?.reset(idRef.current ?? undefined); },
           theme: 'light',
           appearance: 'interaction-only',
-          'before-interactive-callback': () => setInteractive(true),
+          'before-interactive-callback': () => { setInteractive(true); onInteractive?.(true); },
+          // `interactive` (the slot's spacing) stays true by ruling R3-3; only the PARENT is told the challenge ended.
+          'after-interactive-callback': () => onInteractive?.(false),
         });
         setMounted(true);
         onRendered?.();
