@@ -23,6 +23,8 @@ function fakeTurnstile() {
     pass: (t: string) => w[0].opts.callback(t),
     error: () => w[0].opts['error-callback'](),
     challenge: (on: boolean) => w[0].opts[on ? 'before-interactive-callback' : 'after-interactive-callback'](),
+    timeout: () => w[0].opts['timeout-callback'](),
+    expired: () => w[0].opts['expired-callback'](),
     resets: () => (w[0] ? w[0].resets : 0),
     rendered: () => w.length,
   };
@@ -137,4 +139,15 @@ test('every outcome ends a challenge, not only after-interactive (it may never c
   ts.challenge(true); h.refresh();
   assert.equal(challenge.at(-1), false, 'our reset ends it');
   ts.pass('t2');                                 // no timer outlives the test
+});
+
+test('a challenge left unsolved (timeout) or a token that expired also ends the pause, and asks for a new token', async () => {
+  const { ts, challenge, states } = await mount();
+  ts.challenge(true); ts.timeout();
+  assert.equal(challenge.at(-1), false, 'timeout ends the challenge');
+  assert.equal(states.at(-1), 'pending'); assert.equal(ts.resets(), 1);
+  ts.challenge(true); ts.expired();
+  assert.equal(challenge.at(-1), false, 'expiry ends the challenge');
+  assert.equal(ts.resets(), 2);
+  ts.pass('t1');
 });

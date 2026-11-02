@@ -41,6 +41,7 @@ const STUB = `(() => {
     pass(t) { w[0].o.callback(t); },
     error() { w[0].o['error-callback'](); },
     challenge(on) { w[0].o[on ? 'before-interactive-callback' : 'after-interactive-callback'](); },
+    timeout() { w[0].o['timeout-callback'](); },
     rendered() { return w.length; },
     resets() { return w[0] ? w[0].resets : 0; },
   };
@@ -247,6 +248,12 @@ async function stubCases(b) {
   await b.ev(`window.__ts.challenge(true)`); await sleep(500); await b.ev(`window.__ts.challenge(false)`);
   const endedSaid = await waitFor(b, stuckShown, 25000);
   check('a challenge that ends without a token: the stall is said by 25 s', endedSaid, await state(b));
+
+  // 11. A CHALLENGE LEFT UNSOLVED (timeout-callback, no after-interactive), Cloudflare's reset never answering.
+  await page(b);
+  await b.ev(`window.__ts.challenge(true)`); await sleep(500); await b.ev(`window.__ts.timeout()`);
+  const timeoutSaid = await waitFor(b, stuckShown, 25000);
+  check('a challenge that times out (no after-interactive), then silence: the stall is said by 25 s', timeoutSaid, await state(b));
 
   // 5. A WAIT THAT NEVER ENDS: a send, then the reset's callback never comes. Said after 20 s; gone with the token.
   await page(b);

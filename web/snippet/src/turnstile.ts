@@ -113,7 +113,7 @@ export function mountTurnstile(
   let retryTimer: ReturnType<typeof setTimeout> | undefined;
   // A challenge ends with ANY outcome or reset, not only with after-interactive: one that failed, timed out or was reset
   // may never send that callback (unmeasured), and a pause left on would silence the composer's stuck timer for the rest
-  // of the page (code-reviewer R4, third pass). Cloudflare raises it again with before-interactive if it re-asks.
+  // of the page (code-reviewer R4, third pass). If Cloudflare re-asks, before-interactive should raise it again (also unmeasured).
   const endChallenge = () => onInteractive?.(false);
 
   onChange('pending');

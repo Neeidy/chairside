@@ -135,7 +135,7 @@ export function TurnstileWidget({
           sitekey: siteKey,
           // Every outcome ends a challenge, not only after-interactive: a challenge that failed, timed out or was reset
           // may never send that callback (unmeasured), and a pause left on would silence the stuck timer for the rest of
-          // the page (code-reviewer R4, third pass). Cloudflare raises it again with before-interactive if it re-asks.
+          // the page (code-reviewer R4, third pass). If Cloudflare re-asks, before-interactive should raise it again (also unmeasured).
           callback: (token: string) => { onToken(token); onState('ready'); onInteractive?.(false); },
           'error-callback': () => { onToken(null); onState('error'); onInteractive?.(false); },
           'expired-callback': () => { onToken(null); onInteractive?.(false); window.turnstile?.reset(idRef.current ?? undefined); },

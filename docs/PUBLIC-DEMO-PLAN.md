@@ -536,7 +536,8 @@ callback alone. *(Said "no `after-interactive` callback is registered, so there 
 in" until R4.)*
 
 **R3 amendment — the spacing stays after interaction (ruling R3-3, 2026-11-01; committed, NOT deployed — the site is
-redeployed after the NAME-CAPTURE promotion).** Both render sites drop the `after-interactive-callback`; the
+redeployed after the NAME-CAPTURE promotion).** Both render sites drop the `after-interactive-callback` *(superseded by
+DATE-PHRASING R4, 2026-11-02: registered again, to pause the stuck timer — LOW-A above)*; the
 `before-interactive-callback` still gives the slot its `10px 18px`, and the no-challenge collapse (padding 0, slot never
 `display:none`) is unchanged. **Tested headless on an isolated build (OPS-10), same harness and fake engine host as
 above** *(terminal-measured; screenshots in the session scratchpad, not committed)*:
@@ -547,7 +548,8 @@ above** *(terminal-measured; screenshots in the session scratchpad, not committe
   there: what changed is the source, not a callback that never runs. The send carried a 21-character token.
 - *always-pass key*, site and snippet: token issued before any click, **slot 0 px high, padding 0, no box in the panel**
   (screenshot), and the send carried the token.
-- The snippet bundle built from the real inputs carries no test key and no `after-interactive`; `check-all` 0, including
+- The snippet bundle built from the real inputs carries no test key and no `after-interactive` *(true at R3-3; R4
+  registers it again)*; `check-all` 0, including
   the snippet's byte-for-byte freshness check.
 
 ### RENAME — `barber-demo.<apex>` and `barber-dashboard.<apex>`; protection Standard (STOPPED: two project aliases stay public); owner-run reads (2026-11-01)

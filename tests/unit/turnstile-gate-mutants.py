@@ -48,6 +48,8 @@ MUTANTS = {
     'snippet: a failure does not end a challenge': (SNIP, [("            onChange('pending');\n            endChallenge();\n", "            onChange('pending');\n")]),
     'snippet: a success does not end a challenge': (SNIP, [("onChange('ready'); endChallenge(); },", "onChange('ready'); },")]),
     'snippet: refresh does not end a challenge': (SNIP, [("      onChange('pending');\n      endChallenge();\n", "      onChange('pending');\n")]),
+    'snippet: a timeout does not end a challenge': (SNIP, [("'timeout-callback': () => { token = null; onChange('pending'); endChallenge();", "'timeout-callback': () => { token = null; onChange('pending');")]),
+    'snippet: an expiry does not end a challenge': (SNIP, [("'expired-callback': () => { token = null; onChange('pending'); endChallenge();", "'expired-callback': () => { token = null; onChange('pending');")]),
     'snippet: a block leaves the last retry armed': (SNIP, [('          clearTimeout(retryTimer);                     // the retries are spent', '          // the retries are spent')]),
     'snippet: refresh ignores a real block': (SNIP, [('      if (blocked) return;\n', '')]),
     'snippet: refresh never asks for a new token': (SNIP, [('      if (widgetId && window.turnstile) window.turnstile.reset(widgetId);\n', '')]),
