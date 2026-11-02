@@ -41,3 +41,14 @@ exit 0, container exit 0, 238 container seconds. Answer verbatim as `r3.md`, byt
 - The separate scan of the 27 command lines: 0 hits; its positive control matched the four forbidden shapes and not the
   ordinary command.
 - The R2 export and Codex home were deleted after the R2 records were pushed; the R3 ones are deleted after these.
+
+## R4 — the recheck of the R2c fixes
+Same harness, run by `docs/codex/date-phrasing/run-r4.sh` (the R3 runner with the prompt path changed). Pin `7731b8e`
+(385 files), prompt 39 lines. Mount-check controls: one extra mount → 97, as intended → 0. Then: mount check OK, Codex
+exit 0, container exit 0, 200 container seconds. Answer verbatim as `r4.md`, byte-compared with the run's output file.
+- `scripts/codex-containment.py`: commands 14 · passed 12 · flags 3, read one by one: two `../…` references (the
+  chat-replay library, the staged export) from a probe under its own `.audit-r4/`; one "unparseable shell script", a
+  heredoc building its own probe from the test file — all inside the working copy.
+- The separate scan of the 14 command lines: 0 hits; its positive control matched the four forbidden shapes and not the
+  ordinary command.
+- The R3 export and Codex home were deleted after the R3 records were pushed; the R4 ones are deleted after these.

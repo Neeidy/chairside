@@ -331,3 +331,25 @@ text-detection rules (`CAL_IN_TEXT`, the year check). If the R2c recheck finds a
 is NOT tuned a fourth time: the next step is a ruling on a design change (for example, refusing every message whose text
 holds a digit or a month name unless the expression parses as a calendar date covering ALL of them), with its cost
 measured first.
+
+### R4 recheck — THE DECLARED THRESHOLD IS MET; the build STOPS for a design ruling (2026-11-02; NOT live)
+**Codex recheck** (contained, pin `7731b8e`; prompt `prompt-r4.md`, answer verbatim `r4.md`): R3's exact
+counterexamples and MEDIUM-4 closed, only `Resolve Date` changed — and **2 HIGH in the same detection class**:
+- **HIGH-1 — a two-digit year after a month name** ("haircut 5 november '27", `dateExpr` "5 november") resolves to
+  2026, in the booking AND the reschedule lane. The structural year check looks at three or more digits; only a dot date
+  had a continuation check.
+- **HIGH-2 — the pronoun-only exemption still hides a real May date** ("May 5 of our anniversary year, 2027" with an
+  empty extraction keeps the stored date). The exemption is syntactic; it cannot tell the modal from the month.
+**Per the threshold declared in R2c, the rule is NOT tuned a fourth time.** Four Codex rounds have each found the same
+property — *the model's `dateExpr` can drop part of a date the customer wrote, and a text-side detector built from
+patterns misses some wording* — in a different spelling. Each fix closed its examples and opened none of the earlier
+ones, but the class stays open. **Nothing in this edit is live; Main still runs the promoted NAME-CAPTURE export**
+(parity against the committed exports 0), so production has today's narrower resolver: these wrong-date paths exist
+only in the staged edit.
+**The ruling asked for** — options in the round report; the recommendation is a **full-cover rule** replacing the
+patterns: when the customer's message holds any digit (outside well-formed times) or any month name, a date is accepted
+only if the expression is a calendar or ISO date whose occurrence in the message covers EVERY such digit run and month
+name; anything else re-asks with the hint. It ends the class rather than a spelling of it — no exemption list, no year
+shapes — and its cost (a stray number such as "for 2 people", and the recorded case "may 2 of us come friday", resolve-date
+N1-d, would re-ask once) is to be MEASURED on the golden set, the regression suite and the replay fixtures BEFORE the
+ruling, not after.

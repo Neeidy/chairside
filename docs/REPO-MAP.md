@@ -208,6 +208,7 @@
 - `docs/codex/date-phrasing/r1.md`
 - `docs/codex/date-phrasing/r2.md`
 - `docs/codex/date-phrasing/r3.md`
+- `docs/codex/date-phrasing/r4.md`
 - `docs/codex/date-phrasing/run-r2.sh`
 - `docs/codex/date-phrasing/run-r3.sh`
 - `docs/codex/date-phrasing/run-r4.sh`
@@ -842,6 +843,7 @@
   - ## R2 — Codex and the fixes (2026-11-01; NOT live)
   - ### R2 recheck and R2b — the fixes for the recheck (2026-11-02; NOT live)
   - ### R3 recheck and R2c — the third Codex round on the same rule (2026-11-02; NOT live)
+  - ### R4 recheck — THE DECLARED THRESHOLD IS MET; the build STOPS for a design ruling (2026-11-02; NOT live)
 
 ### `docs/FLOW-DIAGRAM.md`
   - ## Overview — the lanes
@@ -1424,6 +1426,7 @@
   - ## R1 — the audit of the R1 head
   - ## R2 — the recheck of the R1 fixes
   - ## R3 — the recheck of the R2b fixes
+  - ## R4 — the recheck of the R2c fixes
 
 ### `docs/codex/date-phrasing/prompt-r2.md`
   - _(no `##` headings — flat file)_
@@ -1446,6 +1449,9 @@
   - _(no `##` headings — flat file)_
 
 ### `docs/codex/date-phrasing/r3.md`
+  - _(no `##` headings — flat file)_
+
+### `docs/codex/date-phrasing/r4.md`
   - _(no `##` headings — flat file)_
 
 ### `docs/codex/name-capture/containment.md`
