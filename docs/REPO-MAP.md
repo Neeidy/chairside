@@ -223,7 +223,11 @@
 
 ### docs/codex/n1
 
+- `docs/codex/n1/containment.md`
+- `docs/codex/n1/p1.md`
+- `docs/codex/n1/prompt-p2.md`
 - `docs/codex/n1/prompt.md`
+- `docs/codex/n1/run-p2.sh`
 - `docs/codex/n1/run.sh`
 
 ### docs/codex/name-capture
@@ -961,6 +965,7 @@
   - ## 12. Automation-fit
   - ## 13. Decisions for the approver — each with a recommendation
   - ## R1 — built offline (2026-11-03)
+  - ## R2 — Codex pass 1 and the fixes (2026-11-03)
 
 ### `docs/NAME-CAPTURE-PLAN.md`
   - ## 0. The defect, verified against `n8n/workflow.main.sanitized.json`
@@ -1527,6 +1532,15 @@
   - _(no `##` headings — flat file)_
 
 ### `docs/codex/date-phrasing/r6.md`
+  - _(no `##` headings — flat file)_
+
+### `docs/codex/n1/containment.md`
+  - ## Pass 1 — the audit of the R1 head
+
+### `docs/codex/n1/p1.md`
+  - _(no `##` headings — flat file)_
+
+### `docs/codex/n1/prompt-p2.md`
   - _(no `##` headings — flat file)_
 
 ### `docs/codex/n1/prompt.md`
