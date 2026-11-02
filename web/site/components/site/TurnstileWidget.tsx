@@ -49,11 +49,14 @@ export function TurnstileWidget({
   siteKey,
   onToken,
   onState,
+  onRendered,
   resetSignal,
 }: {
   siteKey: string;
   onToken: (token: string | null) => void;
   onState: (s: TurnstileState) => void;
+  /** Called once Turnstile has been asked for a token — the panel's stuck timer starts from here, not from page load. */
+  onRendered?: () => void;
   /** Increment to mint a fresh token after a send. */
   resetSignal: number;
 }) {
@@ -132,14 +135,19 @@ export function TurnstileWidget({
           'before-interactive-callback': () => setInteractive(true),
         });
         setMounted(true);
+        onRendered?.();
       })
-      .catch(() => { if (!cancelled) { onToken(null); onState('error'); } });
+      // The script did not load (a blocker, a network policy) or render() threw: there is no widget to reset, so this is
+      // not a failure to retry — `unavailable` shows the blocked notice at once. Reported as 'error' it was retried by
+      // a reset that never runs (`mounted` is false), and the panel said "retrying…" forever (`code-reviewer`, R4).
+      .catch(() => { if (!cancelled) { onToken(null); onState('unavailable'); } });
     return () => {
       cancelled = true;
       if (idRef.current && window.turnstile) window.turnstile.remove(idRef.current);
       idRef.current = null;
     };
-    // siteKey is build-time constant; the callbacks are stable refs from the parent.
+    // siteKey is build-time constant. The callbacks are captured once: the parent's are written to use only stable
+    // setters (see LiveChatPanel's onTsState), so a later render's copies are not needed.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [siteKey]);
 

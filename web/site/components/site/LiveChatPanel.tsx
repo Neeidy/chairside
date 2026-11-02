@@ -17,7 +17,7 @@ import {
   type ChatReply, type EndpointConfig,
 } from '@salon/shared/chat';
 import { TurnstileWidget } from './TurnstileWidget';
-import { composerGate, shouldRetry, type TurnstileState } from '../../lib/turnstileGate';
+import { composerGate, shouldRetry, waitingForToken, VERIFY_STUCK_MS, type TurnstileState } from '../../lib/turnstileGate';
 import { lockLineDecision } from '../../lib/lockedOnce';
 import { MESSAGE_TEXT_DAYS } from '../../lib/retention';   // no config import: a client component
 
@@ -50,6 +50,8 @@ export function LiveChatPanel({ config, endpoint }: { config: ClientConfig; endp
   // Consecutive Turnstile failures, reset by a success. Counted here, per report, because `tsState` going 'error' →
   // 'error' is not a change React re-runs an effect for — the old retry counter advanced only once (measured, R4).
   const [tsErrors, setTsErrors] = useState(0);
+  const [tsRendered, setTsRendered] = useState(false);
+  const [stuck, setStuck] = useState(false);
   const [resetSignal, setResetSignal] = useState(0);
   const sessionId = useRef<string>('');
   const threadRef = useRef<HTMLDivElement>(null);
@@ -58,6 +60,8 @@ export function LiveChatPanel({ config, endpoint }: { config: ClientConfig; endp
   // environments (a blocked resource, a slow network, an extension), so retry a couple of times before
   // giving up — and never lock the input on account of it. Only when the retries have failed too does the
   // panel say it cannot verify (lib/turnstileGate.ts), and a later success takes that notice away.
+  // Captured ONCE by TurnstileWidget's mount effect: safe only because it uses nothing but stable setters and a
+  // functional updater — a state READ added here would go stale silently.
   const onTsState = (s: TurnstileState) => {
     setTsState(s);
     setTsErrors((n) => (s === 'error' ? n + 1 : s === 'ready' ? 0 : n));
@@ -67,7 +71,15 @@ export function LiveChatPanel({ config, endpoint }: { config: ClientConfig; endp
     const id = setTimeout(() => setResetSignal((n) => n + 1), 2500);
     return () => clearTimeout(id);
   }, [tsState, tsErrors]);
-  const gate = composerGate(!!token, tsState, tsErrors);
+  // A wait for a token that never ends (a reset whose callback never comes) must not leave a silent, greyed-out send:
+  // after VERIFY_STUCK_MS the panel says so, and the arrival of a token takes it away. Re-armed by every reset.
+  const waiting = waitingForToken(tsRendered, !!token, tsState);
+  useEffect(() => {
+    if (!waiting) { setStuck(false); return; }
+    const id = setTimeout(() => setStuck(true), VERIFY_STUCK_MS);
+    return () => clearTimeout(id);
+  }, [waiting, resetSignal]);
+  const gate = composerGate(!!token, tsState, tsErrors, stuck);
 
   useEffect(() => {
     sessionId.current = getSessionId();
@@ -150,9 +162,10 @@ export function LiveChatPanel({ config, endpoint }: { config: ClientConfig; endp
           </div>
         ))}
         {busy && <div className="typing in" aria-hidden="true"><i /><i /><i /></div>}
-        {gate.blocked && (
-          // Bound to the state, not appended to the log: it is on screen exactly while no token can be obtained.
-          <div className="msg in bot" role="status">{FRONTEND_TEXT.blocked}</div>
+        {(gate.blocked || gate.stuck) && (
+          // Bound to the state, not appended to the log: on screen exactly while no token can be obtained (blocked), or
+          // while a wait for one has outlasted VERIFY_STUCK_MS (stuck) — and gone the moment a token arrives.
+          <div className="msg in bot" role="status">{gate.blocked ? FRONTEND_TEXT.blocked : FRONTEND_TEXT.verifyStuck}</div>
         )}
       </div>
 
@@ -160,6 +173,7 @@ export function LiveChatPanel({ config, endpoint }: { config: ClientConfig; endp
         siteKey={endpoint.turnstileSiteKey}
         onToken={setToken}
         onState={onTsState}
+        onRendered={() => setTsRendered(true)}
         resetSignal={resetSignal}
       />
 

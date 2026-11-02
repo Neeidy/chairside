@@ -212,8 +212,8 @@ function boot(selfSrc: string | null) {
    * THE WAIT NEEDS A WAY OUT — and the way out must not speak before there is anything to wait for.
    *
    * The gap, structurally (the search, shown, because this is a claim about shape):
-   *     turnstile.ts:110  callback: (t) => { token = t; onChange('ready'); }   ← the ONLY 'ready'
-   *     turnstile.ts:98/112/113/126 'pending'   ·   111/117 'blocked'
+   *     turnstile.ts:128  callback: (t) => { token = t; …; onChange('ready'); }   ← the ONLY 'ready'
+   *     turnstile.ts:113/133/141/142/157 'pending' (133: a failure being retried, R4)   ·   139/148 'blocked'
    *     index.ts    setGate('pending') at mount and on every send   ·   'blocked' in the refresh catch
    * One producer of `ready`, and `pending` has no timeout of its own, so a `reset()` whose callback
    * never arrives leaves the composer dead behind "Verifying…" with nothing on screen. That is the

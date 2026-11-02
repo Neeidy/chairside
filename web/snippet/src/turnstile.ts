@@ -44,6 +44,14 @@ declare global {
 const SCRIPT_SRC = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
 
 /**
+ * A failure is retried before it is called a block — the site panel's policy (web/site/lib/turnstileGate.ts), held the
+ * same here (DATE-PHRASING R4, 2026-11-02). Until R4 the first error-callback said "Couldn't verify this browser" at
+ * once, even when the next attempt then succeeded.
+ */
+export const TURNSTILE_MAX_RETRIES = 2;
+export const TURNSTILE_RETRY_MS = 2500;
+
+/**
  * DELIBERATE EXCEPTION to "no third-party runtime dependency". Turnstile is a challenge SERVICE — its
  * script must run from Cloudflare or there is no bot protection at all. It is the one third-party
  * script the widget loads, and it is the one whose entire purpose is to be third-party.
@@ -99,6 +107,8 @@ export function mountTurnstile(
   let token: string | null = null;
   let widgetId: string | null = null;
   let blocked = false;
+  let errors = 0;                                       // consecutive failures; a success resets it
+  let retryTimer: ReturnType<typeof setTimeout> | undefined;
 
   onChange('pending');
   loadScript()
@@ -112,11 +122,23 @@ export function mountTurnstile(
       if (!window.turnstile) throw new Error('turnstile_unavailable');
       widgetId = window.turnstile.render(slot, {
         sitekey: siteKey,
-        // A success ends a block: `blocked` is cleared here. It used to stay set after an error that Cloudflare's own
-        // retry then cleared, so the NEXT `refresh()` returned early and never asked for a token — the composer sat at
+        // A success ends a block: `blocked` is cleared here. It used to stay set after an error that a retry then
+        // cleared, so the NEXT `refresh()` returned early and never asked for a token — the composer sat at
         // "Verifying…" for good after one transient error (DATE-PHRASING R4, 2026-11-02).
-        callback: (t: string) => { token = t; blocked = false; onChange('ready'); },
-        'error-callback': () => { token = null; blocked = true; onChange('blocked'); },
+        callback: (t: string) => { token = t; errors = 0; blocked = false; clearTimeout(retryTimer); onChange('ready'); },
+        'error-callback': () => {
+          token = null;
+          errors += 1;
+          if (errors <= TURNSTILE_MAX_RETRIES) {
+            onChange('pending');
+            clearTimeout(retryTimer);
+            retryTimer = setTimeout(() => window.turnstile?.reset(widgetId ?? undefined), TURNSTILE_RETRY_MS);
+            return;
+          }
+          clearTimeout(retryTimer);                     // the retries are spent: a block, not another attempt
+          blocked = true;
+          onChange('blocked');
+        },
         'expired-callback': () => { token = null; onChange('pending'); window.turnstile?.reset(widgetId ?? undefined); },
         'timeout-callback': () => { token = null; onChange('pending'); window.turnstile?.reset(widgetId ?? undefined); },
         theme: 'light',
