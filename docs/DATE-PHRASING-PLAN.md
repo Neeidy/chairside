@@ -3,6 +3,9 @@
 > **Status: APPROVED 2026-11-01 (Yigitcan, written: "tarih plani onaylı onerdigin sekilde") with D-1…D-4 as recommended,
 > D-5 in scope (Sunday "this <weekday>" → the coming week) and A1 (the horizon applies to every resolved date). R1 built
 > offline — "R1" at the end; NOT live.** *(This line said "PLAN ONLY — awaiting approval … Nothing below is built" until R1.)*
+> **R2d (ruling 2026-11-02, option B):** the r4 stop was ruled — the guarantee is STRUCTURAL (the year in both confirm
+> asks), D-2 amended to **30** days, the text-side checks stay only as best-effort, the r4 class is a recorded bound.
+> Section "R2d" at the end. Still NOT live.
 > **Trigger:** the NAME-CAPTURE R3 owner run of 2026-11-01 (`docs/NAME-CAPTURE-PLAN.md` → "The owner run of
 > 2026-11-01"). "I'd like a haircut on Wednesday 4 November at 11:00" was extracted correctly by the model
 > (`date` 2026-11-04, `dateExpr` "wednesday 4 november") and dropped by `Resolve Date` (reason `unparsed`), so the bot
@@ -154,7 +157,8 @@ Neither `/loop` nor `/goal`: a gated, single-pass edit with a live window.
   re-ask a numeric form whose parts are both ≤ 12. (c) revive `business.locale` (`en-AT`) as the source — not
   recommended: a locale string is a weaker contract than an explicit order, and it is a dead key today (K-2).
 - **D-2 booking horizon:** a config key `bot.bookingHorizonDays` (recommended 90). Today there is none; a past
-  day+month rolls to next year only inside it.
+  day+month rolls to next year only inside it. *(Ruled 90 on 2026-11-01; **amended to 30** by the R2d ruling of
+  2026-11-02 — section "R2d".)*
 - **D-3 the hint text:** recommended "Which day and time? You can write e.g. "Wednesday at 11:00", "tomorrow at 15:00"
   or "4 November at 11:00"."
 - **D-4 second consecutive dropped date → handoff** (recommended yes).
@@ -353,3 +357,69 @@ name; anything else re-asks with the hint. It ends the class rather than a spell
 shapes — and its cost (a stray number such as "for 2 people", and the recorded case "may 2 of us come friday", resolve-date
 N1-d, would re-ask once) is to be MEASURED on the golden set, the regression suite and the replay fixtures BEFORE the
 ruling, not after.
+
+## R2d — the r4 stop ruled: a structural defence, no more text-side rules (2026-11-02; NOT live)
+**The ruling, verbatim** (Yigitcan, 2026-11-02, by pasting the R2d brief; option B, horizon amended by him):
+> (1) The guarantee is STRUCTURAL: the booking confirm and the reschedule confirm show the full resolved date WITH the
+> year (e.g. "Haircut, Thursday 5 Nov 2026 11:00 for <name> — shall I book it? (yes / no)"; the reschedule confirm both
+> dates with years); nothing is written without the customer's "yes" (unchanged).
+> (2) D-2 amended: `bot.bookingHorizonDays` = 30 (A1 unchanged: it applies to every resolved date, ISO included).
+> (3) The text-side "did the model drop a part" detection is NOT extended. What R2–R2c built stays only if its tests are
+> green and it is labelled best-effort in code and records; if a piece of it is what produces the r4-class false sense
+> of coverage, say so and propose removal — do not tune it.
+> (4) The r4 class is recorded as a BOUND, with its defence: the full date incl. year is shown before any write, and the
+> horizon is 30 days. Full-cover (option A) NOT adopted.
+
+**What was built** (staged Main only; three commits, one logical change each):
+- `25c7191` — `Compute Availability`'s confirm ask formats the slot `cccc d LLL yyyy HH:mm`; `Compute Reschedule
+  Availability`'s move confirm shows both dates that way. Every other reply keeps its wording (the busy and past replies
+  are pinned unchanged). Every pin moved with it: the site hero sample and the static `SitePanel` line, the hero drift
+  guard (`scripts/check-hero-engine-text.cjs` — now also parses the W12 sample with the engine's confirm format, and
+  reads the staged Main while one exists), the design mockups, `docs/SCREEN-INVENTORY.md`, `docs/UX-ARCHITECTURE.md`,
+  `tests/unit/chat-replay.test.cjs` (owner run 2 split by export), `tests/unit/name-capture.test.cjs`.
+- `19ca6c8` — `bot.bookingHorizonDays` 30 in the staged `Load Config` gate edit, its delta entry, the deploy tool's
+  approved value (`scripts/diff-workflow-copy.py`; the selftest also refuses the pre-R2d 90) and both example configs.
+- `abc6b84` — `Resolve Date`: comments only (every code line byte-equal, asserted by the build script). One BEST-EFFORT
+  block names every text-side check and points at the structural guarantee; the check sites carry the label.
+
+**The tests that carry the guarantee** (in `check-all`; mutants in `tests/unit/date-phrasing-mutants.py`):
+- `date-phrasing.test.cjs` — both confirms show the SLOT's year (a January slot on 20 Dec 2026 shows 2027), the busy
+  and past replies unchanged; the 30-day boundary (day 30 inside, day 31 refused; day+month and ISO).
+- `chat-replay.test.cjs` test 9 — after a year-bearing confirm ask, ONE turn of eleven kinds in between (nothing, an
+  uncertain turn naming another date, an uncertain turn, another date, another time, an empty extraction, another name,
+  a question, a "yes" naming another date, a reschedule, a cancel), then "yes": every booking row and calendar event,
+  and every moved slot, is the slot of the LAST confirm ask shown. Both lanes. Test 10 — across the year end.
+- Mutants for the year in both confirms (dropped, the short format read, the year taken from the clock, the year spread
+  to other replies, a move confirm showing another date than the one written) and for the bound (90, 31, 29).
+
+**The bound (ruling point 4) — the r4 class, recorded with its defence:**
+*The model's `dateExpr` can drop part of a date the customer wrote, and the best-effort text-side checks miss some
+phrasings* — r4's "haircut 5 november '27" (resolves to 5 Nov 2026) and "May 5 of our anniversary year, 2027" with an
+empty extraction (keeps the stored date) are the recorded examples; more exist and are not chased. **The defence:** the
+slot that "yes" writes is shown in full, with its year, in the confirm ask immediately before the write — r4 HIGH-1
+becomes "Haircut, Thursday 5 Nov 2026 11:00 … — shall I book it?" and HIGH-2 re-shows the stored date with its year —
+and the horizon is 30 days, so a date meant for another year is outside it anyway. **What the defence does NOT do,
+stated:** it relies on the customer reading the confirm; a "yes" to a wrong date that was shown books that date. It does
+not cover the recorded confirm-turn behaviour (ARCH-DEC 2026-09-09e; Codex r3 HIGH-3): a "yes" that names another date
+books the slot shown, with the `date_changed_on_confirm` owner alert — the slot written is still the one shown. A plain
+booking confirm stays answerable across an interleaved turn (no freshness check on `confirming`, `handoff.md`); test 9
+shows that the write is still the last slot shown.
+
+**What stays best-effort (ruling point 3), and the removal question answered:** `CAL_IN_TEXT` with its "may N of
+<pronoun>" exemption, the numeric-continuation and omitted-year checks, the weekday scan and the empty-extraction
+backstop — all green, all labelled. **No piece produces a false sense of coverage by itself:** each one only REFUSES (a
+re-ask); none resolves a date, so removing one only removes catches. The false sense lived in SENTENCES — "the date must
+come FROM it" in the code, and this plan's own R2–R2c sections presenting each fix as closing the class; the code sentence
+now says "should … best-effort", and this section is the record that the class is a bound. **One piece is named
+because it is the mechanism of r4 HIGH-2:** the "may N of <pronoun>" exemption (kept so that resolve-date N1-d, "may 2 of
+us come friday", stays a Friday). Removing it would flip N1-d to a re-ask and catch that one phrasing — a trade on a
+spelling, i.e. tuning by another name. **Recommendation: keep it**; the year-bearing confirm is what covers HIGH-2.
+
+**Measured while re-pinning to 30 days, and left for a ruling (no behaviour change made):** the plan's rule for a
+day+month without a year that has passed this year and whose next-year date is beyond the horizon is "passed"
+(`datePast`). With 90 days that edge held the dates behind us this year whose next-year date is more than 90 days ahead
+(on 3 Nov 2026: 2 February – 2 November, mostly dates just gone). With 30 it also takes the next-year dates 31–90 days
+ahead — on 3 Nov 2026, 1 January – 1 February: "haircut on 15 january" answers "That date has passed — which date did
+you mean?" (replayed). The customer means next January; "We take bookings up to 30 days ahead" (`dateTooFar`) would be the true reply. A one-line change of the outcome
+in `resolveCalendar`; not made, because the rule was approved as written.
+
