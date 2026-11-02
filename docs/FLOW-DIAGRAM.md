@@ -127,7 +127,11 @@ flowchart TD
   CPU -->|no| AC{Abort Cancel?<br/>stage=cancel_confirming AND intent≠confirm}
   AC -->|continue| AR{Abort Reschedule?<br/>stage=reschedule_confirming AND intent≠confirm}
   AR -->|abort| BRA[Build Reschedule-Aborted State]
-  AR -->|continue| UT{Uncertain Turn?<br/>intent=unknown OR conf below 0.7}
+  AR -->|continue| CCR[Classify Confirm Reply<br/>N1: tags declined · decline_reask · dropped<br/>every other turn passes through unchanged]
+  CCR --> BD{Booking Declined?<br/>a tag set}
+  BD -->|yes| BBD[Build Booking-Declined State<br/>collecting, slots + name kept — t.bookingDeclined<br/>dropped: new, service/date/time emptied — t.bookingDropped<br/>no Calendar · no appointment write · no alert]
+  BBD --> SS
+  BD -->|no| UT{Uncertain Turn?<br/>intent=unknown OR conf below 0.7}
   UT -->|uncertain| RU{Repeat Uncertain?<br/>previous last_intent=clarify}
   RU -->|yes — flag standing| MH
   RU -->|no — 1st| BCS[Build Clarify State<br/>t.askIntent · last_intent=clarify · stage UNCHANGED]

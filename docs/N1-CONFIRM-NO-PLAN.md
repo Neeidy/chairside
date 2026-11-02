@@ -1,7 +1,9 @@
 # N1 PLAN — a designed path for "no" at the booking confirm
 
-> **Status: PLAN ONLY — awaiting Yigitcan's written "approved"** (`.claude/rules/plan-gate.md`). Nothing is built:
-> no Main or staged edit, no live write. Written from the committed export at `4cd53fd`.
+> **Status: APPROVED by Yigitcan, 2026-11-03** (by pasting the N1 R1 brief): D-1…D-5, D-7, D-8 as recommended, **D-6
+> AMENDED** (a bare "yes" right after a decline re-asks the change question once; a second one in a row → today's handoff)
+> and a Codex cap of two passes. **R1 built offline (staged, NOT live)** — "R1" at the end of this file. Written from the
+> committed export at `4cd53fd`.
 > **Ruling it implements:** Yigitcan's ruling, given by pasting the N1 brief (dated 2026-11-03 in the brief), says
 > to plan N1 now and build only after his written "approved". ROADMAP calls N1 "a 'no' at the booking confirm has no
 > designed path".
@@ -100,6 +102,8 @@ into a question about cancelling a different booking.
 ## 3. Design
 
 **3.1 Where.** Add one IF, **`Booking Declined?`**, on `Abort Reschedule?`'s false output, in front of `Uncertain Turn?`.
+⚠ *Corrected at R1 (§4): the checks of §3.2, §3.3 and §3.5 (and D-6 as amended) live in a Code node,
+`Classify Confirm Reply`, placed in front of that IF; the IF reads only the tag it sets.*
 - **Where that is today (measured):** `Abort Reschedule?` false → `Uncertain Turn?`. The cancel and reschedule confirms
   already drop a non-`confirm` answer at that point (`Abort Cancel?` → `Build Cancel-Aborted State`, `Abort Reschedule?`
   → `Build Reschedule-Aborted State`). The booking confirm gets the same shape, at the same place.
@@ -155,7 +159,7 @@ the PREVIOUS turn's `last_intent` is `'declined'`, and the text matches the clos
 | new time / day / service / name, or the original slot restated | re-confirm (C1–C5) |
 | a question | answered (C9) |
 | something unclear | clarify (C8) |
-| bare "yes" | fail-closed handoff with an owner alert (C6) — **never a booking**; a recorded bound (§13 D-6) |
+| bare "yes" | ⚠ *ruled at approval (D-6 amended):* the change question once more (`decline_reask`, no lock, no write); a second bare "yes" in a row → today's fail-closed handoff (C6) — **never a booking** |
 | "cancel" with an existing booking | that booking's own cancel ask (C10) |
 
 **3.7 "No + a new detail", and what this plan leaves alone.**
@@ -174,14 +178,17 @@ the PREVIOUS turn's `last_intent` is `'declined'`, and the text matches the clos
   recorded.**
 
 ## 4. Skeleton (node level)
-**Main (edited):**
-- **`Booking Declined?`** (NEW IF): one boolean expression carrying §3.2, §3.3 and §3.5.
-- **`Build Booking-Declined State`** (NEW Code): picks the variant by `state.stage` (`confirming` → §3.4,
-  `collecting` → §3.5); no regex of its own.
-- **`Sticky — Booking Declined`** (NEW sticky note).
-- **Edges:** remove `Abort Reschedule?|1|Uncertain Turn?|0`; add `Abort Reschedule?|1|Booking Declined?|0`,
-  `Booking Declined?|0|Build Booking-Declined State|0`, `Booking Declined?|1|Uncertain Turn?|0` and
-  `Build Booking-Declined State|0|Save State|0`.
+**Main (edited)** — ⚠ *corrected at R1 (declared deviation, "R1" below): THREE new nodes, not two. D-6 as amended gives
+the decision a third outcome (the re-ask), so an IF expression plus a regex-free Build node could no longer tell the
+turns apart without a second copy of the closed sets; the classification moved into its own Code node.*
+- **`Classify Confirm Reply`** (NEW Code): carries §3.2, §3.3, §3.5 and D-6 (amended) — the ONE copy of the closed sets;
+  tags the turn `declined` / `decline_reask` / `dropped`, and passes every other turn through unchanged.
+- **`Booking Declined?`** (NEW IF): `!!$json._booking_reply`.
+- **`Build Booking-Declined State`** (NEW Code): builds the state for the tag; no regex of its own.
+- **`Sticky — Booking declined`** (NEW sticky note).
+- **Edges:** remove `Abort Reschedule?|1|Uncertain Turn?|0`; add `Abort Reschedule?|1|Classify Confirm Reply|0`,
+  `Classify Confirm Reply|0|Booking Declined?|0`, `Booking Declined?|0|Build Booking-Declined State|0`,
+  `Booking Declined?|1|Uncertain Turn?|0` and `Build Booking-Declined State|0|Save State|0`.
 - **`Load Config`** gains exactly `messageTemplates.bookingDeclined` and `messageTemplates.bookingDropped`
   (a `gate_edits` entry, §13 D-5).
 - **Nothing else in Main changes.**
@@ -295,8 +302,9 @@ One Codex pass on the delta (§13 D-7), not a new target.
 
 ## 11. Deploy route, rollback, rounds
 **Route:** `scripts/workflow-step.py put` with a new `APPROVED_DELTAS['main']` entry:
-- `add_nodes {Booking Declined?, Build Booking-Declined State, Sticky — Booking Declined}`;
-- the four edges of §4 added and the one removed;
+- `add_nodes {Classify Confirm Reply, Booking Declined?, Build Booking-Declined State, Sticky — Booking declined}`
+  (*corrected at R1, §4*);
+- the five edges of §4 added and the one removed;
 - `gate_edits {'Load Config': {messageTemplates.bookingDeclined, messageTemplates.bookingDropped}}`.
 
 IF, Code and sticky note are all in `ADDABLE_TYPES`. Everything else is unchanged and `compare` holds it so.
@@ -379,8 +387,10 @@ Neither `/loop` nor `/goal`: every step ends at a human gate (the plan approval,
   - *Alternative:* the `OPTIONAL` route with a code fallback (as `cancelRetry`). It touches fewer surfaces, but the
     demo text would live in a node.
   - **Texts proposed in §3.4 and §3.5; amend them freely.**
-- **D-6 A bare "yes" after a decline.**
-  - **Recommended:** keep today's fail-closed handoff (C6) as a recorded bound. It is rare after a reply that asks what
+- **D-6 A bare "yes" after a decline.** ⚠ **Ruled AMENDED (2026-11-03):** the first bare "yes" right after a decline
+  re-asks the change question once (non-locking, the clarify/two-strike shape); a second one in a row → today's handoff.
+  *Reason given: the change question invites "yes"; a one-word lock is the greeting dead-end class fixed 2026-09-07.*
+  - **Recommended (not taken):** keep today's fail-closed handoff (C6) as a recorded bound. It is rare after a reply that asks what
     to change; it is visible and never a booking.
   - *Alternative:* a new path that re-asks the confirm. That is new code on the confirm lane, close to the v2 design.
 - **D-7 Codex.**
@@ -390,3 +400,54 @@ Neither `/loop` nor `/goal`: every step ends at a human gate (the plan approval,
   - **Recommended:** none. The design does not depend on the model's answer for a closed "no"; the owner's live run
     records it for "no", and for "no, make it 12:00" if he types it.
   - *Alternative:* a capped paid mini-eval (≤ 10 calls) at R1, under its own approval.
+
+## R1 — built offline (2026-11-03)
+
+**What was built** (staged Main only; nothing live):
+- `n8n/staged/workflow.main.sanitized.json` + `workflow.main.delta.json`: the three nodes and the sticky of §4, the edge
+  swap, `Load Config`'s two gate-edit lines. `diff-workflow-copy --phase edit` against the committed export: only
+  `Load Config` differs among existing nodes. `staged-sanitised`: the delta is exactly the approved one.
+- `scripts/diff-workflow-copy.py`: the N1 entry in `APPROVED_DELTAS['main']` (`N1_GATE_EDITS`).
+- Config: both examples carry the two texts — example-b in its own voice. `PENDING_KEYS` holds the two keys while they
+  are staged (`tests/unit/render-client.test.py`).
+- Docs: `SCREEN-INVENTORY` W12a/W12b, `UX-ARCHITECTURE`, `FLOW-DIAGRAM`, `tests/regression-suite.md` N1-1…N1-7, golden
+  G28–G30 (expected outputs only — no model run).
+
+**Declared deviations from the approved plan** (`governance-sync.md` §5):
+1. **Three nodes, not two** — `Classify Confirm Reply` added in front of `Booking Declined?` (§4, corrected in place).
+   D-6 as amended gives the decision a third outcome; keeping the plan's shape would have meant the closed sets in the
+   IF expression AND a second copy in the Build node to tell "no" from "yes". The Code node holds the one copy; the IF
+   reads only its tag.
+2. **The markers' names:** `last_intent` = `declined`, `decline_reask` (the D-6 re-ask) and `dropped`. The plan named the
+   first and the last; the middle one is new with the amendment.
+3. **The D-6 re-ask reuses `bookingDeclined`** — the brief says "re-asks the change question"; no third template, so the
+   approved gate edit (D-5: two keys) stands as approved.
+4. **D-6's trigger mirrors D-3:** a closed "yes" (`yes · yeah · yep · yup · ok · okay · sure · yes please · that works ·
+   confirm`, trailing `.`/`!`) or a CONFIDENT model `confirm`. A detail in that message is not merged — §3.7's bound.
+5. **A "no" right after the re-ask closes the request too** (D-4 extended to `decline_reask`).
+6. **Promotion step recorded now:** at promotion `PENDING_KEYS` is emptied and the Build node's two fallbacks (the demo's
+   texts) go on render-client's A-leak `ALLOW` list, one entry each — the render of example-b then carries them as code
+   fallbacks it never reaches (the render refuses a config without the keys).
+
+**A bound of D-6, recorded:** the SECOND bare "yes" goes to today's route, so its outcome is today's: a confident
+`confirm` → `Build Event Request` (stage `collecting`) → `Event ID Valid?` false → `Mark Handoff` with the `handoff` alert;
+an uncertain reading → today's clarify (no lock, no write), and the next uncertain turn hands off. Never a booking.
+
+**A harness limit found, not an engine defect:** the chat-replay stub of `Delete Booking Event` matches
+`_cancel_target.eventId`, which the cancel lane does not carry, so its in-memory calendar keeps a cancelled event — on
+the committed export too (measured). The owner-script test reads the delete from the path (node ran, 204) instead.
+
+**Tests** (in `check-all`, which exits 0):
+- `tests/unit/n1-confirm-no.test.cjs` — 25 tests: the closed sets run as code (positives under five model readings, 16
+  near-misses, D-3's floor inclusive, the stage and previous-turn gates, pass-through unchanged), `Load Config`'s two
+  texts, the graph (the new nodes read only `Load Config` and `Merge State`; the true branch reaches `Save State` only),
+  every §9 row end to end, D-6 and its bound, both owner scripts line by line, and the NEGATIVE CONTROL on the export at
+  `bc6eadf`, which shows the §0 defect (on the committed export the test is 6 green / 18 red).
+- `tests/unit/n1-confirm-no-mutants.py` — 34/34 killed, the unmutated control green. Two survived the first run and each
+  showed a gap in the test, now closed: a "no" set unanchored at the start (no near-miss ending in "no" — "oh no", "is
+  that a no" added) and the after-decline rung without its stage gate (no case with the marker kept under another stage).
+- `tests/unit/render-client-n1.test.py` — 8 cases: both examples render with their own texts; a config without either
+  key is refused by name; the control against the committed exports.
+- Unchanged behaviour: `name-capture.test.cjs`, `date-phrasing.test.cjs`, `chat-replay.test.cjs` green on the staged
+  export; `date-phrasing-mutants.py` 60/60 and `name-capture-mutants.py` 50/50 against it, both controls green.
+

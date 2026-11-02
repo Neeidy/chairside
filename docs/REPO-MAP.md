@@ -266,6 +266,11 @@
 
 - `n8n/screenshots/.gitkeep`
 
+### n8n/staged
+
+- `n8n/staged/workflow.main.delta.json`
+- `n8n/staged/workflow.main.sanitized.json`
+
 ### ops/systemd
 
 - `ops/systemd/salon-dashboard.service`
@@ -421,6 +426,8 @@
 - `tests/unit/locked-once-parity.test.cjs`
 - `tests/unit/main-tur2.test.cjs`
 - `tests/unit/message-id-guard.test.cjs`
+- `tests/unit/n1-confirm-no-mutants.py`
+- `tests/unit/n1-confirm-no.test.cjs`
 - `tests/unit/name-capture-mutants.py`
 - `tests/unit/name-capture.test.cjs`
 - `tests/unit/owner-actions-tur2.test.cjs`
@@ -429,6 +436,7 @@
 - `tests/unit/privacy-facts.test.cjs`
 - `tests/unit/render-client-askname.test.py`
 - `tests/unit/render-client-mutants.py`
+- `tests/unit/render-client-n1.test.py`
 - `tests/unit/render-client.test.py`
 - `tests/unit/reschedule-orphan-alert.test.cjs`
 - `tests/unit/resolve-date.test.cjs`
@@ -947,6 +955,7 @@
   - ## 11. Deploy route, rollback, rounds
   - ## 12. Automation-fit
   - ## 13. Decisions for the approver — each with a recommendation
+  - ## R1 — built offline (2026-11-03)
 
 ### `docs/NAME-CAPTURE-PLAN.md`
   - ## 0. The defect, verified against `n8n/workflow.main.sanitized.json`
@@ -1128,6 +1137,7 @@
   - ### docs/n1
   - ### n8n
   - ### n8n/screenshots
+  - ### n8n/staged
   - ### ops/systemd
   - ### prompts
   - ### schemas
@@ -1605,6 +1615,7 @@
   - ### ⚙ CP5d signature/adapter drills (constant-time compare + Normalize graceful reject)
   - ### ⚙ CP5e robustness drills (store error-split · purge · reminders overlap lock — exec ids: *Airtable era, not re-run on the copies*)
   - ### ⚙ Reconcile drills — Phase-7 gate (from refactor Step 1 / c1)
+  - ### Booking confirm "no" — N1 (added 2026-11-03; OFFLINE replay, `tests/unit/n1-confirm-no.test.cjs`; live: the owner run of N1 R3)
   - ### Clarify tier — `unknown` ≠ `handoff` (added 2026-09-07, all Airtable-verified — *Airtable era, not re-run on the copies*)
   - ### Date resolution — arithmetic taken away from the LLM (added 2026-09-07, CRT #12)
 

@@ -181,6 +181,8 @@ Diğer red sınıfları (hepsi `collecting`, hepsi literal metin):
 | `past` | "{tarih} has already passed — give me a future day and time." |
 | `closed` | "We're closed {gün}. Open {saatler}. What time works?" |
 
+**Rezervasyon onayına "hayır" (N1, 2026-11-03):** W12'ye kapalı bir "no" ya da modelin emin `cancel`'ı → `Build Booking-Declined State` → `bookingDeclined` ("No problem — nothing is booked. What would you like to change…?"), stage `collecting`, slot'lar ve isim korunur; değişiklik normal `book` yolundan yeniden onaya gider. Hemen ardından ilk çıplak "yes" bu soruyu bir kez daha alır, ikincisi bugünkü handoff'a gider. Ardından yine "no" → `bookingDropped`, stage `new`. Bu yolda takvim, randevu yazımı ya da owner alert yok.
+
 ### 2.5 — İptal (bul → onayla → sonuç)
 
 | Adım | Node | Metin | Stage |

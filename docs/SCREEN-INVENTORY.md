@@ -160,6 +160,8 @@ Hepsi `Answer FAQ` node'u, tek turluk, state yazmaz, çıkış `Send Reply To Or
 | W11 | Tarih/saat sor | `askDateTime` → "What day and time works for you?" | `collecting` | `Slot Gate` |
 | W12 | Müsait → onay iste | **literal**: `"{servis}, {gün} {tarih} {yıl} {saat} — shall I book it? (yes / no)"` (yıl: DATE-PHRASING R2d, 2026-11-02 — yazmadan önce tarih yılıyla gösterilir) | `confirming` | `Compute Availability` |
 | W13 | **Booked** | `bookingConfirmed` → "You're booked: {service}, {date} {time}. See you then!" | `booked` | `Build Booked State` |
+| W12a | W12'ye "hayır" → değişiklik sorusu | `bookingDeclined` → "No problem — nothing is booked. What would you like to change: the service, the day, the time or the name?" — kapalı bir "no" (no · nope · nah · no thanks · no thank you · not now) ya da modelin emin `cancel`'ı; hemen ardından gelen ilk çıplak "yes" de bu soruyu bir kez daha alır (N1, D-6) | `collecting` (slot'lar + isim korunur) | `Build Booking-Declined State` |
+| W12b | W12a'dan sonra yine "hayır" → talep kapanır | `bookingDropped` → "Okay — nothing is booked. Message me any time you'd like to book." | `new` (servis/tarih/saat boşalır, isim kalır) | `Build Booking-Declined State` |
 
 **Chip fırsatı:** W10'un 3 servisi ve W12'nin yes/no'su mockup'ta zaten chip olarak var — korunmalı.
 
