@@ -221,6 +221,11 @@
 - `docs/codex/date-phrasing/run-r6.sh`
 - `docs/codex/date-phrasing/run.sh`
 
+### docs/codex/n1
+
+- `docs/codex/n1/prompt.md`
+- `docs/codex/n1/run.sh`
+
 ### docs/codex/name-capture
 
 - `docs/codex/name-capture/containment.md`
@@ -1131,6 +1136,7 @@
   - ### docs/codex/7-2-r2
   - ### docs/codex/7-2-r2b
   - ### docs/codex/date-phrasing
+  - ### docs/codex/n1
   - ### docs/codex/name-capture
   - ### docs/codex/phase-8
   - ### docs/codex/public-demo
@@ -1521,6 +1527,9 @@
   - _(no `##` headings — flat file)_
 
 ### `docs/codex/date-phrasing/r6.md`
+  - _(no `##` headings — flat file)_
+
+### `docs/codex/n1/prompt.md`
   - _(no `##` headings — flat file)_
 
 ### `docs/codex/name-capture/containment.md`
