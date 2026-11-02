@@ -65,3 +65,19 @@ exit 0, container exit 0, 282 container seconds. Answer verbatim as `r5.md`, byt
 - Codex reported "No tracked files changed".
 - The R4 export and Codex home were deleted after the R4 records were pushed; the R5 ones are deleted after these.
 
+
+## R6 — the recheck of the R2e diff (E1, the comment wording, the F1 precondition's premise)
+Same harness, run by `docs/codex/date-phrasing/run-r6.sh` (the R5 runner with the prompt path changed). Pin `cdc2290`
+(391 files), prompt 54 lines. Mount-check controls: one extra mount → 97, as intended → 0. Then: mount check OK, Codex
+exit 0, container exit 0, 249 container seconds. Answer verbatim as `r6.md`, byte-compared with the run's output file.
+- `scripts/codex-containment.py`: commands 21 · passed 18 · flags 4, read one by one: the "absolute path" `/` and `//`
+  tokens are string literals inside the run's own heredoc probes (a `.replace('/','_')`, a filter dropping `//` comment
+  lines); the two `..` tokens are `require('../tests/unit/chat-replay.lib.cjs')` and
+  `require('../n8n/staged/workflow.main.sanitized.json')` inside `.audit-r6/premise.cjs`, i.e. inside the working copy.
+  ⚠ The first invocation passed the HOST export path as the worktree argument and every command flagged "outside the
+  worktree" (29 flags, 0 passed) — an instrument error of mine; the worktree the session ran in is the container's
+  `/home/auditor/work`, as in R5, and the re-run with it gives the line above.
+- The separate scan of the 21 command lines: 0 hits; its positive control matched the four forbidden shapes and not the
+  ordinary command.
+- Codex reported "No tracked files changed".
+- The R5 export and Codex home were deleted after the R5 records were pushed; the R6 ones are deleted after these.
