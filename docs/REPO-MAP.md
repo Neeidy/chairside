@@ -137,6 +137,7 @@
 - `docs/CP6D-BUILD-PACKAGE.md`
 - `docs/DATA-MODEL.md`
 - `docs/DATE-PHRASING-PLAN.md`
+- `docs/ENGINEERING-NOTES.md`
 - `docs/FLOW-DIAGRAM.md`
 - `docs/LOOM-SCRIPT.md`
 - `docs/MIGRATION-PLAN.md`
@@ -754,7 +755,6 @@
   - ## How it works
   - ## What works today ✅
   - ## Not built yet 🔜
-  - ## Not yet — deferred to v2 (ruled 2026-10-24)
   - ## Engineering decisions worth reading
   - ## Case study
   - ## Repo map
@@ -885,6 +885,12 @@
   - ## R4 — the owner's run read back, PROMOTED; DATE-PHRASING CLOSED (2026-11-02)
   - ### R4 — the "couldn't verify this browser" line the owner saw: diagnosed, fixed on both render sites, redeployed (2026-11-02)
   - ### Definition of Done — DATE-PHRASING
+
+### `docs/ENGINEERING-NOTES.md`
+  - ## Deferred to v2, and the recorded bounds
+  - ## Not yet — deferred to v2 (ruled 2026-10-24)
+  - ## Security — the honest limits recorded in the README
+  - ## Config / code / secret — the full statement
 
 ### `docs/FLOW-DIAGRAM.md`
   - ## Overview — the lanes
@@ -1227,6 +1233,7 @@
   - ### `docs/CP6D-BUILD-PACKAGE.md`
   - ### `docs/DATA-MODEL.md`
   - ### `docs/DATE-PHRASING-PLAN.md`
+  - ### `docs/ENGINEERING-NOTES.md`
   - ### `docs/FLOW-DIAGRAM.md`
   - ### `docs/LOOM-SCRIPT.md`
   - ### `docs/MIGRATION-PLAN.md`
