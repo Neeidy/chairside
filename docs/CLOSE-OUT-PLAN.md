@@ -340,3 +340,62 @@ Neither `/loop` nor `/goal`. Each round ends at an approval or an owner step.
 | DC-11 | The old nameless `confirming` row | **Keep it.** With M2 its "yes" re-asks, and it is the owner's row (never deleted without his word) |
 | DC-12 | The Codex cap | **2 passes per surface**, as the brief says |
 | DC-13 | M2's stale "yes" | **Show the confirm again**, availability re-read, nothing written. A handoff would page the owner for a customer who only asked a question |
+
+## R1 — built offline (2026-11-03); NOT live
+
+*(Every number below terminal-measured, output not committed, unless a committed test or file holds it.)*
+
+**Rulings taken during R1, asked and answered (Yigitcan, 2026-11-03):**
+- **DC-5 → Purge IN.** The read (row 57): 3 of 3 nightly Purge runs after go-live alerted `no_candidates` (0 candidates,
+  4 leads); Main 3 alerts, Reminders 0. P1/P2 built; the window gets a Purge put under its own ⚠ ONAY.
+- **D1 → "fix the counter only"**, replacing DC-3's "single source". As first built (`sender_masked` as the display
+  source), D1 hid the sender on about 3.7 % of widget rows (a 7-character all-digit slice tripped the phone guard;
+  200,000 synthetic ids) and showed 7 characters of the widget id instead of 4. Now the display is today's, and only the
+  "re-masked" counter reads the column.
+
+**Declared deviations and precisions (none changes a ruling):**
+1. **M1 withholds only the ping.** The date still drops at a pending confirm, so HIGH-2b's guard stands. One committed
+   test row expected the ping and was aligned (`resolve-date` "CODEX-H2b right stage, wrong intent"). This is the plan's
+   stated risk: a real change at a confirm goes unalerted, and is still never written.
+2. **M2's gate is scoped to stage `confirming`.** Unscoped, it turned N1's D-6 second bare "yes" after a decline (stage
+   `collecting`) from a handoff into a re-shown confirm, against an explicit ruling. Scoped, D-6 holds; a mutant
+   removing the scope is killed.
+3. **DC-13's re-read** runs by sending a stale "yes" back through `Slot Gate`. `Compute Availability` reads Slot Gate's
+   item, and Slot Gate reads only the stored slots. A stored request without a name gets the name question (row 13's
+   row) instead of a handoff.
+4. **Tests whose premise M1/M2 changed, adapted in place:**
+   - N1's A10: a "yes" after a question re-shows, then books;
+   - chat-replay 9: the write property holds through the re-show;
+   - two `workflow-step` gate-edit cases: a delta with no gate edit gets a byte-equal Load Config check;
+   - `privacy-facts`: its pre-NAME-CAPTURE branch for a committed Purge beside a staged one.
+5. **One equivalent mutant, shown and not counted:** keeping the stamp on a non-confirming status. The gate reads it
+   only at `confirming`.
+6. **Not covered offline:** a slot taken between the ask and a stale "yes". The harness's freeBusy stub is always free.
+   That answer is `Compute Availability`'s unchanged "taken" branch.
+7. **The local snippet bundle** (gitignored) was rebuilt in an isolated copy and only the output copied in, because
+   S2 changed the source (OPS-10).
+
+**Built and tested** (`check-all` 0 on the final tree):
+- **G1:** `scripts/start-gates.sh` + `scripts/vienna-window.py`; the test refuses at :55/:57/:00/:02/:05 and runs at
+  :06/:10/:54; two mutants are red.
+- **Main (staged) M1–M3:** `close-out-main` 12 tests; 7 red on `5d8dacf`; 13 mutants killed. N1 39/39, DATE-PHRASING
+  60/60 and NAME-CAPTURE 50/50 mutants on the staged export.
+- **Purge (staged) P1/P2:** `close-out-purge` 5 tests; 3 red on the committed export; two mutants killed.
+- **Site/snippet S1:** with Cloudflare's always-fail test key in 45 s, the default gave 6 error callbacks and
+  7 challenge frames; `retry: 'never'` gave 3 and 3. The default kept retrying about every 12 s after our block.
+  `retry: 'never'` is now set on both render sites, and the drill asserts it (red before, green after).
+- **Site/snippet S2:** times in the shop's zone with the zone named once. The drill under two browser zones went from
+  2/7 to 7/7 on both surfaces. 4 mutants killed. A zone the runtime does not know is refused at build time.
+- **Dashboard D1/D2:** the counter only (8 mutants killed; the rendered sender and the client props are identical to
+  `5d8dacf` on the fixtures). D2 reproduced and fixed: the "Today" block counts only today's rows.
+- **Docs:**
+  - ARCH-DEC rows for the rulings that lived only in plans, plus this phase's rulings;
+  - the stale records 48 and 51–56;
+  - the B / B-v2 decisions in ENGINEERING-NOTES;
+  - README D1/D2;
+  - the RUNBOOK pause line;
+  - the PHASE-6-BACKLOG dispositions;
+  - the two records S1/S2 superseded.
+
+**Found, not fixed (a new item):** `scripts/check-no-host-leak.sh`'s documented `$N8N_HOST`-only path stops with
+"PARSED: unbound variable" when `CLAUDE.local.md` is absent. It fails closed, never silently green.
