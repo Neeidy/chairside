@@ -111,6 +111,20 @@ test('M2: at a stage other than confirming the route is today\'s — N1 D-6: a s
   assert.equal(r.db.appts.length, 0);
 });
 
+// ── the recorded bound (ruling 2026-11-03, Codex CLOSE-OUT pass 1 HIGH) ───────────────────────────────────────────
+// The stamp counts SAVED turns. A turn that saves no state — an LLM-unavailable reply, a guard trip — does not advance
+// turn_count, so it does not stale the confirm: the next "yes" books the slot that was shown (write-then-verify
+// unchanged). The cancel and reschedule confirms' count-based TTL has the same bound. Pinned so a change is seen.
+test('BOUND: an unsaved transient turn between the ask and the "yes" does not stale the confirm; the "yes" books the slot shown', () => {
+  const r = atConfirm();
+  const turns = r.db.conv.turn_count;
+  const o = r.turn('how much is it?', { __llmError: true });
+  assert.ok(o.path.includes('LLM Unavailable Reply'), 'the turn took the LLM-unavailable route');
+  assert.equal(r.db.conv.turn_count, turns, 'the failed turn saved no state');
+  assert.equal(r.turn('yes', answer('confirm', 0.92)).reply, BOOKED);
+  assert.equal(r.db.appts.length, 1);
+});
+
 // ── M3 ───────────────────────────────────────────────────────────────────────────────────────────────────────────
 test('M3: "yes" sent twice after one confirm books ONCE (the second meets stage booked)', () => {
   const r = atConfirm();

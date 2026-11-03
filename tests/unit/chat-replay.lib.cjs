@@ -90,8 +90,12 @@ function makeReplay(exportJson, { nowISO, sender = 'widget:w-replay', configPatc
     'Record LLM Spend': (j) => [{ id: 'm-replay', fields: { period_key: j.period_key, cost_usd: j.cost_usd } }],
     'Record Alert Class': () => [convRow()],
     'Send Owner Alert (Telegram)': (j) => { db.alerts.push(j._alert_class || null); return [{ ok: true }]; },
-    'Extract Intent': () => [{ model: 'replay', type: 'message', role: 'assistant', content: [{ type: 'text', text: JSON.stringify(model) }],
-      stop_reason: 'end_turn', usage: { input_tokens: 100, output_tokens: 50 } }],
+    // A model answer carrying `__llmError: true` makes the call FAIL: n8n's error item on output 1, as continueErrorOutput
+    // routes it (CLOSE-OUT R2, to pin the unsaved-transient-turn bound; no other test uses the field).
+    'Extract Intent': () => (model && model.__llmError
+      ? { __outputs: [[], [{ error: { message: 'replay: the LLM call failed' }, message: 'replay: the LLM call failed' }]] }
+      : [{ model: 'replay', type: 'message', role: 'assistant', content: [{ type: 'text', text: JSON.stringify(model) }],
+        stop_reason: 'end_turn', usage: { input_tokens: 100, output_tokens: 50 } }]),
     'Get Calendar Busy': () => [{ kind: 'calendar#freeBusy', calendars: { [cfg().googleCalendarId]: { busy: [] } } }],
     'Get Reschedule Busy': () => [{ kind: 'calendar#freeBusy', calendars: { [cfg().googleCalendarId]: { busy: [] } } }],
     'Book Appointment': (j) => { db.calendar.push(event(j.booking)); return [event(j.booking)]; },
@@ -121,7 +125,7 @@ function makeReplay(exportJson, { nowISO, sender = 'widget:w-replay', configPatc
     const n = N[name], t = n.type.split('.').pop(), j = items[0] || {};
     path.push(name);
     if (path.length > UPSTREAM_LIMIT) throw new Error('replay: the walk did not end');
-    if (STUB[name]) return [STUB[name](j)];
+    if (STUB[name]) { const r = STUB[name](j); return r && r.__outputs ? r.__outputs : [r]; }
     if (t === 'code') {
       const r = new Function('$', '$json', '$input', 'DateTime', '$now', '$getWorkflowStaticData', n.parameters.jsCode)(
         $, j, { all: () => items.map((x) => ({ json: x })), first: () => ({ json: j }), item: { json: j } }, clock, now(), () => staticData);

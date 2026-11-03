@@ -37,6 +37,22 @@ def main():
     for t in ('11:06', '11:10', '11:30', '10:54'):
         rc, out = at(t)
         case(f'runs at {t}', rc == 0 and 'OK' in out, f'rc {rc} {out!r}')
+    # The production path (no --at) reads the clock in Europe/Vienna: its label must be the Vienna HH:MM computed here
+    # independently, which a zone change (UTC, the host's zone) breaks through the HOUR. The minute alone could not show
+    # it — Vienna is a whole-hour offset from UTC, so a UTC mutant decides every minute the same (Codex CLOSE-OUT pass 1
+    # LOW: an equivalent mutant for the decision, not for the label). Retried once across a minute rollover.
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+    for _ in range(2):
+        before = datetime.now(ZoneInfo('Europe/Vienna')).strftime('%H:%M')
+        r = subprocess.run([sys.executable, HELPER], capture_output=True, text=True, stdin=subprocess.DEVNULL)
+        after = datetime.now(ZoneInfo('Europe/Vienna')).strftime('%H:%M')
+        if before == after:
+            break
+    m = int(before.split(':')[1])
+    want_rc = 3 if (m >= 55 or m <= 5) else 0
+    case(f'the live clock path: the label is the Vienna time {before} and the decision matches it',
+         f' {before} Vienna' in r.stdout and r.returncode == want_rc, f'rc {r.returncode} {r.stdout!r}')
     rc, out = at('25:00')
     case('a non-time is refused as usage, not as a pass', rc == 2, f'rc {rc}')
 

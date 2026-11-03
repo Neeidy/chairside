@@ -50,7 +50,10 @@ found by the L2 reviewers, not by the build (2026-09-09f):**
    the list. Since CLOSE-OUT M2 (2026-11-03) the booking confirm HAS a freshness check — `Reschedule Router` →
    `Booking Fresh?` → `Build Event Request` — so an extra turn DOES stale it; but a stale booking "yes" only shows the
    confirm again (`Booking Fresh?` → `Slot Gate`, nothing written), it never drops the request as a stale cancel or
-   reschedule confirm answers "your booking stands". So the list still does not need it. *Corrected in place: this said
+   reschedule confirm answers "your booking stands". So the list still does not need it. **Bound (ruling 2026-11-03,
+   Codex CLOSE-OUT pass 1 HIGH):** the stamp counts SAVED turns — a turn that saves no state (an LLM-unavailable reply, a
+   guard trip) does not advance `turn_count`, so it does not stale any confirm; the next "yes" books the slot shown. The
+   cancel and reschedule confirms' TTL has the same bound. *Corrected in place: this said
    the booking path had no freshness check, true until M2 (`tests/unit/close-out-main.test.cjs`).*)
 2. **The second one in a row escalates.** `Repeat Extraction Failure?` reads `last_intent='invalid'` carried in
    by `Merge State` and routes to `Mark Handoff`. Without it a systematic contract failure gave the customer up

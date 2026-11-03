@@ -96,6 +96,13 @@ def main():
             print(f"{'✓ killed  ' if killed else '✗ SURVIVED'} {label}")
             if not killed:
                 survivors.append(label)
+        for label, f in EQUIVALENT.items():   # shown, not counted: it must stay GREEN, or it is not equivalent
+            p = os.path.join(d, 'e.json')
+            json.dump(f(copy.deepcopy(base)), open(p, 'w', encoding='utf-8'), ensure_ascii=False)
+            eq_green = not red(p)
+            print(f"{'= equivalent' if eq_green else '✗ NOT equivalent (it turned the test red)'} {label}")
+            if not eq_green:
+                survivors.append(f'{label} (declared equivalent, but red)')
         ctrl = os.path.join(d, 'c.json')
         json.dump(base, open(ctrl, 'w', encoding='utf-8'), ensure_ascii=False)
         green = not red(ctrl)
