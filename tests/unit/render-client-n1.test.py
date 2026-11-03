@@ -69,7 +69,7 @@ def main():
             out = os.path.join(d, f'out-{cfg}')
             rc, txt = render(path, exp_next, out)
             got = {k: templates(out).get(k) for k in N1} if rc == 0 else None
-            case(f'{label}: renders against the staged Main, its Load Config carries its OWN two decline texts',
+            case(f'{label}: renders against the N1 Main (staged, or committed after the promotion), its Load Config carries its OWN two decline texts',
                  rc == 0 and got == want, f'rc {rc} {txt[-200:]}')
         for k in N1:
             case(f"example-b's {k} is not the demo's text (a second client's copy)",
@@ -84,7 +84,7 @@ def main():
             json.dump(a, open(cfg, 'w', encoding='utf-8'), ensure_ascii=False)
             out = os.path.join(d, f'out-no-{k}')
             rc, txt = render(cfg, exp_next, out)
-            case(f'a config WITHOUT {k} is refused against the staged Main, by name, and nothing is written',
+            case(f'a config WITHOUT {k} is refused against the N1 Main (staged, or committed after the promotion), by name, and nothing is written',
                  rc == 1 and f'messageTemplates.{k}' in txt and not os.path.exists(out), f'rc {rc} {txt[-200:]}')
             if unpromoted:
                 out = os.path.join(d, f'out-no-{k}-now')

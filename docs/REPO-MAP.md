@@ -260,6 +260,8 @@
 
 ### docs/n1
 
+- `docs/n1/alert-4905-replay.cjs`
+- `docs/n1/alert-4905-replay.out.txt`
 - `docs/n1/replay-measure.cjs`
 - `docs/n1/replay-measure.out.txt`
 

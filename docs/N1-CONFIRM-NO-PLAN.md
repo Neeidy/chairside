@@ -278,7 +278,8 @@ slots alerts on neither (`docs/n1/alert-4905-replay.cjs`, output committed besid
    Write Appointment), 4906–4907 the cancel confirm unchanged (`Delete Booking Event` 204, the row `cancelled`).
 7. **Config:** both templates are in `Load Config` and in both example configs; `render-client` refuses a config
    without them; the inventory and flow-diagram rows exist.
-   — ✅ `render-client-n1` 8/8; `render-client` OK with `PENDING_KEYS` empty and the two `Build Booking-Declined State`
+   — ✅ `render-client-n1` 6/6 at the promoted export (its two controls against the unpromoted literal skip after the
+   promotion, by design; 8/8 at R1, staged); `render-client` OK with `PENDING_KEYS` empty and the two `Build Booking-Declined State`
    fallbacks on the A-leak `ALLOW` list ("every entry still hits": green).
 8. **Release:** guards at 0; parity green against the committed exports after promotion; the owner's live run shows (1)
    and (4), read back by GET on executions and with `salon_ro`.
