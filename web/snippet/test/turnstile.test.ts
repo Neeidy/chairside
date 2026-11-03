@@ -27,6 +27,7 @@ function fakeTurnstile() {
     expired: () => w[0].opts['expired-callback'](),
     resets: () => (w[0] ? w[0].resets : 0),
     rendered: () => w.length,
+    opts: () => w[0].opts as Record<string, unknown>,
   };
 }
 const slot = { offsetParent: {}, getBoundingClientRect: () => ({ width: 300 }), classList: { add: () => {} } };
@@ -44,6 +45,11 @@ async function mount() {
   assert.equal(ts.rendered(), 1, 'rendered once');
   return { ts, h, states, challenge };
 }
+
+test("Cloudflare's own retry is off, so ours is the only one (DC-4: its default kept failing after our block)", async () => {
+  const { ts } = await mount();
+  assert.equal(ts.opts().retry, 'never');
+});
 
 test('one failure is retried, not a block: pending, our own reset after the retry delay, then a success and the next token', async () => {
   const { ts, h, states } = await mount();

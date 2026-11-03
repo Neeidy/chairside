@@ -53,6 +53,7 @@ MUTANTS = {
     'snippet: a block leaves the last retry armed': (SNIP, [('          clearTimeout(retryTimer);                     // the retries are spent', '          // the retries are spent')]),
     'snippet: refresh ignores a real block': (SNIP, [('      if (blocked) return;\n', '')]),
     'snippet: refresh never asks for a new token': (SNIP, [('      if (widgetId && window.turnstile) window.turnstile.reset(widgetId);\n', '')]),
+    "snippet: Cloudflare's own retry left on (DC-4)": (SNIP, [("        retry: 'never',\n", '')]),
     'snippet: a script that cannot load is not a block': (SNIP, [(".catch(() => { token = null; blocked = true; onChange('blocked'); });",
                                                                ".catch(() => { token = null; onChange('pending'); });")]),
 }

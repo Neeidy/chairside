@@ -10,7 +10,11 @@
 // real engine sends nothing (the engine call is made from the page frame). Cross-origin iframes (Turnstile's own, in
 // the real modes), workers and the browser's background traffic are NOT intercepted by this session.
 // MODE `real-pass` / `real-block`: no stub — the REAL Turnstile script, with a build carrying Cloudflare's always-pass
-// (1x…AA) or always-block (2x…AB) TEST sitekey; only the engine is intercepted.
+// (1x…AA) or always-block (2x…AB) TEST sitekey; only the engine is intercepted. In the real modes a counter is appended
+// to the real api.js (render options, error-callbacks, our resets) and the challenge iframes are counted.
+// `real-block` also asserts DC-4 (CLOSE-OUT S1): `retry: 'never'`, and a block costs exactly 3 error-callbacks and our 2
+// resets over DRILL_BLOCK_WINDOW_MS (default 45 s). Measured on the pre-DC-4 build (Cloudflare's default retry): 6
+// error-callbacks and 7 challenge frames in that window, one more every ~12 s after our block, on both surfaces.
 //
 // Usage: node tests/browser/turnstile-gate.drill.mjs <site|snippet> <url> <cdpPort> [stub|real-pass|real-block]
 //   site    url = the built site's page (the live panel)      snippet url = a host page that loads barber-widget.js
@@ -29,6 +33,7 @@ const NOTICE = /couldn.t verify this browser/i;
 const STUCK = /still (checking this browser|verifying)/i;
 const ENGINE = 'engine.example.test';
 const CHALLENGE = 'challenges.cloudflare.com';
+const BLOCK_WINDOW_MS = Number(process.env.DRILL_BLOCK_WINDOW_MS || 45000);
 
 const STUB = `(() => {
   const w = [];
@@ -45,6 +50,26 @@ const STUB = `(() => {
     rendered() { return w.length; },
     resets() { return w[0] ? w[0].resets : 0; },
   };
+})();`;
+
+// Appended to the REAL api.js (real modes only), so it runs the moment Cloudflare has defined window.turnstile and before
+// the page can call render(). An accessor installed beforehand does not work: api.js then refuses to load ("Turnstile
+// already has been loaded", measured). The page's own code is not changed; only what it calls is counted.
+const COUNTER = `;(() => {
+  if (!window.turnstile || window.__tsCount) return;
+  const c = window.__tsCount = { renders: 0, retry: [], errors: 0, errorAt: [], resets: 0 };
+  const wrap = (ts) => new Proxy(ts, { get(target, prop) {
+    const v = target[prop];
+    if (prop === 'render') return (el, o) => {
+      c.renders += 1; c.retry.push(o && 'retry' in o ? o.retry : '(default)');
+      const onError = o['error-callback'];
+      return v.call(target, el, { ...o, 'error-callback': (...a) => {
+        c.errors += 1; c.errorAt.push(Math.round(performance.now())); return onError && onError(...a); } });
+    };
+    if (prop === 'reset') return (...a) => { c.resets += 1; return v.apply(target, a); };
+    return typeof v === 'function' ? v.bind(target) : v;
+  } });
+  window.turnstile = wrap(window.turnstile);
 })();`;
 
 const ROOT = surface === 'site' ? 'document' : `document.getElementById('barber-widget-root')?.shadowRoot`;
@@ -70,18 +95,43 @@ async function browser() {
   if (!opened) { try { ws.close(); } catch {} cleanup(); throw new Error('the CDP socket never opened'); }
   let id = 0; const pending = new Map();
   const b = { posts: [], foreign: [], failScript: false, emptyScript: false };
-  const send = (method, params = {}) => new Promise((r) => { const i = ++id; pending.set(i, r); ws.send(JSON.stringify({ id: i, method, params })); });
+  const send = (method, params = {}, sessionId) => new Promise((r) => {
+    const i = ++id; pending.set(i, r); ws.send(JSON.stringify({ id: i, method, params, ...(sessionId ? { sessionId } : {}) }));
+  });
+  // Turnstile's challenge runs in cross-origin iframes. Each one is a CDP target of its own: auto-attached only to be
+  // COUNTED (one per attempt, measured) and let run. Its document request is seen by THIS session's Fetch (measured).
+  b.challenge = { frames: 0, requests: 0 };
   const cors = [{ name: 'Access-Control-Allow-Origin', value: '*' }, { name: 'Access-Control-Allow-Methods', value: 'POST' },
     { name: 'Access-Control-Allow-Headers', value: 'content-type' }];
   ws.addEventListener('message', (ev) => {
     const m = JSON.parse(ev.data);
     if (m.id && pending.has(m.id)) { pending.get(m.id)(m.result ?? m.error); pending.delete(m.id); return; }
+    if (m.method === 'Target.attachedToTarget') {
+      const sid = m.params.sessionId;
+      if (m.params.targetInfo.type === 'iframe') b.challenge.frames += 1;
+      send('Runtime.runIfWaitingForDebugger', {}, sid);
+      return;
+    }
     if (m.method !== 'Fetch.requestPaused') return;
     const r = m.params.request; const rid = m.params.requestId;
     const host = new URL(r.url).hostname;
+    if (m.params.responseStatusCode !== undefined) {   // response stage: only the real api.js, to append the counter
+      // api.js?render=explicit answers 302 to a versioned /turnstile/v0/g/<build>/api.js (measured): the redirect passes.
+      if (m.params.responseStatusCode !== 200 || !new URL(r.url).pathname.endsWith('/api.js')) {
+        send('Fetch.continueRequest', { requestId: rid }); return;
+      }
+      send('Fetch.getResponseBody', { requestId: rid }).then((g) => {
+        const js = g.base64Encoded ? Buffer.from(g.body, 'base64').toString('utf8') : g.body;
+        send('Fetch.fulfillRequest', { requestId: rid, responseCode: m.params.responseStatusCode,
+          responseHeaders: m.params.responseHeaders, body: Buffer.from(js + COUNTER).toString('base64') });
+      });
+      return;
+    }
     if (host === '127.0.0.1' || host === 'localhost') {
       send('Fetch.continueRequest', { requestId: rid });
     } else if (host === CHALLENGE) {
+      // The challenge's own requests (/cdn-cgi/challenge-platform/…) reach this session too (measured) — counted here.
+      if (!new URL(r.url).pathname.endsWith('/api.js')) b.challenge.requests += 1;
       if (b.failScript) send('Fetch.failRequest', { requestId: rid, errorReason: 'BlockedByClient' });
       else if (b.emptyScript) send('Fetch.fulfillRequest', { requestId: rid, responseCode: 200,   // loads, defines nothing
         responseHeaders: [{ name: 'Content-Type', value: 'application/javascript' }], body: '' });
@@ -102,7 +152,13 @@ async function browser() {
     }
   });
   await send('Page.enable'); await send('Runtime.enable');
-  await send('Fetch.enable', { patterns: [{ urlPattern: '*' }] });
+  if (REAL) {
+    // Count what the REAL api.js does: every render's options, every error-callback it invokes, every reset WE call
+    // (COUNTER, appended at the response stage below), and every request the challenge frames make.
+    await send('Target.setAutoAttach', { autoAttach: true, waitForDebuggerOnStart: true, flatten: true });
+  }
+  await send('Fetch.enable', { patterns: [{ urlPattern: '*' },
+    ...(REAL ? [{ urlPattern: `https://${CHALLENGE}/turnstile/v0/*`, requestStage: 'Response' }] : [])] });
   b.send = send;
   b.ev = async (expr) => (await send('Runtime.evaluate', { expression: expr, returnByValue: true, awaitPromise: true }))?.result?.value;
   b.close = () => { try { ws.close(); } catch {} cleanup(); };
@@ -112,10 +168,16 @@ async function browser() {
 async function page(b, { failScript = false, emptyScript = false } = {}) {
   b.posts.length = 0; b.failScript = failScript; b.emptyScript = emptyScript;
   await b.send('Page.navigate', { url });
-  for (let i = 0; i < 40; i++) { await sleep(250); if (await b.ev(`!!(${Q.launcher})`)) break; }
+  for (let i = 0; i < 40; i++) { await sleep(250); if (await b.ev(`!!(${Q.launcher}) && document.readyState === 'complete'`)) break; }
+  // The site's launcher is in the server-rendered HTML before its click handler is bound: a click that early is lost,
+  // the panel never opens and Turnstile is never rendered (measured once, on the first load after a server restart).
+  await sleep(500);
   await b.ev(`(${Q.launcher}).click()`);
   if (failScript || emptyScript) { await sleep(1500); return; }
-  if (REAL) { for (let i = 0; i < 40; i++) { await sleep(250); if (await b.ev('!!window.turnstile')) return; } throw new Error('the Turnstile script never loaded'); }
+  if (REAL) {
+    for (let i = 0; i < 40; i++) { await sleep(250); if (await b.ev('!!(window.__tsCount && window.__tsCount.renders > 0)')) return; }
+    throw new Error('the real Turnstile widget was never rendered');
+  }
   for (let i = 0; i < 40; i++) { await sleep(250); if (await b.ev('window.__ts && window.__ts.rendered() > 0')) return; }
   throw new Error('Turnstile was never rendered');
 }
@@ -169,7 +231,7 @@ async function stubCases(b) {
   s = await state(b);
   check('the next token arrives: the message goes out and is answered', b.posts.length === 2 && s.replies === 2 && !noticeShown(s), { ...s, posts: b.posts.length });
 
-  // 2. A TRANSIENT ERROR, THEN SUCCESS (Cloudflare retries; the drill drives the outcome).
+  // 2. A TRANSIENT ERROR, THEN SUCCESS (our retry resets the widget; the drill drives the outcome).
   await page(b);
   await b.ev(`window.__ts.error()`); await sleep(300);
   await type(b, 'hello'); await enter(b);
@@ -276,6 +338,17 @@ async function realCases(b) {
     await type(b, 'hello'); await enter(b);
     const s = await state(b);
     check('always-block key: the notice is shown, nothing is sent', shown && noticeShown(s) && b.posts.length === 0, { ...s, posts: b.posts.length });
+    // DC-4 (CLOSE-OUT S1): OUR policy is the only retry — one failure plus TURNSTILE_MAX_RETRIES (2) resets, then a
+    // block that stays quiet. Cloudflare's own default retry ran beside ours and kept failing after the block. The
+    // window is long enough for several of Cloudflare's retries (its documented default interval is 8 s).
+    await sleep(BLOCK_WINDOW_MS);
+    const c = await b.ev('window.__tsCount');
+    const counts = { ...c, challengeFrames: b.challenge.frames, challengeRequests: b.challenge.requests, windowMs: BLOCK_WINDOW_MS };
+    console.log(`  MEASURED ${surface}: ${JSON.stringify(counts)}`);
+    check('the counter saw the real widget (an instrument that cannot see a render measures nothing)', c && c.renders === 1, counts);
+    check("both render sites pass retry: 'never' to Cloudflare (DC-4)", c && c.retry.length > 0 && c.retry.every((r) => r === 'never'), counts);
+    check('a block costs exactly 1 + 2 error-callbacks and our 2 resets, and nothing after it',
+      c && c.errors === 3 && c.resets === 2, counts);
     return;
   }
   // Always-pass key: two messages back to back, the second typed the moment the first is answered (the owner's case).

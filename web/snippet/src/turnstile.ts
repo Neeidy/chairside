@@ -152,6 +152,10 @@ export function mountTurnstile(
         'timeout-callback': () => { token = null; onChange('pending'); endChallenge(); window.turnstile?.reset(widgetId ?? undefined); },
         theme: 'light',
         appearance: 'interaction-only',
+        // OUR retry is the only one (DC-4, CLOSE-OUT S1). With Cloudflare's default it kept retrying beside ours and
+        // after the block, one more failing attempt about every 12 s for as long as the page stayed open
+        // (tests/browser/turnstile-gate.drill.mjs, always-block test key).
+        retry: 'never',
         'before-interactive-callback': () => { slot.classList.add('is-interactive'); onInteractive?.(true); },
         'after-interactive-callback': () => { onInteractive?.(false); },   // the spacing stays (ruling R3-3)
       });

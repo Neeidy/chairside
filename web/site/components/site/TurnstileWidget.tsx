@@ -142,6 +142,10 @@ export function TurnstileWidget({
           'timeout-callback': () => { onToken(null); onInteractive?.(false); window.turnstile?.reset(idRef.current ?? undefined); },
           theme: 'light',
           appearance: 'interaction-only',
+          // The panel's retry is the only one (DC-4, CLOSE-OUT S1). With Cloudflare's default it kept retrying beside
+          // ours and after the block, one more failing attempt about every 12 s for as long as the page stayed open
+          // (tests/browser/turnstile-gate.drill.mjs, always-block test key).
+          retry: 'never',
           'before-interactive-callback': () => { setInteractive(true); onInteractive?.(true); },
           // `interactive` (the slot's spacing) stays true by ruling R3-3; only the PARENT is told the challenge ended.
           'after-interactive-callback': () => onInteractive?.(false),
