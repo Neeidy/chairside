@@ -73,6 +73,10 @@ ALLOW = {
         'the fallback after `t.bookingConfirmed ||`; unreachable: the render refuses the key missing or empty',
     ('main', 'Build Cancelled State', 'Done — your {service} on {when} is cancelled.'):
         'the fallback after `cfg.messageTemplates.cancelDone ||`; unreachable: the render refuses the key missing or empty',
+    ('main', 'Build Booking-Declined State', 'No problem — nothing is booked. What would you like to change: the service, the day, the time or the name?'):
+        'the fallback after `t.bookingDeclined ||`; unreachable: the render refuses the key missing or empty (N1)',
+    ('main', 'Build Booking-Declined State', "Okay — nothing is booked. Message me any time you'd like to book."):
+        'the fallback after `t.bookingDropped ||`; unreachable: the render refuses the key missing or empty (N1)',
 }
 JS = r"""
 const fs = require('fs');
@@ -179,9 +183,9 @@ def all_leaves(o, p=''):
 # not hold yet. A render against the committed exports cannot carry them, so they are no A-leak probe until the edit is
 # promoted; tests/unit/render-client-askname.test.py renders them against the staged exports instead. main() asserts each
 # is still ABSENT from the committed literal — after the promotion that case goes red, and this set is emptied.
-# N1 R1 (docs/N1-CONFIRM-NO-PLAN.md §4): the two decline templates, staged and not yet promoted. At promotion this set is
-# emptied, and the Build Booking-Declined State fallbacks (the demo's two texts) go on the ALLOW list above, one entry each.
-PENDING_KEYS = {'messageTemplates.bookingDeclined', 'messageTemplates.bookingDropped'}
+# N1 R1 (docs/N1-CONFIRM-NO-PLAN.md §4) held the two decline templates here until N1's promotion (R4, 2026-11-03); the
+# set is empty again, and the Build Booking-Declined State fallbacks (the demo's two texts) are on the ALLOW list above.
+PENDING_KEYS = set()
 
 
 def a_probes():
