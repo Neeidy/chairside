@@ -235,28 +235,55 @@ ask about another booking. The targets it touches:
 One Codex pass on the delta (§13 D-7), not a new target.
 
 ## 8. Acceptance criteria
+
+*Status at R4 (2026-11-03), each line ✅ with its evidence: "offline" = the replay tests at the promoted export
+(`n1-confirm-no` 26/26, mutants 39/39); "live" = the owner run, Main executions 4895–4907, read back by GET and with
+`salon_ro`. ⚠ Criteria 1 and 5 are REWORDED in place: they said "any owner alert", which
+the live run showed is wider than what N1 can promise — execution 4905 alerted from `Resolve Date`, which runs BEFORE
+the N1 nodes and is unchanged by them. What N1 promises is no alert FROM THE N1 NODES (the R4 brief's step 1 said "no
+alert", and Cowork recorded that wording as its own brief error). **The 4905 alert is a pre-existing bound (ruling,
+2026-11-03):** the live model answered that "no" with `cancel` 0.85 AND the stored beard slots echoed — date set, `dateExpr`
+empty — and `Resolve Date` alerts on exactly that (`date_without_expr` → `date_expr_missing`; execution order 26–32, the
+N1 nodes 38–46). The same answer replayed alerts on this export AND on `bc6eadf` (before N1); the same turn with empty
+slots alerts on neither (`docs/n1/alert-4905-replay.cjs`, output committed beside it).*
+
 1. **A closed "no" at the booking confirm** (§3.2's set, any case and trailing `.`/`!`) gets `bookingDeclined`,
    whatever the model answered (cancel / unknown / confirm-low / book). After it: `stage=collecting`,
    `last_intent=declined`, and service, date, time and name kept. Not on the path: `Find Booking`, any Calendar node,
-   `Write Appointment` and any owner alert on the normal path (a `Save State` failure keeps its own alerting error
-   branch — *precision added at R3, `security-auditor`*).
+   `Write Appointment` and any owner alert from the N1 nodes on the normal path (a `Save State` failure keeps its own
+   alerting error branch — *precision added at R3, `security-auditor`*; an alert raised UPSTREAM of the N1 nodes, as
+   `Resolve Date`'s `date_expr_missing` in 4905, is outside this criterion — *reworded at R4*).
+   — ✅ offline; **live** 4897, 4899, 4905: tag `declined` from the closed set, state as stated, no Calendar or
+   appointment node; the N1 nodes raised no alert (4905's came from `Resolve Date`, above).
 2. **A confident model `cancel` at the booking confirm** gets the same result (A1, A4, A5, A7, A9 and B1). No
    `Cancel Lookup` runs on that turn, so the existing booking in B1 gets no cancel ask.
+   — ✅ offline; **live** 4905 is B1 itself: the model said `cancel` at 0.85 with a Haircut booked, and the reply was the
+   change question, not a cancel ask (the closed set matched too, so live shows the outcome, not the model-only path).
 3. **An uncertain `cancel` or `unknown` on a non-closed text** keeps today's clarify, and the confirm stays pending.
+   — ✅ offline only (the owner run had no such turn).
 4. **After a decline:** a new time, day, service or name — or the original slot restated — re-confirms (C1–C5); a bare
    "yes" never books (C6); a question is answered (C9).
+   — ✅ offline; **live** 4898: "12:00 instead" re-confirmed at 12:00 with the name. C6 and C9 offline only.
 5. **A second closed "no" after a decline** gets `bookingDropped`: `stage=new`, service/date/time cleared, name kept,
-   no alert.
+   no alert from the N1 nodes (*reworded at R4, as in 1*).
+   — ✅ offline; **live** 4900: tag `dropped` — from the closed set ALONE (the model said `unknown` at 0.4), state as
+   stated, no alert; `salon_ro`: that conversation `new` / `dropped`.
 6. **Unchanged:**
    - "yes" at the confirm books (A6 and A8, then "yes");
    - a question at the confirm keeps it pending (A10, the v2 freshness item, recorded);
    - the cancel and reschedule confirms' own "no" (B3);
    - two uncertain non-closed turns hand off (B2);
    - every existing replay test and golden case stays green.
+   — ✅ offline (`check-all` 0 at the promoted export); **live** 4903 "yes" booked (Book Appointment → Verify Slot →
+   Write Appointment), 4906–4907 the cancel confirm unchanged (`Delete Booking Event` 204, the row `cancelled`).
 7. **Config:** both templates are in `Load Config` and in both example configs; `render-client` refuses a config
    without them; the inventory and flow-diagram rows exist.
+   — ✅ `render-client-n1` 8/8; `render-client` OK with `PENDING_KEYS` empty and the two `Build Booking-Declined State`
+   fallbacks on the A-leak `ALLOW` list ("every entry still hits": green).
 8. **Release:** guards at 0; parity green against the committed exports after promotion; the owner's live run shows (1)
    and (4), read back by GET on executions and with `salon_ro`.
+   — ✅ R4: content parity 5/5 and structural parity (196/196 nodes, 278/278 connections) against the COMMITTED exports;
+   the owner run read back as in 1–6.
 
 ## 9. ⚙ Drill matrix
 | scenario | setup | expected | MUST-RUN | MUST-NOT-RUN |

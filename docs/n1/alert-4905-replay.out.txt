@@ -1,0 +1,4 @@
+committed (N1) · the live answer → {"alerts":["date_expr_missing"],"stage":"collecting","last_intent":"declined","reply":"No problem — nothing is booked. What would you like to chang"}
+committed (N1) · empty slots     → {"alerts":[],"stage":"collecting","last_intent":"declined","reply":"No problem — nothing is booked. What would you like to chang"}
+bc6eadf (before N1) · the live answer → {"alerts":["date_expr_missing"],"stage":"cancel_confirming","last_intent":"cancel","reply":"Cancel your Haircut on Wednesday 4 Nov 11:00? Reply \"yes\" to"}
+bc6eadf (before N1) · empty slots     → {"alerts":[],"stage":"cancel_confirming","last_intent":"cancel","reply":"Cancel your Haircut on Wednesday 4 Nov 11:00? Reply \"yes\" to"}
