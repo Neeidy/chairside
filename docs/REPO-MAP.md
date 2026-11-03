@@ -329,7 +329,9 @@
 - `scripts/secret-scan.sh`
 - `scripts/seed-workflow.py`
 - `scripts/settings_parity.py`
+- `scripts/start-gates.sh`
 - `scripts/turnstile-window.py`
+- `scripts/vienna-window.py`
 - `scripts/workflow-step.py`
 - `scripts/workflows.py`
 
@@ -454,6 +456,7 @@
 - `tests/unit/seed-workflow.test.py`
 - `tests/unit/settings-parity.test.py`
 - `tests/unit/staged-sanitised.test.py`
+- `tests/unit/start-gates-window.test.py`
 - `tests/unit/turnstile-gate-mutants.py`
 - `tests/unit/turnstile-window.test.py`
 - `tests/unit/validate-intent.test.cjs`
