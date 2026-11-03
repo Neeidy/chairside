@@ -26,3 +26,21 @@ file).
 - Its MAIN HIGH was measured by editing the replay harness's `Extract Intent` stub inside the run's own working copy (a
   timeout injected); that copy is discarded, so the edit is no fix and reached nothing else.
 - The export and the Codex home are deleted after this record is pushed (they hold the login copy).
+
+## Pass 2 — the recheck of the pass-1 fixes (the last pass, by the cap)
+Same harness, run by `docs/codex/close-out/run-p2.sh` (the pass-1 runner with the prompt path changed). Pin `e28ffb2`
+(434 files), prompt 23 lines. Mount-check controls: one extra mount → 97, as intended → 0. Then: mount check OK, Codex
+exit 0, container exit 0, 113 container seconds. The answer is committed verbatim as `p2.md`, byte-compared with the
+run's output file.
+- `scripts/codex-containment.py`: commands 14 · passed 11 · search patterns that name no path 8 · flags 5. Each was read
+  one by one; all five stay inside the container's own filesystem, whose only mounts are `/audit` (read-only) and
+  `/codexhome`:
+  - `find .. -name AGENTS.md` reaches the container's `/home/auditor`;
+  - `find /usr /opt /deps -name Vienna …` looks for time-zone data in the image;
+  - `ls /usr/bin/python* /usr/local/bin/python*` lists the image's interpreters.
+- The separate scan of the 14 command lines found 1 hit, read: `env=dict(os.environ, PYTHONTZPATH=d)` in a probe that
+  handed an offline time-zone fixture to a subprocess. It copies the container's environment and does not print it. Its
+  positive control matched the four forbidden shapes and not the ordinary command.
+- Codex reported its temporary edits restored and the working tree clean.
+- The pass-1 login copy and export were deleted after the pass-1 record was pushed (absence read back); the pass-2 ones
+  are deleted after this record is pushed.
