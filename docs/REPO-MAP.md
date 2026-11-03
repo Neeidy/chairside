@@ -201,6 +201,11 @@
 - `docs/codex/7-2-r2b/containment.md`
 - `docs/codex/7-2-r2b/deploy.md`
 
+### docs/codex/close-out
+
+- `docs/codex/close-out/prompt.md`
+- `docs/codex/close-out/run.sh`
+
 ### docs/codex/date-phrasing
 
 - `docs/codex/date-phrasing/containment.md`
@@ -851,6 +856,7 @@
   - ## 11. Rounds — at most three build rounds and one live window
   - ## 12. Automation-fit
   - ## 13. Decisions for Yigitcan — each with a recommendation
+  - ## R1 — built offline (2026-11-03); NOT live
 
 ### `docs/CP4-RESCHEDULE-EXECUTE-PLAN.md`
   - ## What this replaces
@@ -1195,6 +1201,7 @@
   - ### docs/codex/7-2
   - ### docs/codex/7-2-r2
   - ### docs/codex/7-2-r2b
+  - ### docs/codex/close-out
   - ### docs/codex/date-phrasing
   - ### docs/codex/n1
   - ### docs/codex/name-capture
@@ -1544,6 +1551,9 @@
   - ## Flag 2 — run 9
   - ## Flag 3 — run 9
   - ## Tur 1b — containment by isolation (runs 1b, 2, 5, 6, 12, 4, 11)
+
+### `docs/codex/close-out/prompt.md`
+  - _(no `##` headings — flat file)_
 
 ### `docs/codex/date-phrasing/containment.md`
   - ## R1 — the audit of the R1 head
