@@ -13,8 +13,9 @@
 >   limits were not re-measured for this move.
 > - *"Main is not edited before this release"* (the reschedule-orphan row): Main has been edited since, by NAME-CAPTURE,
 >   DATE-PHRASING and N1; the v2 ruling on that row itself stands.
-
-## Deferred to v2, and the recorded bounds
+> - *"Main: node names still say 'Airtable'"*: no node name in the committed Main export contains "Airtable"
+>   (`security-auditor`, 2026-11-03), so that row was already inaccurate at `9b6babb`.
+> - This list holds what was found while moving the text; it is not a full re-audit of every moved line.
 
 ## Not yet — deferred to v2 (ruled 2026-10-24)
 

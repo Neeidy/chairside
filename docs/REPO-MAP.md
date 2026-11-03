@@ -896,7 +896,6 @@
   - ### Definition of Done — DATE-PHRASING
 
 ### `docs/ENGINEERING-NOTES.md`
-  - ## Deferred to v2, and the recorded bounds
   - ## Not yet — deferred to v2 (ruled 2026-10-24)
   - ## Security — the honest limits recorded in the README
   - ## Config / code / secret — the full statement

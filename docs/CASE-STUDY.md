@@ -211,10 +211,12 @@ What stands between that sentence and a fact, stated (`.claude/rules/honesty-dem
   system is complete: rotating the leaked Access service tokens and the n8n API key, revoking the Access sessions and a
   24 h session, the Airtable token and base, the root-side steps and an off-server backup target. **v2:** splitting the
   read-only role's column access, the dashboard's error handling, the infra alerts' sender fields, a stale prompt line
-  (PHASE-7-PLAN §4j; `README.md`, "The final security pass: what stays open").
+  (PHASE-7-PLAN §4j; `docs/ENGINEERING-NOTES.md`, "The final security pass: what stays open" — moved there from the
+  README on 2026-11-03).
 - **The demo is public since 2026-11-01** (§10). The rate limit's BLOCK direction was shown before it went live.
   *(Corrected 2026-11-03: this line said the demo was not deployed.)*
-- The v2 list — what was deliberately deferred and why — is in `README.md`, "Not yet — deferred to v2".
+- The v2 list — what was deliberately deferred and why — is in `docs/ENGINEERING-NOTES.md`, "Not yet — deferred to
+  v2" (moved there from the README on 2026-11-03).
 
 ## 9 · A closer look: the embeddable widget (Phase 6b)
 

@@ -14,7 +14,9 @@ its prices are mock data. The engine behind the chat is the real one.
 
 > **Honest status:** this is a **demo / learning build**. It has no paying client and no real customers. The public
 > demo went live on 2026-11-01 ([`docs/PUBLIC-DEMO-PLAN.md`](docs/PUBLIC-DEMO-PLAN.md), "GO-LIVE"). Every claim on
-> this page points to a committed record. Where a number has no committed evidence, it is not given.
+> this page points to a committed record. Many of those records are write-ups of live measurements whose raw output is
+> not committed, or statements by the reviewer who made a dashboard change; the records label which is which, and this
+> page does not repeat each label. Counts given here are ones a committed file holds.
 
 ## Try this
 
@@ -104,7 +106,7 @@ Telegram (owner alerts) · Zernio (the WhatsApp Business API adapter).
 - **Pause:** the site can be paused on Vercel, which then answers 503 with a "paused" marker. This was drilled before
   go-live (`docs/PUBLIC-DEMO-PLAN.md`, R2f).
 - **Privacy:** a `/privacy` page (GDPR) names the controller and the contact, the legal basis (Art. 6(1)(f)), retention
-  (leads 30 days, deleted by a scheduled purge), the data subject's rights and the right to complain. Both identity
+  (leads 30 days, deleted by a nightly purge with a fail-closed safety limit), the data subject's rights and the right to complain. Both identity
   values are build-time settings and never sit in this public repo
   ([`web/site/app/privacy/page.tsx`](web/site/app/privacy/page.tsx)).
 - **Public repo hygiene:** no secret and no customer data in git; only sanitized workflow exports are committed. A
@@ -113,7 +115,8 @@ Telegram (owner alerts) · Zernio (the WhatsApp Business API adapter).
 
 ## How it was tested and reviewed
 
-- **`check-all`** ([`scripts/package.json`](scripts/package.json)) runs before every push: the unit suites, the
+- **`check-all`** ([`scripts/package.json`](scripts/package.json)) is run before every push by procedure (the git
+  pre-push hook itself runs the secret scan): the unit suites, the
   contract drift checks (the validator is generated from the schema), the SQL-parameter gate and the deploy tools'
   self-tests.
 - **Chat replay:** whole conversations are replayed offline through the exported workflow
@@ -166,12 +169,12 @@ Telegram (owner alerts) · Zernio (the WhatsApp Business API adapter).
 | **Dates resolved in code** | weekday words, calendar dates (`4 November`) and numeric forms (`4.11.`), in the shop's timezone, with the year in the confirm and a 30-day horizon; a wrong weekday or an impossible date is asked back, never guessed ([`docs/DATE-PHRASING-PLAN.md`](docs/DATE-PHRASING-PLAN.md)) |
 | **A "no" at the confirm** | nothing booked, the details kept, "what would you like to change?"; a second "no" closes the request ([`docs/N1-CONFIRM-NO-PLAN.md`](docs/N1-CONFIRM-NO-PLAN.md)) |
 | **Deterministic FAQ** | Price / hours / services / address answered from config, never from the model |
-| **Lead capture** | Non-booking interest written to Postgres (`salon.leads`) with channel + message; deleted after 30 days by the scheduled purge |
+| **Lead capture** | Non-booking interest written to Postgres (`salon.leads`) with channel + message; deleted after 30 days by the scheduled purge, which deletes nothing on a night when it would remove more than a fifth or more than 200 at once, or when fewer than five are stored (fail-closed; the owner is alerted) |
 | **Human handoff, 5 distinct classes** | guard-trip (transient) · infrastructure down (an error flag + owner alert; 503 only before the message is claimed) · genuine handoff (writes state) · clarify (first uncertain turn, no lock) · extraction-transient (our schema broke, owner alerted, no lock) — never merged ([`.claude/rules/handoff.md`](.claude/rules/handoff.md)) |
 | **Visible failures** | Distinct machine-side error flags, never dressed as a normal reply — e.g. `invalid_payload` · `state_unavailable` · `llm_unavailable` · `lead_unavailable` · `calendar_unavailable` · `spend_meter_unavailable` |
-| **Booking without double-booking** | Calendar first, then re-read the slot; on a lost race the bot withdraws ITS OWN event and hands off, and only a won slot is mirrored to Postgres. A message delivered twice is answered once: the message id is CLAIMED at the start of the turn on a UNIQUE column, so two deliveries cannot both claim it. The cost is at-most-once — a run that dies after its claim is not retried. See [booking-integrity](.claude/rules/booking-integrity.md) for that and the booking race it does not close |
+| **Booking without double-booking** | Calendar first, then re-read the slot; on a lost race the bot withdraws ITS OWN event and hands off, and only a won slot is mirrored to Postgres. A message delivered twice is answered once: the message id is CLAIMED at the start of the turn on a UNIQUE column, so two deliveries cannot both claim it (claim-first; CRT 1a closed in 7-2). The cost is at-most-once — a run that dies after its claim is not retried. See [booking-integrity](.claude/rules/booking-integrity.md) for that and the booking race it does not close |
 | **Cancel · reschedule · reminders** | Bot-automated, identity-bound to the channel's `sender_key`. Reminders are proven in dry-run; live WhatsApp template delivery needs the client's own WhatsApp Business number |
-| **Owner dashboard** | Read-only panels + the handoff queue + one write (release a handoff lock, through a protected n8n path). Runs on the build server behind Cloudflare Access and reads Postgres as a SELECT-only role. It runs as a systemd user unit (`ops/systemd/salon-dashboard.service`) that restarts it on a crash; its start at boot is shown by configuration, not by a reboot |
+| **Owner dashboard** | Read-only panels + the handoff queue + one write (release a handoff lock, through a protected n8n path). Runs on the build server behind Cloudflare Access and reads Postgres as a SELECT-only role. It runs as a systemd user unit (`ops/systemd/salon-dashboard.service`) that restarts it on a crash (measured, 7-F1); its start at boot is shown by configuration, not by a reboot |
 | **Spend brakes before the LLM** | Kill-switch, max-turns and a monthly LLM spend cap run *before* any paid call — a tripped guard costs nothing. The cap fails CLOSED: if the spend meter cannot be read, no model is called, the customer gets a handoff reply and the owner a `spend_meter_unavailable` alert. A deployment with no cap configured is never blocked by it |
 | **Embeddable widget, one script tag** | A single self-contained IIFE (well under 20 kB; `npm run build -w @salon/snippet --prefix web` prints the current size) that mounts a booking chat inside a Shadow DOM on someone else's site. Isolation measured in both directions against a deliberately hostile host page — see the case study ([docs/CASE-STUDY.md](docs/CASE-STUDY.md) §9), including what it knowingly does not do |
 | **Public demo** | The Next.js site on Vercel, only its custom domain public, with the chat, a `/privacy` page and the Turnstile check ([`docs/PUBLIC-DEMO-PLAN.md`](docs/PUBLIC-DEMO-PLAN.md)) |
