@@ -203,7 +203,11 @@
 
 ### docs/codex/close-out
 
+- `docs/codex/close-out/containment.md`
+- `docs/codex/close-out/p1.md`
+- `docs/codex/close-out/prompt-p2.md`
 - `docs/codex/close-out/prompt.md`
+- `docs/codex/close-out/run-p2.sh`
 - `docs/codex/close-out/run.sh`
 
 ### docs/codex/date-phrasing
@@ -857,6 +861,7 @@
   - ## 12. Automation-fit
   - ## 13. Decisions for Yigitcan — each with a recommendation
   - ## R1 — built offline (2026-11-03); NOT live
+  - ## R2 — Codex pass 1 and the fixes (2026-11-03)
 
 ### `docs/CP4-RESCHEDULE-EXECUTE-PLAN.md`
   - ## What this replaces
@@ -1551,6 +1556,20 @@
   - ## Flag 2 — run 9
   - ## Flag 3 — run 9
   - ## Tur 1b — containment by isolation (runs 1b, 2, 5, 6, 12, 4, 11)
+
+### `docs/codex/close-out/containment.md`
+  - ## Pass 1 — the audit of the R1 head
+
+### `docs/codex/close-out/p1.md`
+  - ## MAIN
+  - ## PURGE
+  - ## SITE + SNIPPET
+  - ## DASHBOARD
+  - ## OPS
+  - ## TESTS
+
+### `docs/codex/close-out/prompt-p2.md`
+  - _(no `##` headings — flat file)_
 
 ### `docs/codex/close-out/prompt.md`
   - _(no `##` headings — flat file)_
