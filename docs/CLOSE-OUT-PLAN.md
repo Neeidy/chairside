@@ -59,7 +59,7 @@ ARCHITECTURE-DECISIONS. The result is **58 items in 57 rows**. Row 29 is merged 
 | 34 | Per-client Turnstile provisioning | ROADMAP:20; README | infra-security | B | trigger: the second real client; steps in §5 |
 | 35 | A real second deployment | README; PHASE-8:285 | infra-security | B | trigger: a real client; steps in §5 |
 | 36 | WhatsApp end to end on Postgres (K-5) | ROADMAP:20; README | infra-security | B | trigger: the WhatsApp channel turned on for a client; steps in §5 |
-| 37 | Instagram DMs (config-gated, no adapter built) | MASTER-BRIEF:92; README (K-2 `instagram` key) | infra-security | B | trigger: a client asks for Instagram |
+| 37 | Instagram DMs (config-gated, no adapter built) | MASTER-BRIEF:92; PHASE-8:22–24 (the dead `instagram` key) | infra-security | B | trigger: a client asks for Instagram |
 | 38 | The 7-2 CONVERGE deploy-tool / secret-scan / masking LOWs | ENG-NOTES | infra-security | B-v2 | DC-1 |
 | 39 | Vercel token revocation + `~/.vercel-demo.env` deletion | ROADMAP:20 | owner-only | **C** → then A | §6 C-2; **after** R3's site redeploy, which still needs the token |
 | 40 | #17b–d rotations: the `/api` Access service token, the owner-path Access service token, the n8n API key (17a done, 17e accepted) | PHASE-7:577–579 | owner-only | **C** | §6 C-3, after R3 (the window uses them) |
