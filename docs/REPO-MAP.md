@@ -352,6 +352,7 @@
 
 ### tests/browser
 
+- `tests/browser/shop-time.drill.mjs`
 - `tests/browser/turnstile-gate.drill.mjs`
 
 ### tests/contract
@@ -465,6 +466,7 @@
 - `tests/unit/seed-pd-mutants.py`
 - `tests/unit/seed-workflow.test.py`
 - `tests/unit/settings-parity.test.py`
+- `tests/unit/shop-time-mutants.py`
 - `tests/unit/staged-sanitised.test.py`
 - `tests/unit/start-gates-window.test.py`
 - `tests/unit/turnstile-gate-mutants.py`
@@ -548,6 +550,7 @@
 
 - `web/shared/src/chat/chatClient.test.ts`
 - `web/shared/src/chat/chatClient.ts`
+- `web/shared/src/chat/shopTime.test.ts`
 
 ### web/shared/src/config
 
