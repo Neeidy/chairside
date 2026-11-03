@@ -17,6 +17,8 @@ export interface AppointmentSections {
   todays: Appointment[];
   /** Booked, after now, and not today. */
   upcoming: Appointment[];
+  /** On today's date in the shop's timezone and NOT booked (cancelled, or a blank status). */
+  inactiveToday: number;
 }
 
 export function appointmentSections(rows: Appointment[], tz: string, nowMs: number): AppointmentSections {
@@ -29,7 +31,31 @@ export function appointmentSections(rows: Appointment[], tz: string, nowMs: numb
     undated: rows.length - dated.length,
     todays: dated.filter((r) => isToday(r) && r.status === 'booked'),
     upcoming: dated.filter((r) => Date.parse(r.start_utc!) > nowMs && !isToday(r) && r.status === 'booked'),
+    inactiveToday: dated.filter((r) => isToday(r) && r.status !== 'booked').length,
   };
+}
+
+/**
+ * What the "Today" block says when nothing booked is on today's date. D5 and D6 are different empty states and
+ * are not collapsed into one: "no bookings today" is an ordinary Tuesday, "no bookings yet" means the shop has not
+ * started, and showing the second to a new owner tells them their system is broken.
+ *   - K4: anything booked in the window is not "no bookings yet". This was called `anyBookedEver` and computed from
+ *     a 30-day, 100-row window, so a shop whose table held 121 appointments of which 118 were cancelled (measured
+ *     2026-09-12) was told "no bookings yet" — wrong, and wrong in the reassuring direction.
+ *   - `none-active`: rows ON TODAY'S DATE, none of them still booked. It does not say "every one was cancelled":
+ *     the code tests `status !== 'booked'`, and a blank status is not a cancellation (`code-reviewer` #4).
+ *     ⚠ Corrected (PHASE-7-PLAN §4b, finding (ii), reproduced 2026-11-03): this used to count every row in the
+ *     WINDOW, which starts yesterday 00:00 UTC and has no end, so after a cancel the block under "Today" read
+ *     "1 appointment in this window, none of them still active" for an appointment on the NEXT day.
+ *   - D6 only when the window holds no row at all.
+ */
+export type TodayEmpty = { kind: 'none-today' } | { kind: 'none-active'; count: number } | { kind: 'none-yet' };
+
+export function todayEmptyState(s: AppointmentSections): TodayEmpty {
+  if (s.dated.some((r) => r.status === 'booked')) return { kind: 'none-today' };
+  if (s.inactiveToday > 0) return { kind: 'none-active', count: s.inactiveToday };
+  if (s.dated.length > 0) return { kind: 'none-today' };
+  return { kind: 'none-yet' };
 }
 
 /** The panel's wording of a start time, in the shop's timezone. */

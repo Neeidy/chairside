@@ -19,23 +19,20 @@ import { shopConfig } from '../lib/shopConfig.ts';
 // outside CET gets every time drawn wrong, silently. Read from the shop's own config now.
 // The selection and the time wording live in lib/appointmentView.ts since Phase 7 F2, so the CSV export
 // carries exactly the rows this panel shows.
-import { appointmentSections, when } from '../lib/appointmentView.ts';
+import { appointmentSections, todayEmptyState, when } from '../lib/appointmentView.ts';
 
 export function AppointmentsPanel({ page }: { page: Page<Appointment> }) {
   const { timezone: TZ } = shopConfig();
-  const { dated, undated, todays, upcoming } = appointmentSections(page.rows, TZ, Date.now());
+  const sections = appointmentSections(page.rows, TZ, Date.now());
+  const { undated, todays, upcoming } = sections;
   // A row with no start time cannot be placed on any screen. It is EXCLUDED from the lists and
   // COUNTED below rather than dropped in silence. Measured 2026-09-12 on Airtable, these were UI
   // artefacts (completely empty rows). On Postgres `start_utc` is NOT NULL, so the count should read
   // zero; it stays, because a count the owner can see is how anyone would notice if that stopped being true.
 
-  // K4: this was called `anyBookedEver` and was computed from a 30-day, 100-row window — so a shop
-  // whose table held 121 appointments of which 118 were cancelled (measured 2026-09-12, before that
-  // day's drill cleanup; the counts have moved since and the defect does not depend on them) was told
-  // "no bookings yet", the one sentence reserved for a shop that has never started. Wrong, and wrong
-  // in the reassuring direction.
-  const anyBookedInWindow = dated.some((r) => r.status === 'booked');
-  const hasRowsButNoneActive = dated.length > 0 && !anyBookedInWindow;
+  // The empty-state choice under "Today" (D5 / D6 / none still active) and the reasons for each are in
+  // lib/appointmentView.ts → `todayEmptyState`, where a fixture test can reach them.
+  const empty = todayEmptyState(sections);
 
   const Row = ({ r }: { r: Appointment }) => {
     const w = when(r.start_utc, TZ);
@@ -58,19 +55,12 @@ export function AppointmentsPanel({ page }: { page: Page<Appointment> }) {
 
       <h3>Today</h3>
       {todays.length === 0 ? (
-        anyBookedInWindow
+        empty.kind === 'none-today'
           ? <p className="release">No bookings today.</p>                         /* D5 */
-          : hasRowsButNoneActive
-            /* Neither D5 nor D6: there ARE appointments here, none of them still stand. Saying
-               "no bookings yet" would be false; saying "no bookings today" would hide the history.
-               ⚠ This used to end "— every one was cancelled", which the code does not know: it tests
-               `!some(status === 'booked')`, and `status` is an optional single-select, so a row with
-               a start time and a BLANK status makes that sentence a lie. The panel's own comment
-               already says empty rows appear in this table. The claim is reduced to what is measured
-               (`code-reviewer` #4, 2026-09-12). */
+          : empty.kind === 'none-active'
+            /* Neither D5 nor D6: there ARE appointments today, none of them still stand. */
             ? <p className="release">
-                {dated.length} appointment{dated.length === 1 ? '' : 's'} in this window, none of them
-                still active.
+                {empty.count} appointment{empty.count === 1 ? '' : 's'} today, none of them still active.
               </p>
           : <p className="release">No bookings yet — this is where they will appear.</p>  /* D6 */
       ) : <ul className="q-msgs">{todays.map((r) => <Row key={r.id} r={r} />)}</ul>}
