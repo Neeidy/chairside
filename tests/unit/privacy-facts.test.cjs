@@ -151,11 +151,10 @@ test('conversation and booking records: no committed workflow deletes either, so
   for (const p of purges) {
     const convWrites = p.nodes.map((n) => (n.parameters || {}).query || '').filter((q) => /salon\.conversations/.test(q)
       && /^\s*(UPDATE|DELETE|INSERT)/i.test(q));
-    // The newest Purge (staged if any) empties the name with the text; an older committed one beside a staged edit
-    // still holds the pre-NAME-CAPTURE statement until the promotion.
-    const want = p === purges[purges.length - 1]
-      ? ["recent_messages = '', computed_reply = CASE WHEN COALESCE(slot_name, '') = '' THEN computed_reply ELSE replace(computed_reply, slot_name, '…') END, slot_name = NULL"]
-      : ["recent_messages = ''"];
+    // Every Purge (committed and staged) empties the name with the text since NAME-CAPTURE's promotion (2026-11-01).
+    // (Until CLOSE-OUT's staged Purge this branch expected the pre-NAME-CAPTURE statement from a committed export beside
+    // a staged one — true only while NAME-CAPTURE itself was staged; corrected 2026-11-03.)
+    const want = ["recent_messages = '', computed_reply = CASE WHEN COALESCE(slot_name, '') = '' THEN computed_reply ELSE replace(computed_reply, slot_name, '…') END, slot_name = NULL"];
     // non-greedy up to WHERE: a CASE WHEN inside the SET list is fine (the old [^W]+ stopped at its W)
     assert.deepEqual(convWrites.map((q) => q.match(/\bSET (.+?) WHERE\b/s)[1].trim()), want,
       'Purge only empties the message text (and, newest, the name with it)');
