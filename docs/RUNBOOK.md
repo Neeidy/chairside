@@ -212,6 +212,9 @@ and deactivating Main, do not.
   project did unpause** — it waits for a 200 and the site answers 302 (auditor LOW-6, R2f; recorded, the script is
   unchanged). Read the state with `measure` (exit 5 = neither online nor paused; under protection it is the 302) instead of reading exit 1 as a failure.
   The shell `pause`/`unpause` have not been run live; the R2f drill used the Vercel connection.
+  **Revoking the Vercel token closes this shell path too** — it is planned after the CLOSE-OUT's live window
+  (`docs/CLOSE-OUT-PLAN.md` §6 C-2, then `~/.vercel-demo.env` deleted); from then on the pause is the Vercel-connection
+  path above.
 
 **The engine edits — DEPLOYED and PROMOTED 2026-10-30 (R2a)**; kept here as the record of how they were deployed, so a
 later edit follows the same path. They were staged in `n8n/staged/` (emptied by the promotion): `Eval Spend` fail-closed (Main, `--delta-file
