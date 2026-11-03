@@ -133,6 +133,7 @@
 
 - `docs/ARCHITECTURE-DECISIONS.md`
 - `docs/CASE-STUDY.md`
+- `docs/CLOSE-OUT-PLAN.md`
 - `docs/CP4-RESCHEDULE-EXECUTE-PLAN.md`
 - `docs/CP6D-BUILD-PACKAGE.md`
 - `docs/DATA-MODEL.md`
@@ -815,6 +816,22 @@
   - ## 12 · Six audit rounds, and the rule that stopped the tuning (DATE-PHRASING, 2026-11-01 → 11-02)
   - ## 13 · A "no" that could cancel a different booking (N1, 2026-11-02 → 11-03)
 
+### `docs/CLOSE-OUT-PLAN.md`
+  - ## 0. The inventory — swept from the records, not from memory
+  - ## 1. Goal
+  - ## 2. Scope / NOT-build
+  - ## 3. Design, per surface — the smallest fix for each A row
+  - ## 4. Skeleton (node level) and other changes
+  - ## 5. Integrations, and the B rows' "when the trigger fires" steps
+  - ## 6. The owner's steps (C), as exact clicks, with the check after each
+  - ## 7. Mock data
+  - ## 8. Critical-Review Targets (Codex, at most two passes per surface)
+  - ## 9. Acceptance criteria — "phase closed" means
+  - ## 10. ⚙ Drill matrix
+  - ## 11. Rounds — at most three build rounds and one live window
+  - ## 12. Automation-fit
+  - ## 13. Decisions for Yigitcan — each with a recommendation
+
 ### `docs/CP4-RESCHEDULE-EXECUTE-PLAN.md`
   - ## What this replaces
   - ## Inputs available at `Reschedule Fresh? [out0 fresh]`
@@ -1237,6 +1254,7 @@
   - ### `design/flow-diagram.md`
   - ### `docs/ARCHITECTURE-DECISIONS.md`
   - ### `docs/CASE-STUDY.md`
+  - ### `docs/CLOSE-OUT-PLAN.md`
   - ### `docs/CP4-RESCHEDULE-EXECUTE-PLAN.md`
   - ### `docs/CP6D-BUILD-PACKAGE.md`
   - ### `docs/DATA-MODEL.md`
