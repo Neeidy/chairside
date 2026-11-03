@@ -11,8 +11,15 @@
 >   month and numeric dates, checks a named weekday against the date, puts the year in both confirm asks and refuses a
 >   date beyond the 30-day horizon ([`DATE-PHRASING-PLAN.md`](DATE-PHRASING-PLAN.md) §2, "R2d"). The bullet's other
 >   limits were not re-measured for this move.
-> - *"Main is not edited before this release"* (the reschedule-orphan row): Main has been edited since, by NAME-CAPTURE,
->   DATE-PHRASING and N1; the v2 ruling on that row itself stands.
+> - *"The reschedule orphan alert does not say which old slot to clean"* (the whole row, not only its "Main is not
+>   edited before this release"): **the item is DONE, not v2.** The staged change was promoted with the 7-2 R3 Main
+>   (`784cdd8`, 2026-10-26): `Build Reschedule Orphan State` builds `reschedule_old` (date, time, service) and
+>   `Build Owner Alert` reads it (`tests/unit/reschedule-orphan-alert.test.cjs`, in `check-all`). *(This bullet said
+>   "the v2 ruling on that row itself stands" until 2026-11-03; corrected in place, CLOSE-OUT row 51 —
+>   `PHASE-7-PLAN.md` §4b is corrected the same way.)*
+> - *"the W57/W58/W60 text mismatch"* (in the older v2 / LATER bucket row): already closed on 2026-09-13 (CP 6c-3,
+>   ruling K-4 "the code wins, the document is corrected"; `SCREEN-INVENTORY.md` §2.10.1a), so it was stale before the
+>   move. Found 2026-11-03 while tracing PHASE-6-BACKLOG for the CLOSE-OUT.
 > - *"Main: node names still say 'Airtable'"*: no node name in the committed Main export contains "Airtable"
 >   (`security-auditor`, 2026-11-03), so that row was already inaccurate at `9b6babb`.
 > - This list holds what was found while moving the text; it is not a full re-audit of every moved line.

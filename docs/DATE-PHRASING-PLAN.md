@@ -720,6 +720,6 @@ two quick messages on `barber-demo.<apex>` — no "couldn't verify" line between
 | Pushed | ✅ | origin/main = the records commit of this round |
 | Resume-point memory written AND read back | ✅ | the progress memory, read back in this round |
 
-**DATE-PHRASING is CLOSED** (one DoD item recorded as open, above). **Carried:** N1 (a "no" at the booking confirm has
+**DATE-PHRASING is CLOSED**, with no DoD item open: the README / case-study row closed at the public-demo close (2026-11-03). *(Said "one DoD item recorded as open, above" after that row went ✅; corrected in place 2026-11-03, CLOSE-OUT row 55.)* **Carried:** N1 (a "no" at the booking confirm has
 no designed path) · v2: a freshness check on the booking confirm · the widget's device-local stamps · Cloudflare's
 default retry beside ours (measure, then decide whether to set `retry`).

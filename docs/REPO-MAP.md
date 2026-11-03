@@ -1049,7 +1049,7 @@
   - ## OPS-8 · 2026-10-26 · Mutant runners left test artefacts in the repo and in /tmp, and later runs read them
   - ## OPS-7 · 2026-10-26 · An installer test installed the pre-push gate into THIS repository's `.git/hooks`
   - ## OPS-6 · 2026-10-19 · A process listing printed part of the tunnel credential
-  - ## OPS-5 · 2026-10-06 → STILL OPEN at 2026-10-18 · The Airtable monthly API quota ran out and the bot has had no data layer for 12 days
+  - ## OPS-5 · 2026-10-06 → CLOSED by Airtable's retirement (D6c, 2026-10-27) · The Airtable monthly API quota ran out and the bot had no data layer for 12 days
   - ## OPS-1 · 2026-09-09 · A resync step sanitized the LIVE workflow — production broke, and the parity guard stayed GREEN
   - ## OPS-2 · 2026-09-11 · `pkill -f` matched its own shell and killed it mid-script; a server survived 2h37m
   - ## OPS-3 · 2026-09-11 · `git clone --local` failed silently, so a subagent's negative control ran in the REAL repo

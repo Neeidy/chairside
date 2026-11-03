@@ -9,9 +9,11 @@
 > **Renamed 2026-11-01 (ruling 1 of the RENAME brief):** the public site is now **`barber-demo.<apex>`** and the owner
 > dashboard **`barber-dashboard.<apex>`**. Every `demo.<apex>` below — in the rulings D1, the widget's hostname list (#11),
 > Yigitcan's steps and the rounds — is the name at the time; it was removed from the Vercel project, with no redirect
-> (see "RENAME"). *(Added in place rather than rewriting each approved ruling.)* The widget's hostname list (#11) is no
-> longer "the demo hostname only": since the rename it is `barber-demo.<apex>` + `demo.<apex>` (Cowork's statement) until
-> Cowork removes the old name.
+> (see "RENAME"). *(Added in place rather than rewriting each approved ruling.)* The widget's hostname list (#11) is
+> **`barber-demo.<apex>` alone** since "DOMAIN + INTERACTION-ONLY" (2026-11-01; Cowork's statement): during the RENAME it
+> held `barber-demo.<apex>` + `demo.<apex>`, and Cowork then removed the old name together with its DNS record.
+> *(This sentence said "since the rename it is `barber-demo.<apex>` + `demo.<apex>` … until Cowork removes the old name"
+> until 2026-11-03 — true during the RENAME, stale after DOMAIN; corrected in place, CLOSE-OUT row 56.)*
 
 ## Rulings (Yigitcan, 2026-10-29)
 - **D1** — the site on **Vercel Hobby**, public hostname **`demo.<apex>`** (a DNS-only CNAME to Vercel).
@@ -689,6 +691,7 @@ four, both privacy values `encrypted`, production); **7 names × 9 paths = 63 of
   stale `/privacy` is publicly reachable at those names. Not a stop condition (the public page is correct); **for the
   owner to rule**: delete the older deployments, or protection `all_except_custom_domains` (which also protects the
   project aliases).
+  *(Closed 2026-11-01 by the second option — see "DOMAIN + INTERACTION-ONLY": Cowork set `all_except_custom_domains`, and every older `*.vercel.app` name on record then answered `302`. Pointer added 2026-11-03, CLOSE-OUT row 56.)*
 - **#15 — NOT run, left for the owner.** Its definition is "the existing harness, headless, against the deployed page"
   — re-running the hidden-container control (SP4a) in Managed. The harness is not in the repository, and this
   machine's headless browser cannot get a token with the real key (the control above), so a run here could not show
@@ -697,7 +700,7 @@ four, both privacy values `encrypted`, production); **7 names × 9 paths = 63 of
   the window was the probe's own.
 
 **Left for the owner:** #21 (the first real conversation and a real booking through Turnstile), #19 (the dashboard by
-phone), #15 (above), #13 (Purge's read after a 04:00 Vienna run), the older deployments (above). **At the phase close:**
+phone), #15 (above), #13 (Purge's read after a 04:00 Vienna run), the older deployments (above; closed 2026-11-01). **At the phase close:**
 the Vercel token is revoked.
 
 ### R2i — `/privacy`: restriction of processing and one sentence on processing outside the EU/EEA; redeployed, protected (2026-10-31 → 11-01; no go-live)

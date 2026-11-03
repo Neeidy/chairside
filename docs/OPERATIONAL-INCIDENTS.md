@@ -114,7 +114,9 @@ following his ruling to defer security work to the end. **Open until then.**
 
 ---
 
-## OPS-5 · 2026-10-06 → STILL OPEN at 2026-10-18 · The Airtable monthly API quota ran out and the bot has had no data layer for 12 days
+## OPS-5 · 2026-10-06 → CLOSED by Airtable's retirement (D6c, 2026-10-27) · The Airtable monthly API quota ran out and the bot had no data layer for 12 days
+
+> **Closed — not by a quota reset or a plan upgrade, by leaving Airtable.** The store moved to self-hosted Postgres at the cutover (D6b, 2026-10-24), and at D6c (2026-10-27) the original workflows were archived and n8n's Airtable credential deleted, so nothing reaches Airtable (`.claude/rules/booking-integrity.md`; `MIGRATION-PLAN.md` §7a). Of "What prevents a repeat" below, (3) — the migration — is done; (1), the escalation rule, and (2), the quota line, are not built. *(The heading said "→ STILL OPEN at 2026-10-18" until 2026-11-03; corrected in place, CLOSE-OUT row 53. The body below is the record as written on 2026-10-18.)*
 
 **What happened.** Airtable began refusing every API call from this workspace with
 `PUBLIC_API_BILLING_LIMIT_EXCEEDED` — *"You've reached the maximum number of requests allowed for this month
@@ -270,7 +272,7 @@ override a `deny` rule. Measured again here, from the main session, and the pict
 So the real cause is a **name-shaped `deny` glob in the user-level settings** that happens to catch
 `scripts/secret-scan.sh` (and `.claude/rules/security-secrets.md` — the auditor cannot read its own job
 description), applied to subagents, and unaffected by the project's permission mode. **The real fix is to
-narrow that glob or except those two paths; it is NOT done and is an open item.**
+narrow that glob or except those two paths** — ✅ **DONE 2026-09-11** (ROADMAP, the "KAPANDI 2026-09-11" table, row K1, `8b13c4f`): the glob in the user-level settings was anchored to file extensions, and a sub-agent then measured both directions — `secret-scan.sh` and `security-secrets.md` readable, an extension-matching probe still denied, an untouched pattern still denied. *(This sentence said "it is NOT done and is an open item" until 2026-11-03; corrected in place, CLOSE-OUT row 52.)*
 
 A deny that blocks `cat` while `git show` sails past is not a boundary — it is friction that costs evidence
 and buys nothing. And the original sentence here is the reason this file has a "how it was noticed" field:

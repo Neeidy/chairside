@@ -638,7 +638,7 @@ secret-scan 0, hook-drift OK, listeners OK, 0 project containers.
 | Pushed | ✅ | origin/main = the records commit of this round |
 | Resume-point memory written AND read back | ✅ | the progress memory, read back in this round |
 
-**N1 is CLOSED**, with one DoD item recorded as open (above). **Carried:**
+**N1 is CLOSED**, with no DoD item open: the README / case-study row closed at the public-demo close (2026-11-03). *(Said "with one DoD item recorded as open (above)" after that row went ✅; corrected in place 2026-11-03, CLOSE-OUT row 55.)* **Carried:**
 - the `date_expr_missing` false alert at a pending confirm (named above);
 - v2: a freshness check on the booking confirm;
 - the README / case-study *(closed at the public-demo close, 2026-11-03)*;
