@@ -14,7 +14,8 @@
 // to the real api.js (render options, error-callbacks, our resets) and the challenge iframes are counted.
 // `real-block` also asserts DC-4 (CLOSE-OUT S1): `retry: 'never'`, and a block costs exactly 3 error-callbacks and our 2
 // resets over DRILL_BLOCK_WINDOW_MS (default 45 s). Measured on the pre-DC-4 build (Cloudflare's default retry): 6
-// error-callbacks and 7 challenge frames in that window, one more every ~12 s after our block, on both surfaces.
+// error-callbacks and 7 challenge frames in that window, one more every ~12 s after our block, on both surfaces
+// (terminal-measured in CLOSE-OUT R1, one run, output not committed).
 //
 // Usage: node tests/browser/turnstile-gate.drill.mjs <site|snippet> <url> <cdpPort> [stub|real-pass|real-block]
 //   site    url = the built site's page (the live panel)      snippet url = a host page that loads barber-widget.js
