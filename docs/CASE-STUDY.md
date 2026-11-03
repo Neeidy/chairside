@@ -1,9 +1,11 @@
 # Case study — salon-booking-bot
 
 > **Honest status:** a **demo / learning build**, not a system serving paying customers. Every number below is one
-> that a committed record holds; the record is named beside it. Mock config, test endpoints, synthetic test data.
+> that a committed record holds; the record is named beside it. Mock config on the real engine, synthetic test data.
 > Where something is not built, not tested or only bounded, this page says so in the same sentence.
-> Written at 7-3 (2026-10-27); the widget section (§9) moved here from the README.
+> Written at 7-3 (2026-10-27); the widget section (§9) moved here from the README. **§10–§13 were added at the
+> public-demo close (2026-11-03):** going public, then the three defects the live runs found after it. Stale lines in
+> §2, §3 and §8 were corrected in place on the same day.
 
 ## 1 · The problem
 
@@ -16,7 +18,7 @@ code. Shown offline since Phase 8's first round, with its bounds (§8); not yet 
 ## 2 · The approach
 
 - **One isolated deployment per client** (Model 1; tier T1 in `CLAUDE.md`): no multi-tenancy to get wrong.
-- **n8n as the engine**, self-hosted; a Next.js site (no public deploy yet), an embeddable widget script, and an
+- **n8n as the engine**, self-hosted; a Next.js site (public on Vercel since 2026-11-01, §10), an embeddable widget script, and an
   owner dashboard on the same server behind Cloudflare Access (`README.md`, "Stack").
 - **Plan before build, one verifiable step at a time**, each phase behind a written approval
   (`.claude/rules/plan-gate.md`), and five layers of review: the builder's self-check, repo review agents, an
@@ -55,8 +57,10 @@ nothing to escalate into: the allow-list is the schema enum (`.claude/rules/prom
   Its status depends on the claim: once the message id is claimed it answers **200 with a polite reply**, because a
   5xx would make the channel retry a message that is already claimed (the retry would only be a duplicate); only a
   failure before the claim answers 503 (7-2's CLAIM-RETRY ruling; `tests/unit/main-tur2.test.cjs`).
-- **Spend brakes:** a monthly LLM spend cap checked before any paid call — it fails OPEN if the spend meter cannot be
-  read (the turn runs and the owner is alerted) (`README.md`); a per-conversation turn cap (12 in the example config);
+- **Spend brakes:** a monthly LLM spend cap checked before any paid call. It fails CLOSED: if the spend meter cannot be
+  read, no model is called, the customer gets a handoff reply and the owner a `spend_meter_unavailable` alert (`Eval
+  Spend`; ruling (d), `docs/ARCHITECTURE-DECISIONS.md` 2026-10-29). *(Corrected 2026-11-03: this line said the cap
+  fails OPEN. That was true when it was written; going public changed it, §10.)* a per-conversation turn cap (12 in the example config);
   an explicit timeout on every external HTTP call (60 s for the LLM, 15 s for the others); a dry-run switch that skips
   the calendar insert and the WhatsApp send while conversation and lead rows are still written (`bot.dryRun`, off in
   the example config; Main's `Dry-run note`); and a kill-switch that turns the bot into handoff-only. Two
@@ -150,7 +154,7 @@ allows no third state.
 ## 7 · What I learned
 
 Each of these is written down in this repo now — the first five as rules, the last two as procedure — because the
-failure happened first:
+failure happened first (the list after it was added at the public-demo close):
 - **A claim about a guard is written after the mutation test, never beside the code.** Three coverage claims written
   in the same keystroke as the code were false; one was deployed (`.claude/rules/reporting.md`).
 - **A control that cannot go red proves nothing.** A listener sweep printed OK for the exact orphans it was written
@@ -167,6 +171,23 @@ failure happened first:
 - **Even viewing has effects.** Opening the Main workflow in the editor and pressing auto-layout changed its draft
   (179 node positions, three sticky sizes) without publishing it — and one workflow setting, which applies to the
   running workflow because n8n does not version settings; the parity guard showed it (`docs/RUNBOOK.md` §6).
+
+**Added at the public-demo close (2026-11-03)**, each from a round recorded in its plan:
+- **A live run finds what an offline test cannot — and the fix is to make the offline test replay the live script.**
+  NAME-CAPTURE's suite and its mutants were green, and the owner's first run still hit a date wording that no test had
+  ever sent. The chat-replay harness exists because of it, and every line handed to the owner is now replayed through
+  the staged workflow first (§11).
+- **Declare the stop before you measure.** DATE-PHRASING's text-side date checks were adjusted three times; the
+  threshold for a fourth was written down before the next audit. When it was met, the work stopped tuning patterns
+  and moved the guarantee into the structure: the year in the confirm and a 30-day horizon (§12).
+- **Measure today's behaviour before designing the change.** N1's plan began by replaying the committed workflow. That
+  replay showed the worst case — a "no" turning into the cancel of a different booking — before any design existed
+  (§13).
+- **A probe below the threshold is not a test of the threshold.** The first rate-limit probe sent 25 requests against a
+  rule that blocks from the 31st and was recorded as a failure; the rule was right and the probe was wrong (§10).
+- **A brief's wording is a claim too.** N1's last round stopped on "no alert" because one turn did alert. The alert
+  came from an older guard upstream of the change, the same model answer alerts on the workflow from before N1, and the
+  criterion was "no alert from the N1 nodes". The stop was right; the attribution decided it (§13).
 
 ## 8 · Production-next: "one swap to real", and what that does not yet mean
 
@@ -191,8 +212,8 @@ What stands between that sentence and a fact, stated (`.claude/rules/honesty-dem
   24 h session, the Airtable token and base, the root-side steps and an off-server backup target. **v2:** splitting the
   read-only role's column access, the dashboard's error handling, the infra alerts' sender fields, a stale prompt line
   (PHASE-7-PLAN §4j; `README.md`, "The final security pass: what stays open").
-- **The demo is not deployed publicly.** Before it is, the Cloudflare rate limit's BLOCK direction must be shown
-  (ROADMAP, a gate on public deploy).
+- **The demo is public since 2026-11-01** (§10). The rate limit's BLOCK direction was shown before it went live.
+  *(Corrected 2026-11-03: this line said the demo was not deployed.)*
 - The v2 list — what was deliberately deferred and why — is in `README.md`, "Not yet — deferred to v2".
 
 ## 9 · A closer look: the embeddable widget (Phase 6b)
@@ -266,3 +287,103 @@ control had swept only the axis its author happened to think of.
 **Where a human is still required.** Anything needing a real Turnstile token — a live conversation, a real
 booking and its cleanup. Everything else (DOM, CSS, layout, events, isolation, responsive, request
 blocking) is drilled headless, and the drill sheet says which is which.
+
+## 10 · Going public (plan approved 2026-10-29, live 2026-11-01)
+
+**What it took** (`docs/PUBLIC-DEMO-PLAN.md`, the round records R1–R2i and "GO-LIVE"; `docs/ROADMAP.md`, the public-demo
+row):
+- **Deployed protected first.** The site went to Vercel (Hobby) behind Vercel's own login. Every pre-go-live check was
+  run against that protected deployment: the platform checks, the certificate, and a pause drill (a paused site answers
+  503 with Vercel's paused marker). Protection came off at 00:28:53 Vienna on 2026-11-01. Today only the custom domain is
+  public; the other Vercel addresses redirect to a login or do not exist.
+- **The spend cap was turned from fail-open into fail-closed** before the endpoint became public (ruling (d),
+  `docs/ARCHITECTURE-DECISIONS.md` 2026-10-29). A meter that cannot be read now stops the model call, instead of
+  letting the turn run with an alert.
+- **The rate limit's block direction was shown, on the second try.** The first probe was recorded as RED and then
+  withdrawn: it sent 25 requests against a rule that blocks from the 31st. Forty requests then showed the block from
+  the 31st on, with no workflow execution (R2b, R2c).
+- **The privacy page names a controller and a contact without putting either in a public repo.** Both are build-time
+  settings. The first contact address was on the project's own domain, which the host-leak guard flags, so that round
+  stopped before committing it (R2g) and the values moved to the environment (R2h). The page states the legal basis, retention, the
+  rights and the complaint right, and says that some services process data outside the EU/EEA (R2i, go-live).
+- **Turnstile was set to interaction-only** (`b1dc022`): a Managed widget whose checkbox appears only when Cloudflare
+  asks for it.
+- **The rename** to `barber-demo.<apex>` (2026-11-01) left the old name's DNS record and its place in the widget's
+  hostname list behind. Together that was a takeover path that could mint tokens. It was found during the rename and
+  closed: the old record deleted and the hostname list reduced to the new name (Cowork's statement; RENAME, DOMAIN +
+  INTERACTION-ONLY).
+
+**What stays open, by the owner's reason:** the Managed-mode hidden-container check (ship gate #15, v2); the leaked
+service tokens and the n8n API key (#17, deferred until the system is complete); the Loom walkthrough (#20, deferred)
+(`docs/ROADMAP.md`, "Ship gate after D6c").
+
+## 11 · The name the bot never asked for — and the date the tests never sent (NAME-CAPTURE, 2026-11-01)
+
+**Found by the first real-browser run.** The owner's run with Turnstile up (ship gate #21, 2026-10-31) booked and
+cancelled cleanly, and the appointment row had `customer_name = ''`. The bot had never asked for a name
+(`docs/NAME-CAPTURE-PLAN.md` §0).
+
+**The fix** asks for the name before the confirm, puts it in the confirm and in the calendar event's title, and keeps
+it through a reschedule. Its suite and its mutants were green.
+
+**The owner's first run of it still failed, on a date.** The bot asked for the date twice. `Resolve Date` refused
+"wednesday 4 november", and the same refusal was byte-equal in the committed and the staged workflow, so this was an
+older defect, not a regression (NAME-CAPTURE-PLAN "R3"). **Why every test missed it, as recorded there:**
+- the NAME-CAPTURE tests stored dates as ISO and never sent a date phrase through `Resolve Date`;
+- the golden set validates the model's expected output and executes no node, and its date cases said "tomorrow";
+- the date tests asserted the node's rule table, in which a month name was never a case;
+- the script handed to the owner had never been replayed through the staged workflow.
+
+**The fix to the test gap** is the chat-replay harness (`tests/unit/chat-replay.lib.cjs`). It walks a whole
+conversation through the exported workflow: the code nodes run, IF / Switch / Set are evaluated from their parameters,
+and the stores, the calendar and the model's answer are given. It was committed with DATE-PHRASING's first round
+(`68ceb10`). Since then the scripts handed to the owner are replayed through the staged workflow first: NAME-CAPTURE's
+corrected script and N1's two. The owner's second run passed and closed NAME-CAPTURE ("R4").
+
+## 12 · Six audit rounds, and the rule that stopped the tuning (DATE-PHRASING, 2026-11-01 → 11-02)
+
+**The goal:** understand calendar dates ("4 November", "4.11.") deterministically, and check a weekday the customer
+gives against the date (`docs/DATE-PHRASING-PLAN.md` §2).
+
+**The audits:** six contained Codex rounds (`docs/codex/date-phrasing/r1.md`–`r6.md`). The first four kept finding the
+same property in a new spelling: the model's `dateExpr` can drop part of a date the customer wrote, and a text-side
+detector built from patterns misses some wording.
+
+**The rule that ended it.** This repo has a standing rule that a fourth adjustment removes a rule rather than tuning it
+(`docs/ARCHITECTURE-DECISIONS.md`, 2026-09-09d). The threshold was declared before the next audit (DATE-PHRASING-PLAN
+"R2c"). When round 4 found two more HIGH findings in that class, the build stopped for a design ruling instead of a
+fourth set of patterns ("R4 recheck").
+
+**The ruling: make the guarantee structural** ("R2d"):
+- the booking and reschedule confirms show the full date with its year;
+- `bot.bookingHorizonDays` is 30;
+- the text-side checks are labelled best-effort;
+- the remaining class is a recorded bound.
+
+Nothing is written without the customer's "yes" to a date they can read. Rounds 5 and 6 then attacked that defence
+itself, for example a confirm saved before the change or two concurrent turns of one sender. Round 5's three HIGH
+findings became a read-only deploy precondition and two recorded bounds; round 6's one was closed by the put procedure
+("R2e", "R3"). Live on 2026-11-02, promoted at `c22da47`.
+
+## 13 · A "no" that could cancel a different booking (N1, 2026-11-02 → 11-03)
+
+**Measured before it was designed.** The plan began by replaying the committed workflow
+(`docs/n1/replay-measure.out.txt`; `docs/N1-CONFIRM-NO-PLAN.md` §0). A "no" at the booking confirm left the confirm
+alive, so a later "yes" booked the declined slot. With another booking already made, the model read the "no" as
+*cancel*, and the bot asked to cancel the **other** booking.
+
+**The fix** is three small nodes before the model's route. A closed set of decline phrases, or a confident model
+*cancel* at the confirm, gives "nothing is booked — what would you like to change?", with every detail kept. A second
+"no" closes the request. A bare "yes" right after a decline asks the change question once more (D-6 as amended, plan
+§13).
+
+**Codex was capped at two passes by ruling.** Neither pass found a HIGH. Pass 1 showed the closed set was wider than
+written: `toLowerCase()` turns the Kelvin sign into a `k`. The match became ASCII-only. Pass 2's one LOW, in the same
+class, is a recorded bound ("R2", "R2 recheck").
+
+**The live run** (2026-11-03, both scripts, read back from the executions and the database) showed every reply as
+scripted. On one turn the model was below the confidence threshold, and the closed set alone carried the outcome. One
+turn alerted the owner. The alert came from the older date guard upstream of N1, and the same model answer alerts on
+the workflow from before N1 (`docs/n1/alert-4905-replay.cjs`). It was ruled a pre-existing bound and is carried as a
+named false-alarm item. Promoted at `0ba4003` ("R4").
+

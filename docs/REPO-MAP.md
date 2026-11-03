@@ -751,8 +751,13 @@
   - ## 13. Assumptions to verify (⚠ — NOT yet confirmed; do not treat as fact)
 
 ### `README.md`
-  - ## The one job
+  - ## Try this
   - ## How it works
+  - ## Stack
+  - ## Real vs demo
+  - ## Safety and spend brakes
+  - ## How it was tested and reviewed
+  - ## Honest limits and what comes next
   - ## What works today ✅
   - ## Not built yet 🔜
   - ## Engineering decisions worth reading
@@ -805,6 +810,10 @@
   - ## 7 · What I learned
   - ## 8 · Production-next: "one swap to real", and what that does not yet mean
   - ## 9 · A closer look: the embeddable widget (Phase 6b)
+  - ## 10 · Going public (plan approved 2026-10-29, live 2026-11-01)
+  - ## 11 · The name the bot never asked for — and the date the tests never sent (NAME-CAPTURE, 2026-11-01)
+  - ## 12 · Six audit rounds, and the rule that stopped the tuning (DATE-PHRASING, 2026-11-01 → 11-02)
+  - ## 13 · A "no" that could cancel a different booking (N1, 2026-11-02 → 11-03)
 
 ### `docs/CP4-RESCHEDULE-EXECUTE-PLAN.md`
   - ## What this replaces
