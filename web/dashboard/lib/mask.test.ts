@@ -175,7 +175,9 @@ test('a FULL widget sender_key is destroyed by maskSenderKey — the lane assert
   const out = maskSenderKey(full);                        // what the call site actually renders
   assert.equal(out, 'widget:w-3f2a…');
   assert.ok(!out.includes('9d4e'));
-  // and the component's flag fires precisely because the value differs from its own re-masking
+  // The queue's counter does NOT read this difference any more: on the widget lane the column's own mask differs
+  // from this re-masking too. It counts a stored value the column could not have produced (lib/handoffSender.ts,
+  // ruling 2026-11-03). Corrected in place: this said the flag fires because the value differs from its re-masking.
   assert.notEqual(out, full);
 });
 

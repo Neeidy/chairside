@@ -15,7 +15,8 @@
 import type { Page } from '../lib/store.ts';
 import type { HandoffRow } from '../lib/types.ts';
 import { alertState, alertLabel, triageCompare } from '../lib/alertState.ts';
-import { maskFreeText, maskSenderKey, assertMasked } from '../lib/mask.ts';
+import { maskFreeText, assertMasked } from '../lib/mask.ts';
+import { prepareSenders } from '../lib/handoffSender.ts';
 import { ReleaseButton } from './ReleaseButton.tsx';
 
 /**
@@ -72,31 +73,19 @@ export function HandoffQueue({ page }: { page: Page<HandoffRow> }) {
   // them, i.e. it was never the control here. `maskSenderKey` is idempotent, so applying it to every
   // row costs a correctly-masked value nothing and closes the lane that mattered.
   //
-  // `flagged` is now a real signal rather than a crash counter: a value the formula masked properly
-  // re-masks to ITSELF, so any difference means the store handed us more than a mask. That is the
-  // condition worth telling the owner about, and it is detectable without trusting `assertMasked`.
+  // THE COUNTER (ruling, Yigitcan 2026-11-03 — a declared deviation from DC-3's "single source" wording): a row is
+  // counted only when its STORED value is more than the column's own formula could produce (lib/handoffSender.ts,
+  // `isColumnMask`, pinned to 001_init.sql's CASE). ⚠ Corrected in place (`governance-sync.md` §6): this said "a
+  // value the formula masked properly re-masks to ITSELF, so any difference means the store handed us more than a
+  // mask". That was false on the widget lane — the column keeps 16 characters of the key, `maskSenderKey` 6 of the
+  // id — so every widget row was counted (PHASE-7-PLAN §4b, finding (i)). What is SHOWN is unchanged: every row
+  // still goes through `maskSenderKey`.
   // ⚠ TWO DIFFERENT EVENTS USED TO INCREMENT ONE COUNTER, so a single bad row in a one-row queue
   // reported "2 rows" and described both events with the sentence that fitted only one of them
   // (`code-reviewer`, third pass). They are counted separately now because they mean different things:
-  // `remasked` = the store handed us more than a mask, and we fixed it here (the row is still shown);
+  // `remasked` = the store handed us more than a mask, and we masked it here (the row is still shown);
   // `withheld` = even our own output failed the check, so the row is shown WITHOUT its sender.
-  let remaskedCount = 0;
-  let withheld = 0;
-  const prepared = rows.map((r) => {
-    const stored = (r.sender_masked ?? '').trim();
-    const remasked = stored ? maskSenderKey(stored) : '—';
-    let who: string;
-    // K1 stays: a throw must not take the page down. It now guards our OWN output, which is the only
-    // thing that reaches the screen.
-    try {
-      who = assertMasked(remasked, 'sender');
-      if (stored && remasked !== stored) remaskedCount++;
-    } catch {
-      withheld++;
-      who = '— (masked value rejected)';
-    }
-    return { row: r, who };
-  });
+  const { prepared, remasked: remaskedCount, withheld } = prepareSenders(rows);
 
   return (
     <section className="panel queue" aria-labelledby="queue-h">
@@ -141,12 +130,12 @@ export function HandoffQueue({ page }: { page: Page<HandoffRow> }) {
       {remaskedCount > 0 && (
         // This counter should read zero. ⚠ It used to add "or a row predates the fix", which cannot
         // happen: `sender_masked` is a STORED generated column, recomputed whenever a row is written and for
-        // every row when the schema changes, so no row carries an older formula's value. What a non-zero value
-        // actually means is that the column no longer masks every channel it receives (`code-reviewer`, third pass).
+        // every row when the schema changes, so every value it holds has its formula's shape. A non-zero count
+        // means the formula and this board's copy of its shape (lib/handoffSender.ts) have drifted apart.
         <p className="tech">
-          {remaskedCount} row{remaskedCount === 1 ? '' : 's'}: the stored sender carried
-          more than a mask and was re-masked here before being shown. Expected to be none — the
-          `sender_masked` column needs a branch for the channel these rows arrived on.
+          {remaskedCount} row{remaskedCount === 1 ? '' : 's'}: the stored sender held more than
+          the `sender_masked` column's formula produces, and was masked here before being shown. Expected
+          to be none — the column's formula and this board's check of it have drifted apart.
         </p>
       )}
       {withheld > 0 && (
