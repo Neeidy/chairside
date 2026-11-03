@@ -1,7 +1,11 @@
 # CLOSE-OUT PLAN — every open item closed, or closed by a written decision
 
-> **Status: PLAN ONLY — awaiting Yigitcan's written "approved"** (`.claude/rules/plan-gate.md`). No Main, staged,
-> site, dashboard or infra change is made by this file. Written from `47c9bc9` (2026-11-03).
+> **Status: APPROVED by Yigitcan, 2026-11-03** (plan-gate, written in the conversation), with DC-1…DC-13 exactly as
+> recommended in §13, plus **G1** (the start-gate script refuses to run in the Vienna minutes :55–:05) and, asked and
+> answered during R1, **DC-5 ruled: Purge P1/P2 are IN this phase** (§13, DC-5's row). **R1 in progress.** Recorded in
+> `ARCHITECTURE-DECISIONS.md` (2026-11-03 rows). *(This line said "PLAN ONLY — awaiting Yigitcan's written
+> 'approved'" until the approval; corrected in place.)* No Main, staged, site, dashboard or infra change is made by
+> this file. Written from `47c9bc9` (2026-11-03).
 > **Ruling it implements:** Yigitcan, 2026-11-03 (by pasting the CLOSE-OUT brief): one solid but SHORT phase that
 > closes every open item, before his final question/revision pass. At most three build rounds and one live window.
 > **Placeholders on purpose:** `barber-demo.<apex>`, `<n8n host>`. No credential value, hostname or contact value in
@@ -327,7 +331,7 @@ Neither `/loop` nor `/goal`. Each round ends at an approval or an owner step.
 | DC-2 | Widget times: the shop's zone or the visitor's | **The shop's zone, named once in the panel.** A booking is in shop time, and a visitor abroad otherwise sees a different hour than the confirm |
 | DC-3 | The dashboard's one mask formula | **The stored `sender_masked`** (what the engine writes and the queue reads). The dashboard falls back to its own formula only when the column is empty. Measured on the fixtures first |
 | DC-4 | Cloudflare's own retry | **Measure first.** If it adds callbacks beyond our two retries, set `retry: 'never'` on both render sites |
-| DC-5 | The Purge "no_candidates" alert | **Decide after the read (row 57).** If it still fires nightly, build P1 and add the Purge put to the window. If it no longer fires (the table now holds rows), close the row by that read and leave Purge alone |
+| DC-5 | The Purge "no_candidates" alert | **Decide after the read (row 57).** If it still fires nightly, build P1 and add the Purge put to the window. If it no longer fires (the table now holds rows), close the row by that read and leave Purge alone. ⚠ **Ruled during R1 (Yigitcan, 2026-11-03): P1 and P2 are IN this phase**, with a separate Purge put in R3 under its own ⚠ ONAY. The read behind it, as reported to him (n8n executions, read-only; output not committed): 3 of 3 nightly Purge runs since go-live alerted `no_candidates` with 0 candidates and 4 leads |
 | DC-6 | #15 under interaction-only | **Close by decision.** The forced-interactive TEST key showed the challenge inside the panel (DOMAIN + INTERACTION-ONLY). The real key's challenge was never seen, because the owner's runs passed without one; that is recorded as the bound |
 | DC-7 | The engine's `hostname` check and the secret in a credential | **B, with provisioning (#34).** The hostname list is per client and comes from the widget's creation |
 | DC-8 | An off-server backup | **B, trigger: the first real client**, unless you name a target now |
