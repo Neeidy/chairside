@@ -399,3 +399,29 @@ Neither `/loop` nor `/goal`. Each round ends at an approval or an owner step.
 
 **Found, not fixed (a new item):** `scripts/check-no-host-leak.sh`'s documented `$N8N_HOST`-only path stops with
 "PARSED: unbound variable" when `CLAUDE.local.md` is absent. It fails closed, never silently green.
+
+## R2 — Codex pass 1 and the fixes (2026-11-03)
+
+**Codex pass 1** at `2519887` (contained; verbatim `docs/codex/close-out/p1.md`, containment `containment.md`).
+
+**The one HIGH (MAIN), and its ruling.** The confirm's stamp counts **saved** turns. A turn that saves no state does not
+advance `turn_count`, so it does not stale the confirm, and the next "yes" books. Examples are an LLM-unavailable reply
+or a guard trip. Codex measured it by injecting an LLM timeout into the replay. The slot written is the one shown, and
+write-then-verify is unchanged. The cancel and reschedule confirms' TTL has the same bound.
+**Ruling (Yigitcan, 2026-11-03, asked):** record it as a bound, and pin it with a test. There is no Main change.
+
+**The other findings, per surface:**
+
+| Surface | Finding | Triage | Action |
+|---|---|---|---|
+| MAIN | HIGH: an unsaved transient turn does not stale the confirm | bound, by ruling | `handoff.md` states it. The test `BOUND: an unsaved transient turn…` pins it, through a new harness hook: a model answer with `__llmError` makes `Extract Intent` fail on its error output |
+| SITE + SNIPPET | MEDIUM: after three consecutive errors the widget no longer recovers on its own; a reload is needed | bound — the direct consequence of DC-4. Before S1, Cloudflare kept retrying about every 12 s for as long as the page stayed open | recorded here |
+| TESTS | MEDIUM: the Main suite had no unsaved turn between the ask and the "yes" | real | the BOUND test above |
+| TESTS | LOW: G1's tests never exercised the production clock path; a `TZ = 'UTC'` mutant passed | real for the label, not the decision. Vienna is a whole-hour offset, so every minute decides the same | a live-clock case: the label must be the Vienna HH:MM computed independently. The UTC mutant is now red (measured) |
+| TESTS | LOW: N1's delete-status assertion cannot go red, because the harness's delete stub always answers 204 | real, a harness limit that predates this phase | recorded as a bound of the replay (which never proves a Calendar delete) |
+| TESTS | the declared equivalent mutant was not executed by `main()` | real | `main()` runs it and shows it; it stays green |
+| PURGE, DASHBOARD, OPS, S2 | no finding | — | — |
+
+**The cap:** pass 1 found real items, so pass 2 runs on this round's diff (MAIN's test, the harness hook, G1's test).
+After pass 2, a finding of an earlier class is recorded, not chased. A NEW class that writes, cancels or blocks a
+booking wrongly is a stop.
