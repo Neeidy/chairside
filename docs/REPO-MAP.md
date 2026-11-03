@@ -771,6 +771,7 @@
   - ## Real vs demo
   - ## Safety and spend brakes
   - ## How it was tested and reviewed
+  - ## How this was built
   - ## Honest limits and what comes next
   - ## What works today ✅
   - ## Not built yet 🔜

@@ -12,11 +12,10 @@ reads the message; deterministic rules make every decision.**
 **Live demo:** the **Website** link in the About box at the top right of this GitHub page. The salon, its services and
 its prices are mock data. The engine behind the chat is the real one.
 
-> **Honest status:** this is a **demo / learning build**. It has no paying client and no real customers. The public
-> demo went live on 2026-11-01 ([`docs/PUBLIC-DEMO-PLAN.md`](docs/PUBLIC-DEMO-PLAN.md), "GO-LIVE"). Every claim on
-> this page points to a committed record. Many of those records are write-ups of live measurements whose raw output is
-> not committed, or statements by the reviewer who made a dashboard change; the records label which is which, and this
-> page does not repeat each label. Counts given here are ones a committed file holds.
+> **Honest status:** a **demo / learning build** with no paying client and no real customers; the public demo went
+> live on 2026-11-01 ([`docs/PUBLIC-DEMO-PLAN.md`](docs/PUBLIC-DEMO-PLAN.md), "GO-LIVE"). Every claim and count on
+> this page points to a committed record, and the records label which results are write-ups of live measurements whose
+> raw output is not committed and which are statements by the reviewer who made a dashboard change.
 
 ## Try this
 
@@ -134,6 +133,24 @@ Telegram (owner alerts) · Zernio (the WhatsApp Business API adapter).
 - **Owner live runs:** the three features added after go-live (the name, the date wording, the "no") each closed with
   a run in a real browser with a real Turnstile token. Each run was then read back from the execution log and the
   database (each plan's last round, e.g. [`docs/N1-CONFIRM-NO-PLAN.md`](docs/N1-CONFIRM-NO-PLAN.md), "R4").
+
+## How this was built
+
+Several tools and one person, each with a named job ([`CLAUDE.md`](CLAUDE.md), "Defense-in-depth"):
+- **Architecture and review — in Cowork**, a separate AI workspace that reads this repository from git. It drafted
+  round briefs and reviewed the results. Some dashboard settings (Cloudflare, Vercel) were changed there too,
+  and the records label those as Cowork's statements, not as measurements.
+- **Implementation — by Claude Code**, which wrote the workflows, the frontends, the guards, the tests and these docs,
+  and ran the repository's own review agents (`security-auditor` before every push).
+- **Independent audits — by Codex**, a second tool that did not write the code. Its prompts and raw answers are committed
+  under [`docs/codex/`](docs/codex/).
+- **Live runs in a real browser** with a real Turnstile token — something the build machine's headless browser cannot
+  get. The owner ran them; N1's run was carried out by Cowork at his request
+  ([`docs/N1-CONFIRM-NO-PLAN.md`](docs/N1-CONFIRM-NO-PLAN.md), "R4").
+- **The owner audits and rules.** He does not build. Every phase starts only on his written approval of its plan and
+  closes on his ruling, and the decisions a plan leaves open are his
+  ([`CLAUDE.md`](CLAUDE.md), "CC BUILDS. YIGITCAN AUDITS AND RULES";
+  [`.claude/rules/plan-gate.md`](.claude/rules/plan-gate.md)).
 
 ## Honest limits and what comes next
 
