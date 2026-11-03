@@ -634,14 +634,14 @@ secret-scan 0, hook-drift OK, listeners OK, 0 project containers.
 | Tested (happy + key edge) | ✅ | §8 ticked; `n1-confirm-no` 26/26 (control red on `bc6eadf`), mutants 39/39; DATE-PHRASING 60/60 and NAME-CAPTURE 50/50 mutants on the staged export (byte-identical to the promoted one; not re-run at R4); the owner's live run, both scripts; Codex two passes |
 | Cleaned | ✅ | `n8n/staged/` empty; the snapshot and the mirror deleted, absence read back |
 | Sanitized (secrets and PII) | ✅ | `security-auditor` GO before every push of N1; synthetic names only |
-| README / case-study | ⚠ open | the README does not describe the decline path. Carried to the README/case-study pass, **recorded as a gap, not counted as closed** |
+| README / case-study | ✅ (2026-11-03) | closed at the public-demo close: the README's "Try this" and "What works today" describe the decline path (`6723b40`), the case study's §13 tells it (`53be52d`). *(Was "⚠ open" at R4; corrected in place.)* |
 | Pushed | ✅ | origin/main = the records commit of this round |
 | Resume-point memory written AND read back | ✅ | the progress memory, read back in this round |
 
 **N1 is CLOSED**, with one DoD item recorded as open (above). **Carried:**
 - the `date_expr_missing` false alert at a pending confirm (named above);
 - v2: a freshness check on the booking confirm;
-- the README / case-study;
+- the README / case-study *(closed at the public-demo close, 2026-11-03)*;
 - Cloudflare's default retry beside ours (unmeasured);
 - the widget's device-local stamps;
 - the Vercel token, revoked at the phase close.

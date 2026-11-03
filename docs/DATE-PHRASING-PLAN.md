@@ -11,7 +11,7 @@
 > "R2e" at the end. **Codex r6: 1 HIGH on the precondition's window → closed by procedure (ruling R-c). R3 LIVE 2026-11-02
 > (Main put + site redeploy; section "R3"); the owner's run and promotion follow.**
 > **R4 (2026-11-02): the owner's run read back, PROMOTED (`c22da47`), the Turnstile false notice fixed on both render
-> sites and redeployed — DATE-PHRASING CLOSED (section "R4", its DoD table; README/case-study recorded open).**
+> sites and redeployed — DATE-PHRASING CLOSED (section "R4", its DoD table; README/case-study recorded open then, closed at the public-demo close 2026-11-03).**
 > **Trigger:** the NAME-CAPTURE R3 owner run of 2026-11-01 (`docs/NAME-CAPTURE-PLAN.md` → "The owner run of
 > 2026-11-01"). "I'd like a haircut on Wednesday 4 November at 11:00" was extracted correctly by the model
 > (`date` 2026-11-04, `dateExpr` "wednesday 4 november") and dropped by `Resolve Date` (reason `unparsed`), so the bot
@@ -716,7 +716,7 @@ two quick messages on `barber-demo.<apex>` — no "couldn't verify" line between
 | Tested (happy + key edge) | ✅ | the §8 table above; the owner's live run A and B; Codex r1–r6 |
 | Cleaned | ✅ | `n8n/staged/` empty; the pre-put snapshot and the parity mirror deleted, absence read back |
 | Sanitized (secrets and PII) | ✅ | `security-auditor` GO before every push of the round; the second customer's name appears nowhere |
-| README / case-study | ⚠ open | the README's flow line ("book → collect service/date/time") is still true; the date rules are not described there — carried to the Phase 7 README/case-study pass, **recorded as a gap, not counted as closed** |
+| README / case-study | ✅ (2026-11-03) | closed at the public-demo close: the README describes the date rules ("Try this", "Dates resolved in code", `6723b40`) and the case study's §12 tells the rounds (`53be52d`). *(Was "⚠ open" at R4; corrected in place.)* |
 | Pushed | ✅ | origin/main = the records commit of this round |
 | Resume-point memory written AND read back | ✅ | the progress memory, read back in this round |
 
