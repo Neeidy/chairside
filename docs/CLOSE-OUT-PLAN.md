@@ -425,3 +425,19 @@ write-then-verify is unchanged. The cancel and reschedule confirms' TTL has the 
 **The cap:** pass 1 found real items, so pass 2 runs on this round's diff (MAIN's test, the harness hook, G1's test).
 After pass 2, a finding of an earlier class is recorded, not chased. A NEW class that writes, cancels or blocks a
 booking wrongly is a stop.
+
+## R2 recheck — Codex pass 2, the last (2026-11-03)
+
+**Codex pass 2** at `e28ffb2` (contained; verbatim `docs/codex/close-out/p2.md`): **no HIGH, no MEDIUM, one LOW.**
+- The harness hook routes through the staged Main's real `LLM Unavailable Reply` (`Extract Intent`'s `continueErrorOutput`
+  output 1) and leaves the other replay suites unchanged.
+- The BOUND test fails alone when the count advances or the stamp clears after the failed turn.
+- The UTC mutant turns the live-clock case red. The new `handoff.md` sentence is true of the staged Main.
+
+**The LOW — recorded as a BOUND (the cap: same class as pass 1's G1 test LOW):** the live-clock case retries once
+across a minute rollover. Two rollovers in a row, which needs an unusual scheduling delay, would fail it although the
+helper is right. The failure is loud, never a false pass. Codex also noted that a host without time-zone data cannot run
+the test (`ZoneInfoNotFoundError`); this server has the data.
+
+**Codex for CLOSE-OUT is closed by the cap.** No surface has an open HIGH, so the ⚠ ONAY condition for R3 holds: R1
+green, and the last pass per surface without an open HIGH.
