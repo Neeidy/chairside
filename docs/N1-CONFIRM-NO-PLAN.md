@@ -3,8 +3,8 @@
 > **Status: APPROVED by Yigitcan, 2026-11-03** (by pasting the N1 R1 brief): D-1…D-5, D-7, D-8 as recommended, **D-6
 > AMENDED** (a bare "yes" right after a decline re-asks the change question once; a second one in a row → today's handoff)
 > and a Codex cap of two passes. **R1 built offline; R2 Codex (two passes, no HIGH); R3 LIVE — the Main put of
-> 2026-11-02 23:06 Vienna; ⏸ STOPPED for the owner run; promotion is the next round** — "R1"–"R3" at the end of this file. Written from the
-> committed export at `4cd53fd`.
+> 2026-11-02 23:06 Vienna; R4 the owner run read back and the edit PROMOTED — ✅ N1 CLOSED (2026-11-03)** — "R1"–"R4" at
+> the end of this file. Written from the committed export at `4cd53fd`.
 > **Ruling it implements:** Yigitcan's ruling, given by pasting the N1 brief (dated 2026-11-03 in the brief), says
 > to plan N1 now and build only after his written "approved". ROADMAP calls N1 "a 'no' at the booking confirm has no
 > designed path".
@@ -573,4 +573,76 @@ promotion with parity green (⚠ ONAY (3) of §11). Content parity against the c
 
 **Next round:** read the owner's run (executions + `salon_ro`), then promotion — staged → committed, `PENDING_KEYS`
 emptied, the two A-leak `ALLOW` entries (R1 deviation 6), both parity guards 0 against the committed exports.
+
+## R4 — the owner run read back, promoted; ✅ N1 CLOSED (2026-11-03)
+
+*(Every read and number below terminal-measured, output not committed — except the attribution replay, which is
+committed with its output: `docs/n1/alert-4905-replay.cjs`.)*
+
+**The run.** Cowork ran both scripts at Yigitcan's request (2026-11-03, about 14:18–14:21 Vienna), each in a fresh tab
+of his own browser, with a real Turnstile token that passed without a challenge. Every reply matched the script (Cowork's
+reading). **Read back by GET on the n8n executions:** Main 4895–4907, thirteen turns (6 + 7), every one `success`;
+the other workflows ran only their schedules. Outcome per turn:
+
+| turn | execution | model (live) | N1 classifier | result |
+|---|---|---|---|---|
+| 1 · first `no` | 4897 | `cancel` 0.85 | `declined` (the closed set) | the change question; `collecting`, haircut 4 Nov 11:00 + the name kept |
+| 1 · `12:00 instead` | 4898 | `book` 0.92 | — | the confirm again, at 12:00, with the name |
+| 1 · second `no` | 4899 | `cancel` 0.85 | `declined` (the closed set) | the change question; the 12:00 slot kept |
+| 1 · `no` after the decline | 4900 | `unknown` 0.4 | `dropped` (the closed set ALONE) | `bookingDropped`; `new`, service/date/time emptied, the name kept |
+| 2 · `yes` | 4903 | `confirm` 0.92 | — | booked: `Book Appointment` → `Verify Slot` → `Write Appointment` |
+| 2 · `no` at the second confirm | 4905 | `cancel` 0.85, the stored slots echoed | `declined` (the closed set) | the change question, **no cancel ask about the haircut** (B1 live) |
+| 2 · `cancel my haircut` → `yes` | 4906–4907 | `cancel` 0.95 → `confirm` 0.95 | — | the cancel ask, then `Delete Booking Event` 204 and `Update Appointment Cancelled` |
+
+On every declined turn no Calendar node and no appointment node ran. 4900 is the one turn where the closed set carried
+the outcome by itself: the model was below the threshold, and without the set the turn would have gone to the clarify
+ladder. **The store, as `salon_ro` (READ ONLY):** one appointment was created in the run, the Haircut on 4 Nov 10:00Z,
+now `cancelled`; there is no Beard Trim on 6 Nov (an instrument control: the same query finds the Haircut on 4 Nov);
+the two conversations end `new` / `dropped` and `cancelled`; `processed_messages` holds 13 claims.
+
+**The one mismatch, and the ruling.** 4905 ran `Send Owner Alert (Telegram)`, class `date_expr_missing`. It came from
+`Resolve Date` → `Date Alert?` (execution order 26–32), which runs before the N1 nodes (38–46) and is unchanged by N1.
+The model's answer to that `no` echoed the stored beard slots with a date and an empty `dateExpr`, and `Resolve Date`
+alerts on exactly that shape. Replayed with the same answer, the alert fires on the committed export AND on `bc6eadf`
+(before N1); with empty slots it fires on neither. Before N1 the same turn also asked to cancel the haircut. **The
+brief's step 1 said "no alert", and Cowork recorded that wording as its own brief error:** the criterion is "no alert
+from the N1 nodes", and the N1 nodes raised none. The stop came first and the round waited for the ruling.
+**Ruling (Yigitcan, 2026-11-03):** a pre-existing bound, independent of N1. §8's criteria 1 and 5 were reworded in place.
+**Named and carried, not built now:** *a false owner alert at a pending confirm when the model echoes the stored slots
+without a `dateExpr` (`date_expr_missing`): an alarm-fatigue candidate.* **Recorded observation, no action (ruling):**
+the cancelled conversation still holds the declined Beard Trim slots. It is not at a confirm stage, so nothing can book
+them.
+
+**Promoted (`0ba4003`):** the staged Main became the committed export; `n8n/staged/` is empty; `PENDING_KEYS` is empty
+and the two `Build Booking-Declined State` fallbacks are on the A-leak `ALLOW` list (R1 deviation 6), and the allowlist's
+"every entry still hits" check is green. After the commit, both parity guards are at 0 against the COMMITTED exports:
+content 5/5, structure 196/196 nodes and 278/278 connections. `check-all` 0, `n1-confirm-no` 26/26 and mutants 39/39,
+all at the promoted export. The acceptance criteria are ticked with their evidence (`92e1622`, §8). `security-auditor`'s two LOWs on that push
+were fixed before it (`259f7c4`): `render-client-n1` is 6/6 at the promoted export, because its two controls skip
+after the promotion (8/8 was R1's staged count), and REPO-MAP was regenerated. **Cleaned:** after
+the push, the pre-put snapshot and the parity mirror were deleted on literal absolute paths and their absence was read
+back (⚠ ONAY of the R4 brief).
+
+**The window (two parts, 18:11–18:16 and 18:39–18:59 Vienna):** Main ran only the four probe executions, 4912–4915;
+there was no chat message, no LLM call and no live write. The Turnstile dummy token got 403 at the start and the end; host-leak 0,
+secret-scan 0, hook-drift OK, listeners OK, 0 project containers.
+
+### Definition of Done — N1
+| Item | Status | Evidence |
+|---|---|---|
+| Built | ✅ | R1–R2 staged, live since the R3 put, promoted at `0ba4003` |
+| Tested (happy + key edge) | ✅ | §8 ticked; `n1-confirm-no` 26/26 (control red on `bc6eadf`), mutants 39/39; DATE-PHRASING 60/60 and NAME-CAPTURE 50/50 mutants on the staged export (byte-identical to the promoted one; not re-run at R4); the owner's live run, both scripts; Codex two passes |
+| Cleaned | ✅ | `n8n/staged/` empty; the snapshot and the mirror deleted, absence read back |
+| Sanitized (secrets and PII) | ✅ | `security-auditor` GO before every push of N1; synthetic names only |
+| README / case-study | ⚠ open | the README does not describe the decline path. Carried to the README/case-study pass, **recorded as a gap, not counted as closed** |
+| Pushed | ✅ | origin/main = the records commit of this round |
+| Resume-point memory written AND read back | ✅ | the progress memory, read back in this round |
+
+**N1 is CLOSED**, with one DoD item recorded as open (above). **Carried:**
+- the `date_expr_missing` false alert at a pending confirm (named above);
+- v2: a freshness check on the booking confirm;
+- the README / case-study;
+- Cloudflare's default retry beside ours (unmeasured);
+- the widget's device-local stamps;
+- the Vercel token, revoked at the phase close.
 

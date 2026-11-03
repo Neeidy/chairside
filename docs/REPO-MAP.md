@@ -966,6 +966,8 @@
   - ## R2 — Codex pass 1 and the fixes (2026-11-03)
   - ## R2 recheck — Codex pass 2, the last (2026-11-03)
   - ## R3 — LIVE: the Main put; ⏸ STOPPED for the owner run (2026-11-02, server time)
+  - ## R4 — the owner run read back, promoted; ✅ N1 CLOSED (2026-11-03)
+  - ### Definition of Done — N1
 
 ### `docs/NAME-CAPTURE-PLAN.md`
   - ## 0. The defect, verified against `n8n/workflow.main.sanitized.json`
