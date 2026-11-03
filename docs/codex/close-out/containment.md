@@ -35,9 +35,9 @@ run's output file.
 - `scripts/codex-containment.py`: commands 14 · passed 11 · search patterns that name no path 8 · flags 5. Each was read
   one by one; all five stay inside the container's own filesystem, whose only mounts are `/audit` (read-only) and
   `/codexhome`:
-  - `find .. -name AGENTS.md` reaches the container's `/home/auditor`;
-  - `find /usr /opt /deps -name Vienna …` looks for time-zone data in the image;
-  - `ls /usr/bin/python* /usr/local/bin/python*` lists the image's interpreters.
+  - one flag: `find .. -name AGENTS.md` reaches the container's `/home/auditor`;
+  - two flags (`/usr`, `/opt`): `find /usr /opt /deps -name Vienna …` looks for time-zone data in the image;
+  - two flags (`/usr/bin/python*`, `/usr/local/bin/python*`): `ls …` lists the image's interpreters.
 - The separate scan of the 14 command lines found 1 hit, read: `env=dict(os.environ, PYTHONTZPATH=d)` in a probe that
   handed an offline time-zone fixture to a subprocess. It copies the container's environment and does not print it. Its
   positive control matched the four forbidden shapes and not the ordinary command.

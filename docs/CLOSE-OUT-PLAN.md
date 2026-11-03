@@ -432,11 +432,11 @@ booking wrongly is a stop.
 - The harness hook routes through the staged Main's real `LLM Unavailable Reply` (`Extract Intent`'s `continueErrorOutput`
   output 1) and leaves the other replay suites unchanged.
 - The BOUND test fails alone when the count advances or the stamp clears after the failed turn.
-- The UTC mutant turns the live-clock case red. The new `handoff.md` sentence is true of the staged Main.
+- The UTC mutant turns the live-clock case red. The new `handoff.md` sentence is true of the staged Main, with Codex's qualification: the later "yes" books once the transient condition has cleared; a guard still active, or another failing operation, can still stop it.
 
 **The LOW — recorded as a BOUND (the cap: same class as pass 1's G1 test LOW):** the live-clock case retries once
 across a minute rollover. Two rollovers in a row, which needs an unusual scheduling delay, would fail it although the
-helper is right. The failure is loud, never a false pass. Codex also noted that a host without time-zone data cannot run
+helper is right. The failure is loud, and is judged never to be a false pass (my reading, not Codex's: a stale minute would have to match a wrong helper by chance). Codex also noted that a host without time-zone data cannot run
 the test (`ZoneInfoNotFoundError`); this server has the data.
 
 **Codex for CLOSE-OUT is closed by the cap.** No surface has an open HIGH, so the ⚠ ONAY condition for R3 holds: R1
