@@ -1,0 +1,19 @@
+{
+  "_doc": "CLOSE-OUT R1 (docs/CLOSE-OUT-PLAN.md §3, §4; DC-13): M1 in Resolve Date (the owner ping withheld for an echo of the stored date at a pending confirm; the drop unchanged) and M2 (Compute Availability stamps confirm_turn; Booking Fresh? on Reschedule Router's false output: fresh → Build Event Request, stale → Slot Gate). No other node changes.",
+  "allow": [
+    "Resolve Date",
+    "Compute Availability"
+  ],
+  "add_nodes": [
+    "Booking Fresh?",
+    "Sticky — Booking confirm freshness"
+  ],
+  "add_edges": [
+    "Reschedule Router|1|Booking Fresh?|0",
+    "Booking Fresh?|0|Build Event Request|0",
+    "Booking Fresh?|1|Slot Gate|0"
+  ],
+  "remove_edges": [
+    "Reschedule Router|1|Build Event Request|0"
+  ]
+}

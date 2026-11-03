@@ -151,7 +151,14 @@ test('9 R2d: a write is always the slot of the LAST year-bearing confirm ask sho
     see(b.turn("I'd like a haircut on Wednesday at 11:00", answer('book', 0.92, { serviceId: 'haircut', dateExpr: 'wednesday', time: '11:00' })));
     see(b.turn('Kim Moss', answer('unknown', 0.3)));
     if (mid) see(b.turn(mid[0], mid[1]));
-    see(b.turn('yes', answer('confirm', 0.92)));
+    const before = b.db.appts.length;
+    const yes1 = see(b.turn('yes', answer('confirm', 0.92)));
+    // CLOSE-OUT M2 (ruling 2026-11-03): a "yes" that is not on the turn right after its confirm ask re-shows the confirm
+    // and writes nothing; the next "yes" is fresh. The property below then holds for that second write too.
+    if (BOOK_ASK.test(yes1.reply || '')) {
+      assert.equal(b.db.appts.length, before, `booking lane, ${label}: a stale "yes" wrote`);
+      see(b.turn('yes', answer('confirm', 0.92)));
+    }
     for (const a of b.db.appts) { writes++; assert.equal(a.start_utc, last, `booking lane, ${label}: wrote what was not the last confirm shown`); }
     for (const e of b.db.calendar) assert.equal(DateTime.fromISO(e.start.dateTime).toUTC().toISO(), last, `booking lane, ${label}: calendar`);
     // reschedule lane: a booking, the move confirm ask, one turn, "yes"

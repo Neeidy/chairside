@@ -368,9 +368,12 @@ const CASES = [
     'in two weeks', {dateExpr:null,date:'2026-09-11',time:'11:00'},
     {date:null,dropped:true,cls:'date_expr_missing',outcome:'date_without_expr'},
     {state:{slots:{serviceId:'haircut',date:'2026-09-11',time:'11:00'},stage:'collecting'},intent:'book'}],
+  // CLOSE-OUT M1 (ruling 2026-11-03, docs/CLOSE-OUT-PLAN.md §3): the REFUSAL is H2b's guard and stands; at a pending
+  // confirm the owner ping for an echo of the stored date is withheld whatever the intent (the plan's stated risk: a real
+  // change at a confirm goes unalerted, and is still never written). Before M1 this row expected 'date_expr_missing'.
   ['CODEX-H2b right stage, wrong intent -> REFUSED',
     'tomorrow please', {dateExpr:null,date:'2026-09-11',time:'11:00'},
-    {date:null,dropped:true,cls:'date_expr_missing',outcome:'date_without_expr'},
+    {date:null,dropped:true,cls:null,outcome:'date_without_expr'},
     {state:{slots:{serviceId:'haircut',date:'2026-09-11',time:'11:00'},stage:'confirming'},intent:'book'}],
   ['CODEX-H2b right intent, no confirmation pending -> REFUSED',
     'yes', {dateExpr:null,date:'2026-09-11',time:'11:00'},

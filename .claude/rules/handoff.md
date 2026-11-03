@@ -47,8 +47,11 @@ found by the L2 reviewers, not by the build (2026-09-09f):**
    *"your booking stands"*: the confirmation dropped on a classification we do not trust, which is exactly what
    this file forbids. The stage list in `Extraction Transient?` is COPIED from `Confirm Pending & Uncertain?`
    and a unit test compares the two so they cannot drift. (Plain booking `confirming` is deliberately NOT in
-   the list — shown, not assumed: `Confirm Router` → `Reschedule Router` → `Build Event Request` has no
-   freshness check, so an extra turn cannot stale it.)
+   the list. Since CLOSE-OUT M2 (2026-11-03) the booking confirm HAS a freshness check — `Reschedule Router` →
+   `Booking Fresh?` → `Build Event Request` — so an extra turn DOES stale it; but a stale booking "yes" only shows the
+   confirm again (`Booking Fresh?` → `Slot Gate`, nothing written), it never drops the request as a stale cancel or
+   reschedule confirm answers "your booking stands". So the list still does not need it. *Corrected in place: this said
+   the booking path had no freshness check, true until M2 (`tests/unit/close-out-main.test.cjs`).*)
 2. **The second one in a row escalates.** `Repeat Extraction Failure?` reads `last_intent='invalid'` carried in
    by `Merge State` and routes to `Mark Handoff`. Without it a systematic contract failure gave the customer up
    to `bot.maxTurnsPerConversation` (12) identical re-asks while the owner saw ONE alert (throttle is 30

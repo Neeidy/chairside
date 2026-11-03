@@ -113,7 +113,8 @@ APPROVED_DELTAS = {
     # edit (live since 7-2 R3; kept because its fixtures exercise this tool — applying it again cannot pass `compare`,
     # whose committed side no longer has those nodes), the NAME-CAPTURE R1 edit (docs/NAME-CAPTURE-PLAN.md §11; promoted
     # 2026-11-01, kept for the same reason), the DATE-PHRASING R1 edit (parameters only + Load Config's gate edits;
-    # promoted 2026-11-02) and the N1 R1 edit (three nodes, a sticky, the edge swap, two gate edits).
+    # promoted 2026-11-02), the N1 R1 edit (three nodes, a sticky, the edge swap, two gate edits; promoted 2026-11-03) and
+    # the CLOSE-OUT R1 edit (one IF, a sticky, the edge swap; M1 and M2 inside the allowlisted nodes).
     'main': [{
         'add_nodes': {'Tag Turnstile Unavailable', 'Sticky — Tag Turnstile Unavailable'},
         'remove_nodes': {'Record Processed', 'Build Dedupe-Marker Alert'},
@@ -143,6 +144,14 @@ APPROVED_DELTAS = {
         'remove_edges': {'Abort Reschedule?|1|Uncertain Turn?|0'},
         'settings': {},
         'gate_edits': {'Load Config': N1_GATE_EDITS},
+    }, {
+        # CLOSE-OUT R1 (docs/CLOSE-OUT-PLAN.md §3, §4; DC-13): the booking confirm's freshness gate on Reschedule Router's
+        # false output (fresh → Build Event Request, stale → Slot Gate). M1 and M2's stamp are node edits (allowlist).
+        'add_nodes': {'Booking Fresh?', 'Sticky — Booking confirm freshness'},
+        'remove_nodes': set(),
+        'add_edges': {'Reschedule Router|1|Booking Fresh?|0', 'Booking Fresh?|0|Build Event Request|0', 'Booking Fresh?|1|Slot Gate|0'},
+        'remove_edges': {'Reschedule Router|1|Build Event Request|0'},
+        'settings': {},
     }],
     'owner-actions': {
         'add_nodes': set(),

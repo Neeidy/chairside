@@ -280,6 +280,11 @@
 
 - `n8n/screenshots/.gitkeep`
 
+### n8n/staged
+
+- `n8n/staged/workflow.main.delta.json`
+- `n8n/staged/workflow.main.sanitized.json`
+
 ### ops/systemd
 
 - `ops/systemd/salon-dashboard.service`
@@ -419,6 +424,8 @@
 
 - `tests/unit/chat-replay.lib.cjs`
 - `tests/unit/chat-replay.test.cjs`
+- `tests/unit/close-out-main-mutants.py`
+- `tests/unit/close-out-main.test.cjs`
 - `tests/unit/codex-containment.test.py`
 - `tests/unit/content-parity-inactive.test.py`
 - `tests/unit/date-phrasing-mutants.py`
@@ -1184,6 +1191,7 @@
   - ### docs/n1
   - ### n8n
   - ### n8n/screenshots
+  - ### n8n/staged
   - ### ops/systemd
   - ### prompts
   - ### schemas

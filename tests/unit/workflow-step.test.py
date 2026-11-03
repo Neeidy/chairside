@@ -532,10 +532,11 @@ try:
             dr = drift(fake, cid, en)
             case('NAME-CAPTURE: put the staged Main with its approved delta (incl. the Load Config gate edit), read back == staged',
                  rc == 0 and fake.puts() == 1 and not dr, f'rc {rc} · drift {dr[:1]} · {out.strip().splitlines()[-1][:100]}')
-            committed, fake, oid, cid = world('main')
-            rc, out = run(fake, ['put', M, cid, SN, '--delta-file', repo_file({k: v for k, v in dn.items() if k != 'gate_edits'})])
-            case('NAME-CAPTURE: the same delta WITHOUT its gate edit is refused (Load Config is a gate node)',
-                 rc == 1 and fake.puts() == 0, f'rc {rc}')
+            if dn.get('gate_edits'):   # CLOSE-OUT R1: a staged edit with no gate edit has nothing to remove; the next case
+                committed, fake, oid, cid = world('main')   # (an undeclared Load Config change refused) is then the control
+                rc, out = run(fake, ['put', M, cid, SN, '--delta-file', repo_file({k: v for k, v in dn.items() if k != 'gate_edits'})])
+                case('NAME-CAPTURE: the same delta WITHOUT its gate edit is refused (Load Config is a gate node)',
+                     rc == 1 and fake.puts() == 0, f'rc {rc}')
             alt = copy.deepcopy(en)
             lc = next(n for n in alt['nodes'] if n['name'] == 'Load Config')['parameters']
             lc['jsCode'] = lc['jsCode'].replace('(Any name is fine for this demo.)', '(Any name.)', 1)
@@ -885,7 +886,14 @@ try:
     # the approved one in every item but declares ANOTHER Load Config key — and a staged export that adds exactly that
     # key — must exit 1. Without the CLI's own approved check, compare alone passes it (the key is declared).
     SNC, DNC = 'n8n/staged/workflow.main.sanitized.json', 'n8n/staged/workflow.main.delta.json'
-    if os.path.exists(os.path.join(ROOT, SNC)):
+    if os.path.exists(os.path.join(ROOT, SNC)) and not json.load(open(os.path.join(ROOT, DNC), encoding='utf-8')).get('gate_edits'):
+        # CLOSE-OUT R1: a staged edit may declare NO gate edit. Then its Load Config must equal the committed one exactly,
+        # so an undeclared gate edit cannot ride along (the askFoo case below needs a declared key to rename).
+        lc_of = lambda path: next(n for n in json.load(open(os.path.join(ROOT, path), encoding='utf-8'))['nodes']
+                                  if n['name'] == 'Load Config')['parameters']
+        case('diff-workflow-copy: a staged delta with no gate edit leaves Load Config byte-equal to the committed one',
+             lc_of(SNC) == lc_of('n8n/workflow.main.sanitized.json'), 'the staged Load Config differs from the committed one')
+    elif os.path.exists(os.path.join(ROOT, SNC)):
         en, dn = json.load(open(os.path.join(ROOT, SNC), encoding='utf-8')), json.load(open(os.path.join(ROOT, DNC), encoding='utf-8'))
         foo = copy.deepcopy(en)
         lc = next(n for n in foo['nodes'] if n['name'] == 'Load Config')['parameters']
