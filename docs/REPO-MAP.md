@@ -518,9 +518,12 @@
 
 - `web/dashboard/lib/alertState.test.ts`
 - `web/dashboard/lib/alertState.ts`
+- `web/dashboard/lib/appointmentView.test.ts`
 - `web/dashboard/lib/appointmentView.ts`
 - `web/dashboard/lib/exportCsv.test.ts`
 - `web/dashboard/lib/exportCsv.ts`
+- `web/dashboard/lib/handoffSender.test.ts`
+- `web/dashboard/lib/handoffSender.ts`
 - `web/dashboard/lib/mask.golden.ts`
 - `web/dashboard/lib/mask.test.ts`
 - `web/dashboard/lib/mask.ts`
