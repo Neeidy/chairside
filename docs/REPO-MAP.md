@@ -284,6 +284,8 @@
 
 - `n8n/staged/workflow.main.delta.json`
 - `n8n/staged/workflow.main.sanitized.json`
+- `n8n/staged/workflow.purge.delta.json`
+- `n8n/staged/workflow.purge.sanitized.json`
 
 ### ops/systemd
 
@@ -426,6 +428,7 @@
 - `tests/unit/chat-replay.test.cjs`
 - `tests/unit/close-out-main-mutants.py`
 - `tests/unit/close-out-main.test.cjs`
+- `tests/unit/close-out-purge.test.cjs`
 - `tests/unit/codex-containment.test.py`
 - `tests/unit/content-parity-inactive.test.py`
 - `tests/unit/date-phrasing-mutants.py`

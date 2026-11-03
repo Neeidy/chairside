@@ -1,0 +1,8 @@
+{
+  "_doc": "CLOSE-OUT R1 P1/P2 (docs/CLOSE-OUT-PLAN.md §3 \"Purge\"; ruling 2026-11-03): the leads collector drops a no_candidates refusal (no owner alert for nothing to delete); two stale comments; parameters only.",
+  "allow": [
+    "Purge Error (leads)",
+    "Compute Purge Cutoff",
+    "Compute Leads Cutoff"
+  ]
+}
