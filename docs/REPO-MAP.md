@@ -1058,6 +1058,7 @@
   - ## OPS-4 · 2026-09-11 · The auditor could not read the body of the guard it was judging
 
 ### `docs/PHASE-6-BACKLOG.md`
+  - ## Disposition per item — CLOSE-OUT (2026-11-03)
   - ## 1. Empty / loading / error states — *dashboard, widget*
   - ## 2. Dashboard interactions (no design yet) — *dashboard*
   - ## 3. Mobile — *all three surfaces (verified 2026-07-04 at 390px)*

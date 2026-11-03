@@ -6,6 +6,35 @@
 > **Phase 6 (vitrin frontend)** — except the conversation spec, which is Phase 2 core work. Nothing here
 > blocks Phase 2. Linked from [ROADMAP.md](ROADMAP.md).
 
+## Disposition per item — CLOSE-OUT (2026-11-03)
+
+> **Added 2026-11-03 (CLOSE-OUT plan, row 58):** this file listed each gap with no record of what became of it. Each
+> item's fate below is traced to a committed record; where no record says, the row says **"not found in the records"**
+> rather than guessing, and a code observation is labelled as code, not as a decision. The sections below are the
+> original log, unchanged.
+
+| § | Item | Disposition | Source |
+|---|---|---|---|
+| 1 | Dashboard zero-states (0 appointments, 0 leads, 0 handoffs) | **done** — designed (D5, D6, D8, D12), built in 6c; the L2 round added a third appointments state for "all cancelled" | ROADMAP → "TASARIM AŞAMASI" (Round C, `states.html`) and CP 6c's L2 fix round (K4); SCREEN-INVENTORY §4.a–4.c |
+| 1 | Widget "no slots available" reply | **done** — W15, the engine's own text ("… that day is full — want another day?"), which the widget shows as sent | SCREEN-INVENTORY §2.4 (W15); UX-ARCHITECTURE §2.4 |
+| 1 | Widget offline / timeout state | **done** — W60, `FRONTEND_TEXT.offline` / `.timeout`, closed 2026-09-13 | SCREEN-INVENTORY §2.10.1 and §2.10.1a (CP 6c-3) |
+| 1 | Dashboard error state | **done** — a failed read renders an "unavailable" or "not configured" page, never an empty shop; one bad row cannot take the page down | ROADMAP → CP 6c-3 (the fresh-clone `misconfigured` run) and CP 6c's L2 round (K1/S4, `app/error.tsx`) |
+| 1 | Loading states (widget typing indicator, dashboard skeleton) | **not found in the records** as built — only the design rule is recorded (SCREEN-INVENTORY §5, "Yükleniyor"; the dashboard skeleton D18 in `states.html`) | — |
+| 2 | Reply flow on handoff alerts | **decided out of Phase 6** (UX-ARCHITECTURE §5, ruling K6: only the lock release is built; a manual message stays out — a send-to-any-number primitive is a security risk). SCREEN-INVENTORY §7 says "→ Phase 7"; **no later record takes it: its fate after that is not found in the records** | UX-ARCHITECTURE §5; SCREEN-INVENTORY §7 |
+| 2 | Conversation / thread detail view | **not found in the records** (D10 is specified; the queue row shows the recent messages inline) | SCREEN-INVENTORY §4.c (specification only) |
+| 2 | Date navigation (Today → other days) | **not found in the records** (D1–D3 are specified; no record says built or deferred) | SCREEN-INVENTORY §4.a (specification only) |
+| 2 | Pagination | **done in part; the rest v2** — server-side filters and a "showing the first N" mark, capped at 100 rows; no "more" step. F13 (a capped window can say "Nothing booked ahead") is v2 | ROADMAP → CP 6c-1 ("Correction A"); ENGINEERING-NOTES → "Not yet — deferred to v2" (F13) |
+| 2 | Search / filter | **not found in the records** | — |
+| 3 | Widget panel: 12 px side margin vs full-bleed on mobile | **not found in the records** — still listed as open in SCREEN-INVENTORY §5 ("Mobil") | SCREEN-INVENTORY §5 |
+| 3 | Dashboard top-bar pill vs the MOCK ribbon at 390 px | **not found in the records** — still listed as open in SCREEN-INVENTORY §5 ("Mobil") | SCREEN-INVENTORY §5 |
+| 3 | Real on-device testing | **not found in the records** — only headless checks at 390 px are recorded | ROADMAP (6a-2's headless 390 px checks) |
+| 4 | Landing scope: full salon site or bot showcase | **done — decided: a focused bot showcase**; map, call button, reviews and gallery cut ("§4 böylece kapanır"); 6a-2 then added the address, parking and a plain "Get directions" link, no map image | UX-ARCHITECTURE §9, K2; ROADMAP → 6a-2 revision round |
+| 5 | The full conversation spec | **moved and done as Phase 2** (Phase 2 DONE 2026-08-11). A standalone spec written before the flow is **not found in the records**; the branching is documented from the built workflow | ROADMAP phase table (Phase 2); FLOW-DIAGRAM; UX-ARCHITECTURE §2 |
+| 6 | Oxide `#B4472E` contrast for small text (WCAG AA) | **not found in the records** | — |
+| 6 | Config wiring (config-consistent → config-wired) | **done in part** — the site is config-wired (6a-2 slice 1; a second config gave a different site from the same code); the snippet's `--ink` / `--oxide` are still hard-coded (carried "→ Faz 7" in ROADMAP's 6b list, unchecked); two dead config keys are v2 | ROADMAP → 6a-2 slice 1, and the 6b items list (F7); ENGINEERING-NOTES → "Not yet — deferred to v2" (K-2) |
+| 7 | Dashboard authentication (owner-only) | **done** — behind Cloudflare Access, measured 2026-10-24 (a request without a session is redirected to the Access login); CRT #9 | README → "Security"; ARCHITECTURE-DECISIONS §6 (Final Feature Log); ROADMAP ship gate #18 (K-6) |
+| 8 | Dark / light theme | **not found in the records** — locked as a Phase 6 item on 2026-07-04, with a planned `theme` config key; no later record says built, moved or deferred | ARCHITECTURE-DECISIONS §6 ("Frontend", "Technical decisions") |
+
 ## 1. Empty / loading / error states — *dashboard, widget*
 The mockups only show the happy, populated state. Phase 6 must design: **dashboard** zero-states
 (0 appointments today, 0 new leads, 0 pending handoffs — each needs an intentional empty view, not a blank
