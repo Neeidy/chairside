@@ -205,6 +205,7 @@
 
 - `docs/codex/close-out/containment.md`
 - `docs/codex/close-out/p1.md`
+- `docs/codex/close-out/p2.md`
 - `docs/codex/close-out/prompt-p2.md`
 - `docs/codex/close-out/prompt.md`
 - `docs/codex/close-out/run-p2.sh`
@@ -862,6 +863,8 @@
   - ## 13. Decisions for Yigitcan — each with a recommendation
   - ## R1 — built offline (2026-11-03); NOT live
   - ## R2 — Codex pass 1 and the fixes (2026-11-03)
+  - ## R2 recheck — Codex pass 2, the last (2026-11-03)
+  - ## R3 — LIVE: Main and Purge put, site redeployed, dashboard rebuilt; ⏸ STOPPED for the owner run (2026-11-03)
 
 ### `docs/CP4-RESCHEDULE-EXECUTE-PLAN.md`
   - ## What this replaces
@@ -1559,6 +1562,7 @@
 
 ### `docs/codex/close-out/containment.md`
   - ## Pass 1 — the audit of the R1 head
+  - ## Pass 2 — the recheck of the pass-1 fixes (the last pass, by the cap)
 
 ### `docs/codex/close-out/p1.md`
   - ## MAIN
@@ -1567,6 +1571,9 @@
   - ## DASHBOARD
   - ## OPS
   - ## TESTS
+
+### `docs/codex/close-out/p2.md`
+  - _(no `##` headings — flat file)_
 
 ### `docs/codex/close-out/prompt-p2.md`
   - _(no `##` headings — flat file)_

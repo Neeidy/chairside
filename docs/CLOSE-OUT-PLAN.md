@@ -441,3 +441,67 @@ the test (`ZoneInfoNotFoundError`); this server has the data.
 
 **Codex for CLOSE-OUT is closed by the cap.** No surface has an open HIGH, so the ⚠ ONAY condition for R3 holds: R1
 green, and the last pass per surface without an open HIGH.
+
+## R3 — LIVE: Main and Purge put, site redeployed, dashboard rebuilt; ⏸ STOPPED for the owner run (2026-11-03)
+
+*(Every read and number below terminal-measured, output not committed.)*
+
+**Precondition of the ⚠ ONAY, both true:** R1 green (`check-all` 0), and the last Codex pass per surface has no open
+HIGH (R2 recheck). **The Purge put's own ⚠ ONAY** was asked and given before the window (Yigitcan, 2026-11-03).
+
+**The window, 22:15–22:17 Vienna** (outside :55–:05, away from 04:00):
+- **Start gates:** `scripts/start-gates.sh`, the committed gate script with G1 now enforcing ("22:15 Vienna is outside
+  :55–:05"). All green: the dummy token got 403 as sole holder, parity 5/5 and 196/278 against the committed exports,
+  listeners, host-leak, hook-drift, a clean tree, 0 containers. The import-safety check passed over the window's scripts.
+- **Main:** `rehearse-rollback` was green on a scratch (deleted, 404 read back).
+  - Deactivate, then **put**. The nodes whose stored content changed are exactly `Booking Fresh?`,
+    `Compute Availability`, `Resolve Date` and the sticky, inside the allowlist and the approved delta. Read back ==
+    export and == the body sent; settings and webhook ids unchanged; the pre-PUT snapshot kept (0600, outside the repo).
+  - Activate: **published == draft**. The workflow was inactive from 21:15:35.9Z to 21:15:39.2Z, about 3 s. The probe
+    got 403 as sole holder.
+- **Purge:** `rehearse-rollback` green.
+  - Deactivate, then **put**. The changed nodes are exactly `Purge Error (leads)`, `Compute Purge Cutoff` and
+    `Compute Leads Cutoff`. Read back == export, settings unchanged, the snapshot kept (0600).
+  - Activate: **published == draft**, inactive about 2.5 s.
+- **Parity against the STAGED exports** (a scratch mirror of HEAD with the staged files in the committed paths): Main
+  content 173 nodes and settings OK, Purge content 24 and settings OK, Main structure 198/198 nodes and 280/280
+  connections.
+  **Negative control:** Main against the COMMITTED export shows DRIFT, exactly M2's three connections; red by
+  construction until promotion.
+- **Site:** redeployed from `48fcd8e`. The 60-file set holds nothing under `web/dashboard`, and the previous production
+  deployment is recorded as the rollback target.
+  - The new deployment is **READY**, target production. Its deployment URL gives `302` to Vercel's login.
+    `barber-demo.<apex>` `/` and `/privacy` give 200 (public by ruling).
+  - The **served widget is byte-identical to the local build**. The zone note appears once and `retry: "never"` once,
+    in the widget and in the site's JS.
+  - No file outside its 0600 file holds the token.
+- **Dashboard:** built in an isolated copy (OPS-10; the move between trees measured offline first), swapped in by two
+  renames, and the service restarted. The new BUILD_ID is live, loopback `/` gives 200, the unit is active, and the
+  dashboard hostname gives `302` to the Access login unauthenticated. The listeners are OK and the git tree is clean.
+  - The build carries D2's new text; the old text survives only in code comments.
+  - The previous build is kept as `web/dashboard/.close-out-prev/.next` (ignored) for rollback.
+- **The window's executions:** Main 4927 and 4928, both probes, `success`. Nothing ran on the other four workflows, so
+  there was no error, no alert class and no LLM spend.
+- **End gates:** the dummy token got 403. Listeners, host-leak and hook-drift OK, 0 containers. Parity against the
+  committed Main and Purge is red by construction until promotion.
+
+**The owner's run** — each line replayed through the staged Main (replayed offline by a scratchpad script at 4 Nov 08:00Z, with
+the model's answers given). Run it **in a fresh private window** on `barber-demo.<apex>`:
+1. *"I'd like a haircut on Thursday at 11:00"* → the name question → *"Kim Moss"* → the confirm, *"Haircut, Thursday 5 Nov
+   2026 11:00 for Kim Moss — shall I book it? (yes / no)"* → *"how much is it?"* → the price list → *"yes"* → **the SAME
+   confirm again, nothing booked** (M2) → *"yes"* → *"You're booked: Haircut, Thursday 5 Nov 11:00. See you then!"* →
+   *"cancel my haircut"* → its cancel ask → *"yes"* → cancelled.
+2. A second private window: book again up to the confirm → *"no"* → the change question. The owner's Telegram should
+   get **no alert** from that turn (M1, when the model echoes the stored date; without an echo there is none either).
+3. In both chats the panel shows **"Times in shop time (Europe/Vienna)"** once, and every message time is Vienna time
+   whatever the device's zone (S2).
+4. On the dashboard, the handoff queue shows **no "re-masked" notice** for widget rows (D1), and the "Today" block counts
+   only today's rows (D2).
+
+**Kept for rollback and promotion:** the Main and Purge pre-PUT snapshots and the parity mirror (scratchpad); the
+previous dashboard build; the previous production deployment's id. All are removed at promotion, after parity is green
+against the committed exports.
+
+**Next round:** read the owner's run (executions and `salon_ro`), then promotion. Promotion means: staged → committed
+for Main and Purge, `n8n/staged/` empty, both parity guards 0 against the committed exports, and the snapshots, mirror
+and old dashboard build deleted. Then C-2 (the Vercel token) and C-3 (#17's rotations), and the phase close.
