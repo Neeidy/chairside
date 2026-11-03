@@ -98,6 +98,21 @@ export function welcomeLine(businessName: string): string {
   return `Hi! I'm the ${businessName} assistant — I can book, change or cancel an appointment, or answer questions. How can I help?`;
 }
 
+/**
+ * A message's time on the SHOP's wall clock (CLOSE-OUT S2, ruling DC-2): a booking is in shop time, and a visitor
+ * abroad would otherwise read one hour in the stamp and another in the confirm. Only the zone is the shop's; the
+ * locale stays the browser's, so the visitor still reads 12- or 24-hour as they are used to. Both front ends format
+ * with this, from the config's `business.timezone` (build-config.mjs refuses a zone the runtime does not know).
+ */
+export function shopTime(at: Date, timeZone: string): string {
+  return at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone });
+}
+
+/** Said ONCE in the panel, so a shop-time stamp is never read as the visitor's own time (DC-2). */
+export function shopZoneNote(timeZone: string): string {
+  return `Times in shop time (${timeZone.replace(/_/g, ' ')})`;
+}
+
 /** A client-generated conversation id. Session-token strength, NOT verified identity (accepted T1 limit). */
 /**
  * Per-message id — the IDEMPOTENCY key. `Validate Payload` requires a non-empty `message_id`, so a widget

@@ -14,7 +14,8 @@
  * path where the gate did not run", which claimed more than the code checks (code-reviewer, 2026-09-10).
  *
  * WHAT IS BAKED, AND WHY SO LITTLE: the bundle is served to strangers on a client's website. It carries
- * only what the widget actually renders — the shop name, the message templates the engine deliberately
+ * only what the widget actually renders — the shop name, the shop's time zone (its message times and the zone line,
+ * DC-2), the message templates the engine deliberately
  * does not send, and `demoMode`, which draws a "Demo" tag in the panel header so a widget running on mock
  * data says so on someone else's site (honesty-demos.md). Not the whole config: services, hours, address and site copy are the
  * SITE's business, and shipping them here would publish more than the widget needs.
@@ -111,7 +112,7 @@ if (parsed.pathname !== EXPECTED_PATH) {
 //   $ grep -rn 'messageTemplates' web/snippet/src web/shared/src → no other consumer reads a key
 // `welcomeLine()` is a hardcoded string in the transport, not a template, so nothing else is lost.
 const baked = {
-  business: { name: config.business.name },
+  business: { name: config.business.name, timezone: config.business.timezone },
   messageTemplates: Object.fromEntries(NEEDED_TEMPLATES.map((k) => [k, config.messageTemplates[k]])),
   demoMode: config.demoMode === true,
 };

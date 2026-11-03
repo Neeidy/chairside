@@ -10,9 +10,9 @@
     "./config/types": "./src/config/client.config.types.ts"
   },
   "scripts": {
-    "test": "node --test src/config/loadConfig.test.ts src/chat/chatClient.test.ts",
+    "test": "node --test src/config/loadConfig.test.ts src/chat/chatClient.test.ts src/chat/shopTime.test.ts",
     "gen:types": "node ../../scripts/generate-config-types.cjs",
-    "check": "node ../../scripts/generate-config-types.cjs --check && node --test src/config/loadConfig.test.ts src/chat/chatClient.test.ts"
+    "check": "node ../../scripts/generate-config-types.cjs --check && node --test src/config/loadConfig.test.ts src/chat/chatClient.test.ts src/chat/shopTime.test.ts"
   },
   "dependencies": {
     "ajv": "8.20.0"

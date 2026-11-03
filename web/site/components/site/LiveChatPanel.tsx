@@ -13,7 +13,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ClientConfig } from '@salon/shared/config';
 import {
-  sendMessage, getSessionId, newMessageId, FRONTEND_TEXT, welcomeLine,
+  sendMessage, getSessionId, newMessageId, FRONTEND_TEXT, welcomeLine, shopTime, shopZoneNote,
   type ChatReply, type EndpointConfig,
 } from '@salon/shared/chat';
 import { TurnstileWidget } from './TurnstileWidget';
@@ -23,10 +23,11 @@ import { MESSAGE_TEXT_DAYS } from '../../lib/retention';   // no config import: 
 
 interface Bubble { from: 'bot' | 'user' | 'system'; text: string; stamp: string }
 
-const now = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
 export function LiveChatPanel({ config, endpoint }: { config: ClientConfig; endpoint: EndpointConfig }) {
   const name = config.business.name;
+  // Message times are the SHOP's wall clock, named once below the header (DC-2) — not the visitor's zone.
+  const timeZone = config.business.timezone;
+  const now = () => shopTime(new Date(), timeZone);
   const initials = name.split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
 
   // W61 — FRONTEND welcome (K4=B). The engine emits no greeting; this line has no engine counterpart
@@ -152,6 +153,11 @@ export function LiveChatPanel({ config, endpoint }: { config: ClientConfig; endp
           <a href="/privacy">Privacy</a>
         </p>
       )}
+
+      {/* Outside the live log, like the demo notice: read once, not announced as something the bot said. */}
+      <p style={{ margin: 0, padding: '10px 18px 0', fontSize: 12, lineHeight: 1.45, color: 'var(--muted)' }}>
+        {shopZoneNote(timeZone)}
+      </p>
 
       <div className="thread" role="log" aria-live="polite" ref={threadRef}>
         {thread.map((b, i) => (

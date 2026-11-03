@@ -27,7 +27,7 @@
  * is simply untouched. That is the correct behaviour for an injected widget — the DEMO SITE keeps the
  * no-JS-open contract, this cannot.
  */
-import { sendMessage, getSessionId, newMessageId, welcomeLine, FRONTEND_TEXT, type ChatReply } from '@salon/shared/chat';
+import { sendMessage, getSessionId, newMessageId, welcomeLine, FRONTEND_TEXT, shopTime, shopZoneNote, type ChatReply } from '@salon/shared/chat';
 import { STYLES } from './styles';
 import { injectUiFont, injectDisplayFont, ownOrigin } from './fonts';
 import { mountTurnstile } from './turnstile';
@@ -35,7 +35,7 @@ import { lockLineDecision } from './lockedOnce';
 
 /* Baked at build time by build.mjs — see that file for what is included and why so little. */
 declare const __BAKED_CONFIG__: {
-  business: { name: string };
+  business: { name: string; timezone: string };
   messageTemplates: Record<string, string>;
   demoMode: boolean;
 };
@@ -111,6 +111,7 @@ function boot(selfSrc: string | null) {
     ${cfg.demoMode ? '<span class="demo-tag" title="This assistant is running on demo data">Demo</span>' : ''}
     <button class="panel-close" type="button" aria-label="Close chat">×</button>
   </div>
+  <p class="zone-note">${esc(shopZoneNote(cfg.business.timezone))}</p>
   <div class="thread" role="log" aria-live="polite" data-thread></div>
   <div class="turnstile-slot" data-slot></div>
   <div class="composer">
@@ -140,7 +141,8 @@ function boot(selfSrc: string | null) {
   let sending = false;
   let handoffShown = false;      // K2 = C: show the lock reply ONCE, then accept quietly
 
-  const clock = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  // Message times are the SHOP's wall clock, named once under the header (DC-2) — not the visitor's zone.
+  const clock = () => shopTime(new Date(), cfg.business.timezone);
 
   function bubble(from: 'bot' | 'user' | 'system', text: string, action?: { label: string; run: () => boolean }) {
     // A blank bubble is worse than an honest sentence: it reads as the bot answering with nothing.

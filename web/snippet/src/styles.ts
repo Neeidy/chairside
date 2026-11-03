@@ -69,6 +69,7 @@ display:flex;align-items:center;justify-content:center;background:none;border:no
 transition:background .15s var(--ease),color .15s var(--ease)}
 .panel-close:hover{background:rgba(22,21,15,.08);color:var(--ink)}
 
+.zone-note{margin:0;padding:10px 18px 0;font-family:var(--font-ui);font-size:12px;line-height:1.45;color:var(--muted)}
 .thread{padding:18px;display:flex;flex-direction:column;gap:12px;max-height:min(60vh,440px);overflow-y:auto}
 .msg{max-width:88%;padding:11px 15px;font-size:14.5px;line-height:1.5}
 .msg.user{align-self:flex-end;max-width:84%;background:var(--ink);color:var(--cream);border-radius:16px 16px 4px 16px}

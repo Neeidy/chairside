@@ -128,5 +128,15 @@ if (!config.site) {
     + 'copy in the components would re-create the very second-source-of-truth this block removes.');
 }
 
+// The schema says only "a string" for business.timezone. Both widgets format every message time in it (DC-2), and a
+// zone the runtime does not know throws a RangeError there — in the visitor's browser, on the first bubble. Refuse it
+// here instead, where the operator sees it.
+try {
+  new Intl.DateTimeFormat('en', { timeZone: config.business.timezone });
+} catch {
+  fail(`business.timezone "${config.business.timezone}" is not a time zone this runtime knows (an IANA name, e.g. `
+    + 'Europe/Vienna). The widget formats every message time in it.');
+}
+
 writeFileSync(OUT, JSON.stringify(config, null, 2) + '\n');
 console.log(`config: ${source} → config.generated.json  (business="${config.business.name}", demoMode=${isDemoMode(config)}, services=${config.services.length})`);
