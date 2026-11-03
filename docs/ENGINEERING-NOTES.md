@@ -144,3 +144,54 @@ Since Phase 8's first round, **a new client = a config file + secret inputs → 
 its own n8n; no node edited by hand** (with both secret inputs given) — shown offline on a second, fictional client (`tests/unit/render-client.test.py`: only the ten measured slots differ from the demo's workflows; a synthetic client whose every config value differs from the demo's shows every key of the three config literals fed from the client's own config (the few-shot from its first service, the chat id and Turnstile secret from its secret input); and no demo-client string of five or more characters reaches the new client outside six allowlisted code comments and fallbacks;
 `tests/unit/render-client-mutants.py`, 35 mutants red), with these bounds in the same breath:
 EUR only (`priceEUR`, and `€` written in two nodes), customer text in English, two config keys that drive nothing (`instagram`, `business.locale`), the prompt carries a fixed example that hair colouring is not offered; a client offering it gets a contradicting prompt until a Main edit (quality only: `Merge Slots` and `Slot Gate` refuse a service id the config does not hold), the new instance's credentials linked by hand, and not yet shown on a real second deployment (`docs/PHASE-8-PLAN.md`; CRT #14: Codex audited the pre-fix code, `docs/codex/phase-8/crt14.md`; the fixes were verified by the internal reviews).
+
+## Closed by decision — CLOSE-OUT (2026-11-03)
+
+> **What this section is:** every **B** and **B-v2** row of the CLOSE-OUT inventory
+> ([`CLOSE-OUT-PLAN.md`](CLOSE-OUT-PLAN.md) §0), closed by a written decision rather than by a build (plan approved
+> 2026-11-03 with DC-1…DC-13 as recommended, `ARCHITECTURE-DECISIONS.md` 2026-11-03 rows). **Nothing below is built by
+> the CLOSE-OUT** (its NOT-build list, §2). "Reopens when" is the trigger the plan or the item's own record names; where
+> neither names one, the row says so instead of inventing it. "Steps" are the plan's §5 steps where it gives them.
+> Row numbers are the plan's §0 numbers. The sections above this one are unchanged.
+
+**B — closed by a decision, with a trigger**
+
+| # | Item | Decision | Reopens when | Steps when it fires |
+|---|---|---|---|---|
+| 5 | The few-shot's fixed "no hair colouring" example | a recorded bound (Phase 8 R2b; quality only — `Merge Slots` and `Slot Gate` refuse a service the config does not hold) | a client that offers colouring | a Main edit of `Build LLM Request` (plan row 5) |
+| 6 | The engine does not read siteverify's `hostname`; the Turnstile secret sits in a node | DC-7: B, done with per-client provisioning (#34), which creates the hostname list and the credential (Ruling (d), 2026-10-29: the widget's one-hostname list is the boundary, the engine check is defence in depth) | the second real client (#34) | inside #34's steps below: the engine's `hostname` check added with them |
+| 9 | A verify read with no `items` key counts as an empty list | a ruled carve-out (7-2 R2) | Calendar is seen omitting the key | not written in the plan |
+| 14 | A name that needs combining marks (`\p{M}`) is refused; a ZWNJ is stripped | a recorded bound (NAME-CAPTURE R3-2, v2) | a client whose customers have non-Latin names | a design change, named in NAME-CAPTURE A2: a mark cap against "zalgo" text, or a ZWNJ exception |
+| 15 | DATE-PHRASING's and N1's recorded bounds: the r4 text class (R2d), F2 and F3 (R2e), the in-flight put (R-d), N1's `trim()` LOW | already written as bounds, each with its defence, in its plan | no trigger named — standing bounds. If M2 (the booking-confirm freshness check) is built, F1's premise changes; that is recorded by R1's Main slice, not here | — |
+| 16 | EUR only, English customer text, two dead config keys (`instagram`, `business.locale`) | recorded bounds (PHASE-8-PLAN; `honesty-demos.md`) | a client in another currency or language | not written in the plan |
+| 20 | Real WhatsApp reminder-template delivery (CP4d-2) | B: it needs a real dedicated WhatsApp Business number, which the customer provisions (ROADMAP, CP4d-2) | a client's own WhatsApp Business number | ROADMAP CP4d-2: the send brake opens only after its precondition there; with #36 below |
+| 21 | Release's one-second resend window (Owner Actions) | already a written bound (ROADMAP, "Owner Actions — recorded bounds", R2b OA-2) | no trigger named; the bound assumes the dashboard's and n8n's clocks agree to about a second (same host today) | — |
+| 24 | Ship gate #15, the hidden-container check in Managed mode | DC-6: closed by decision. The forced-interactive TEST key showed the challenge inside the panel (PUBLIC-DEMO "DOMAIN + INTERACTION-ONLY"); the real key's challenge was never seen, because the owner's runs passed without one — that is the recorded bound | no trigger named by DC-6; the earlier ruling (RENAME (3)) names what a run needs: a hidden-container harness page on the demo hostname, in a real browser | — |
+| 25 | The watchdog's five unswept axes (ROADMAP 6b hand-over #9) | B: one axis needs a real token; the other four are threshold tuning, not a defect | a client reports a stuck widget | not written in the plan |
+| 26 | A phone / e-mail field in the widget, per client | out for the demo (RENAME ruling (4): visitors are told not to enter real details); a per-client option later | a client that wants call-backs from the widget | not written in the plan |
+| 33 | Ship gate #18: Access's configuration is not in the repo | it stays out — in a public repo it would be a service inventory; the measured behaviour is the control (K-6, 2026-10-24) | no trigger named | — |
+| 34 | Per-client Turnstile provisioning | B: required before the SECOND real client (Ruling (d)); not built for the demo | the second real client | plan §5: a write-scoped Cloudflare token created by the owner → the widget created through the API → the site key into the client's frontend environment → the secret straight into that client's n8n credential, never through a chat or a log → the engine's `hostname` check (#6) added with it |
+| 35 | A real second deployment | B: shown offline only (Phase 8) | a real client | plan §5: `render-client.py` → import → link the credentials → RUNBOOK §0's provisioning as one procedure, timed |
+| 36 | WhatsApp end to end on Postgres (K-5) | B: the webhook stays closed for spend safety | the WhatsApp channel turned on for a client | plan §5: the client's Zernio number → open the webhook (⚠ ONAY, spend) → a real-phone run → the K-5 row closes |
+| 37 | Instagram DMs (config-gated; no adapter built) | B | a client asks for Instagram | not written in the plan (the design record: a channel is one adapter + config, ARCH-DEC 2026-07-01) |
+| 43 | An off-server backup target; a pinned backup script | DC-8: B (PHASE-7-PLAN §4j #4 and #9: deferred by the owner, recorded) | the first real client, unless the owner names a target earlier | plan §5, for the target: the owner names it → `pg-backup.sh` copies the verified dump there → a restore drill from it. For the pinned script: not written in the plan |
+| 47 | A second owner-alert channel | B (PHASE-7-PLAN §4b; triaged v2 by judgment and flagged for the owner) | a real client — an alert that cannot reach the owner is a business risk then | plan §5: e-mail or SMS through a new credential → each alert class sent to both |
+
+**B-v2 — an existing v2 ruling re-affirmed as the close (DC-1)**
+
+DC-1 re-affirms every one of these as v2: reopening them would break "short" and edit Main twice (plan §13). The plan
+names no trigger for these rows, so "Reopens when" quotes what each item's own record says it needs.
+
+| # | Item | The v2 ruling | Reopens when (what its record says it needs) | Steps when it fires |
+|---|---|---|---|---|
+| 3 | The infra owner alerts take `sender` / `channel` / `stage` from the error item | v2 (PHASE-7-PLAN §4j #15) | a Main edit; the error item carries only `{error, message}` | build the three from node references (PHASE-7-PLAN, Open items (5)) |
+| 4 | A stale line in the intent prompt (reschedule "routed to a human") | v2 (PHASE-7-PLAN §4j, last row; the model still classifies `reschedule`, G11, 7-4 A) | a Main edit, and a prompt change needs a paid golden re-run (plan row 4) | correct `prompts/intent-extraction.md` and the live `Build LLM Request` line together, then the golden re-run |
+| 7 | D-c: an alert can run ahead of the reply on a few paths and delay it | v2 (7-2 CONVERGE; bounded and documented in FLOW-DIAGRAM) | a Main edit | not written beyond "restoring it is a Main edit" |
+| 8 | Rebooking a slot you just cancelled is handed off | v2 (7-F1 ruling K3, 2026-10-25) | a real calendar write to prove the fix (a spike first) | change the event-id scheme or the reconcile branch (PHASE-7-PLAN §4b (3)) |
+| 10 | A change request during a confirm (the "change" intent) | v2 (ARCH-DEC 2026-09-09e: a product feature that gets its own phase and gate; not reopened by N1) | its own phase | a change request handled as its own intent and flow (ARCH-DEC 2026-09-09e) |
+| 12 | The second uncertain turn live; golden G8 / G10 / G11 not run | v2 (PHASE-7-PLAN §4j "Golden set": "needs a seeded stage, not run") | a seeded stage, and an approved window for the LLM spend | not written in the plan |
+| 19 | A reminder for an appointment cancelled while the database mirror was failing | v2 (7-F1 ruling K4, 2026-10-25) | a new Google credential in the Reminders workflow | Reminders reads the event before sending (PHASE-7-PLAN §4b) |
+| 30 | Dashboard security: `salon_ro` reads every column; a cached write check; raw driver errors | v2 (PHASE-7-PLAN §4j #3, #6, #8, #10) | no trigger named; the bound meanwhile: the role is read-only and the dashboard sits behind Access | — |
+| 31 | The older v2 / LATER bucket (the idempotent replay's stored reply, required template keys, the transcript lost on navigation, font subsetting, a `Customers` table, BULGU-4, R2) | v2 since 2026-09-17 (PHASE-7-PLAN, Open items) | no trigger named: "they improve the product but do not change whether it can be sold" | — . ⚠ **Correction:** the plan's row 31 and the bucket's moved text above also list "the W57/W58/W60 text mismatch"; that item was **closed on 2026-09-13** (CP 6c-3, ruling K-4, `SCREEN-INVENTORY.md` §2.10.1a), so it is not re-affirmed here |
+| 32 | F5, F6, F9, F10, F11, F13, the `handoffShown` twin, W64/W65 | v2 (PHASE-7-PLAN §4b; this file, "Not yet — deferred to v2") | the condition each row's reason relies on stops holding — e.g. F9: a `.mts`/`.cts` file appears; F11: a writer that can produce such a value; F13: more than a hundred cancellations inside the window | per row, as its reason says (F11: a migration file and an operator apply) |
+| 38 | The 7-2 CONVERGE deploy-tool, secret-scan and masking LOWs | v2 (7-2 R4, ruled 2026-10-26; this file's 7-2 CONVERGE table) | the condition each row's "why it waits" relies on stops holding (each row names it) | per row |

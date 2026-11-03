@@ -929,6 +929,7 @@
   - ## Not yet — deferred to v2 (ruled 2026-10-24)
   - ## Security — the honest limits recorded in the README
   - ## Config / code / secret — the full statement
+  - ## Closed by decision — CLOSE-OUT (2026-11-03)
 
 ### `docs/FLOW-DIAGRAM.md`
   - ## Overview — the lanes
