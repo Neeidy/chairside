@@ -31,35 +31,35 @@ ARCHITECTURE-DECISIONS. The result is **58 items in 57 rows**. Row 29 is merged 
 | 5 | The few-shot's fixed "no hair colouring" example | PHASE-8:284; ARCH-DEC:387 | Main | B | trigger: a client that offers colouring → a Main edit of `Build LLM Request` |
 | 6 | The engine does not read siteverify's `hostname`; the Turnstile secret sits in a node | PUBLIC-DEMO:33–36; ARCH-DEC:388 | Main | B | DC-7: with per-client provisioning (#34), which creates the hostname list and the credential |
 | 7 | D-c: an alert can run ahead of the reply and delay it | ENG-NOTES | Main | B-v2 | DC-1 |
-| 8 | Rebooking a slot you just cancelled is handed off | PHASE-7:184 | Main | B-v2 | DC-1 (needs a real calendar write to prove) |
+| 8 | Rebooking a slot you just cancelled is handed off | PHASE-7:183 | Main | B-v2 | DC-1 (needs a real calendar write to prove) |
 | 9 | A verify read with no `items` key counts as empty | ENG-NOTES | Main | B | trigger: Calendar seen omitting the key |
 | 10 | A change request during a confirm (the "change" intent) | ARCH-DEC 2026-09-09e | Main | B-v2 | DC-1 |
 | 11 | Does a re-sent `yes` book twice? (an open QUESTION) | ROADMAP:651, :2170 #8 | Main | **A** | M3: answered offline by a chat-replay test, no Main change |
-| 12 | The second uncertain turn live; golden G8/G10/G11 not run (they need a seeded stage) | PHASE-7:609/627 | Main | B-v2 | DC-1 (LLM spend in a window) |
+| 12 | The second uncertain turn live; golden G8/G10/G11 not run (they need a seeded stage) | PHASE-7:609; tests/golden-set.md | Main | B-v2 | DC-1 (LLM spend in a window) |
 | 13 | The old nameless `confirming` row ("its yes hands off") | NAME-CAPTURE:495, :661; DATE-PHRASING:466/648 | Main (data) | **A** | read-only: its prefix and age as `salon_ro`; then DC-11 |
 | 14 | The `\p{M}` / ZWNJ name bound | NAME-CAPTURE:469, :660 | Main | B | already a written bound; trigger: a client with non-Latin names |
 | 15 | DATE-PHRASING and N1 recorded bounds (the r4 text class, F2, F3, the in-flight put, N1's `trim()` LOW) | DATE-PHRASING:408/509/595; N1:523 | Main | B | already written; M2 changes F1's premise, which is recorded in R1 |
 | 16 | EUR only, English text, dead keys `instagram` / `business.locale` | PHASE-8:22–24 | Main/config | B | trigger: a client in another currency or language |
-| 17 | The nightly Purge "no_candidates" alert (recorded when the leads table was empty) | PHASE-7:186; OPS-5:157 | Purge | **A** | measure the alert volume first (#57), then DC-5 |
+| 17 | The nightly Purge "no_candidates" alert (recorded when the leads table was empty) | PHASE-7:186; MIGRATION-PLAN:1407 | Purge | **A** | measure the alert volume first (#57), then DC-5 |
 | 18 | Stale comments in two Purge nodes and `001_init.sql`'s `lead_no` comment | PHASE-7:189 | Purge/db | **A** | P2: the Purge comments ride a Purge put if DC-5 adds one; the SQL comment goes in the next schema file |
-| 19 | A reminder for an appointment cancelled while the mirror failed | PHASE-7:185 | Reminders | B-v2 | DC-1 (needs a new Google credential in Reminders) |
-| 20 | Real WhatsApp template delivery (CP4d-2) | ROADMAP:12 | Reminders | B | trigger: a client's own WhatsApp Business number |
+| 19 | A reminder for an appointment cancelled while the mirror failed | PHASE-7:184 | Reminders | B-v2 | DC-1 (needs a new Google credential in Reminders) |
+| 20 | Real WhatsApp template delivery (CP4d-2) | ROADMAP:14, :199 | Reminders | B | trigger: a client's own WhatsApp Business number |
 | 21 | Release's 1 s resend window | ROADMAP Owner Actions bounds | Owner Actions | B | already a written bound |
 | 22 | Cloudflare's own Turnstile retry beside ours | ROADMAP:20; N1:645 | site+snippet | **A** | S1: measure, then DC-4 |
-| 23 | Widget message times in the visitor's zone (two sites: the site panel and the snippet) | PHASE-7:188 (iii) | site+snippet | **A** | S2, DC-2 |
+| 23 | Widget message times in the visitor's zone (two sites: the site panel and the snippet) | PHASE-7:187 (iii) | site+snippet | **A** | S2, DC-2 |
 | 24 | #15 the hidden-container check in Managed mode | ROADMAP gate table; PUBLIC-DEMO RENAME (3) | site+snippet | B | DC-6: the premise changed with interaction-only |
-| 25 | The watchdog's five unswept axes | ROADMAP:2171 #9 | site+snippet | B | one axis needs a real token; DC-1 |
+| 25 | The watchdog's five unswept axes | ROADMAP:2171 #9 | site+snippet | B | one axis needs a real token, the other four are threshold tuning, not a defect; trigger: a client reports a stuck widget |
 | 26 | A phone / e-mail field in the widget, per client | NAME-CAPTURE:26 | site/Main | B | trigger: a client that wants call-backs from the widget |
-| 27 | Dashboard (i): two mask formulas, so every widget row counts as "re-masked" | PHASE-7:188 (i) | dashboard | **A** | D1, DC-3 |
-| 28 | Dashboard (ii): the "Today" block after a cancel | PHASE-7:188 (ii) | dashboard | **A** | D2: reproduce with a fixture first |
+| 27 | Dashboard (i): two mask formulas, so every widget row counts as "re-masked" | PHASE-7:187 (i) | dashboard | **A** | D1, DC-3 |
+| 28 | Dashboard (ii): the "Today" block after a cancel | PHASE-7:187 (ii) | dashboard | **A** | D2: reproduce with a fixture first |
 | 30 | Dashboard security v2: `salon_ro` reads every column; a cached write check; raw driver errors | PHASE-7:583/586 | dashboard | B-v2 | DC-1 |
-| 31 | The older v2 / LATER bucket (Idempotent Replay's stored reply, required template keys, the lost transcript, font subset, a Customers table, BULGU-4, R2, W57/58/60) | PHASE-7:731 | mixed | B-v2 | DC-1 |
+| 31 | The older v2 / LATER bucket (Idempotent Replay's stored reply, required template keys, the lost transcript, font subset, a Customers table, BULGU-4, R2, W57/58/60) | PHASE-7:728 | mixed | B-v2 | DC-1 |
 | 32 | F5, F6, F9, F10, F11, F13, the `handoffShown` twin, W64/W65 | PHASE-7:171–180 | mixed | B-v2 | DC-1 |
 | 33 | #18 Access's configuration is not in the repo | ROADMAP gate table | infra-security | B | decision: it stays out — in a public repo it would be a service inventory; the behaviour is the measured control (K-6) |
 | 34 | Per-client Turnstile provisioning | ROADMAP:20; README | infra-security | B | trigger: the second real client; steps in §5 |
 | 35 | A real second deployment | README; PHASE-8:285 | infra-security | B | trigger: a real client; steps in §5 |
 | 36 | WhatsApp end to end on Postgres (K-5) | ROADMAP:20; README | infra-security | B | trigger: the WhatsApp channel turned on for a client; steps in §5 |
-| 37 | Zernio Instagram DMs | ROADMAP:12 | infra-security | B | trigger: a client asks for Instagram |
+| 37 | Instagram DMs (config-gated, no adapter built) | MASTER-BRIEF:92; README (K-2 `instagram` key) | infra-security | B | trigger: a client asks for Instagram |
 | 38 | The 7-2 CONVERGE deploy-tool / secret-scan / masking LOWs | ENG-NOTES | infra-security | B-v2 | DC-1 |
 | 39 | Vercel token revocation + `~/.vercel-demo.env` deletion | ROADMAP:20 | owner-only | **C** → then A | §6 C-2; **after** R3's site redeploy, which still needs the token |
 | 40 | #17b–d rotations: the `/api` Access service token, the owner-path Access service token, the n8n API key (17a done, 17e accepted) | PHASE-7:577–579 | owner-only | **C** | §6 C-3, after R3 (the window uses them) |
@@ -278,8 +278,9 @@ writes, cancels or blocks a booking wrongly is a stop.
 
 | Scenario | Setup | Expected | Must run | Must not run |
 |---|---|---|---|---|
-| 4905 replayed | the live answer | change question, no alert | Resolve Date, N1 nodes | Send Owner Alert |
+| 4905 replayed | the live answer | change question, no alert | Resolve Date, N1 nodes | Send Owner Alert (Telegram) |
 | a different date, no expression, at a confirm | a replay | alert as today | Date Alert? | a write |
+| the stored date echoed OUTSIDE a confirm stage | a replay | alert as today | Date Alert? | a write |
 | confirm → question → "yes" | a replay; owner run | the confirm again, nothing booked | Booking Fresh? (false) | Book Appointment |
 | confirm → "yes" | a replay; owner run | booked | Booking Fresh? (true), write-then-verify | — |
 | an unstamped `confirming` row → "yes" | a replay | re-ask | Booking Fresh? (false) | Book Appointment |
@@ -287,6 +288,9 @@ writes, cancels or blocks a booking wrongly is a stop.
 | a Turnstile failure | always-fail test key | the counted callbacks, as measured, per DC-4 | the widget's own retry | an unbounded loop |
 | times under two browser zones | headless | the same shop-time label | — | — |
 | the widget-lane mask fixture | dashboard test | 0 re-masked | — | — |
+| a cancel, then the "Today" block | dashboard fixture (D2) | only today's active appointments counted | — | — |
+| Purge with nothing old (if DC-5) | the Purge test path | no alert | Purge run | Send Owner Alert (Purge) |
+| Purge with a real error (if DC-5) | a forced query error | the alert as today | the error branch | a delete |
 
 ## 11. Rounds — at most three build rounds and one live window
 
@@ -319,7 +323,7 @@ Neither `/loop` nor `/goal`. Each round ends at an approval or an owner step.
 
 | | Decision | Recommendation |
 |---|---|---|
-| DC-1 | The v2-ruled but doable rows (3, 4, 7, 8, 10, 12, 19, 25, 30, 31, 32, 38): re-affirm them as v2, each with its trigger, or reopen some | **Re-affirm all as v2.** Opening them breaks "short" and edits Main twice. Row 11 is answered offline instead (M3) |
+| DC-1 | The v2-ruled but doable rows (3, 4, 7, 8, 10, 12, 19, 30, 31, 32, 38): re-affirm them as v2, each with its trigger, or reopen some | **Re-affirm all as v2.** Opening them breaks "short" and edits Main twice. Row 11 is answered offline instead (M3) |
 | DC-2 | Widget times: the shop's zone or the visitor's | **The shop's zone, named once in the panel.** A booking is in shop time, and a visitor abroad otherwise sees a different hour than the confirm |
 | DC-3 | The dashboard's one mask formula | **The stored `sender_masked`** (what the engine writes and the queue reads). The dashboard falls back to its own formula only when the column is empty. Measured on the fixtures first |
 | DC-4 | Cloudflare's own retry | **Measure first.** If it adds callbacks beyond our two retries, set `retry: 'never'` on both render sites |
