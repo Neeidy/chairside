@@ -104,8 +104,7 @@ Postgres was ruled on 2026-10-19 (`docs/MIGRATION-PLAN.md`).
   to their clean names through the reviewed deploy tool, one workflow at a time with a rehearsal on a scratch first;
   every webhook path and id read back unchanged (`docs/MIGRATION-PLAN.md` §7a). The archived Main original was deleted
   in 7-4 B (2026-10-28); revoking the Airtable token and deleting the base were deferred by the owner, recorded
-  (PHASE-7-PLAN §4j). *(Since 2026-11-04 the base is kept and the token revocation is CLOSE-OUT C-6, open at this
-  writing.)*
+  (PHASE-7-PLAN §4j). *(Since 2026-11-04 the base is kept, and its tokens were revoked by the owner in CLOSE-OUT C-6.)*
 
 **What Postgres costs instead:** a database to run, back up and restore for every client.
 
@@ -212,7 +211,7 @@ What stands between that sentence and a fact, stated (`.claude/rules/honesty-dem
   system is complete: rotating the leaked Access service tokens and the n8n API key, revoking the Access sessions and a
   24 h session, the Airtable token and base, the root-side steps and an off-server backup target. *(Since the CLOSE-OUT
   of 2026-11-04: the 24 h session set; the service-token rotations, the session revocation and the root-side tunnel move
-  closed by written decisions with triggers; the Airtable base kept, its token(s) to be revoked by the owner (open at this writing) — CLOSE-OUT-PLAN,
+  closed by written decisions with triggers; the Airtable base kept, its tokens revoked by the owner — CLOSE-OUT-PLAN,
   last sections.)* **v2:** splitting the
   read-only role's column access, the dashboard's error handling, the infra alerts' sender fields, a stale prompt line
   (PHASE-7-PLAN §4j; `docs/ENGINEERING-NOTES.md`, "The final security pass: what stays open" — moved there from the

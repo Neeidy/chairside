@@ -317,7 +317,7 @@ and the bot had no data layer for almost twelve days ([OPS-5](docs/OPERATIONAL-I
 self-hosted Postgres (ruling 2026-10-19; cut over and accepted 2026-10-24,
 [MIGRATION-PLAN §3t](docs/MIGRATION-PLAN.md)). **Airtable was retired at D6c (2026-10-27)**: the original workflows
 are archived and n8n's Airtable credential is deleted, so nothing can reach it. Since 2026-11-04 the base is kept (synthetic demo data) and
-its token is to be revoked by the owner (CLOSE-OUT C-6, open at this writing). What Postgres costs instead: a
+its tokens were revoked by the owner (CLOSE-OUT C-6). What Postgres costs instead: a
 database to run, back up and restore for every client. The nightly backup restores each dump into a throwaway
 container and compares every table before the dump counts ([`db/ops/pg-backup.sh`](db/ops/pg-backup.sh)).
 

@@ -868,6 +868,7 @@
   - ## C-1 and C-2 — done (2026-11-04)
   - ## C-3 declined by decision; C-4 and C-5 weighed (2026-11-04)
   - ## The final rulings, X1, the screenshot and the worktrees (2026-11-04)
+  - ## CLOSE-OUT closed (2026-11-04)
 
 ### `docs/CP4-RESCHEDULE-EXECUTE-PLAN.md`
   - ## What this replaces

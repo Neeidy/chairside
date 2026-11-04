@@ -8,7 +8,7 @@
 >
 > **Airtable was retired at D6c (2026-10-27, MIGRATION-PLAN §7a):** the original workflows are archived and n8n's
 > Airtable credential is deleted, so nothing reaches the base. Since the CLOSE-OUT ruling of 2026-11-04 (C-6) the base is
-> **kept** (synthetic demo data) and its token(s) are to be revoked by the owner (open at this writing). *(Said "revoking its token and deleting
+> **kept** (synthetic demo data) and its tokens were revoked by the owner the same day. *(Said "revoking its token and deleting
 > the base are on the final security pass list" until then; corrected in place.)* Its description is kept at the bottom of this page as history, not as the current model.
 
 Five tables. `leads` / `appointments` are the CRM; `conversations` / `processed_messages` / `bot_metrics` are the

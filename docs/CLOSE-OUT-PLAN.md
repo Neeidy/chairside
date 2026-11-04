@@ -2,9 +2,9 @@
 
 > **Status: APPROVED by Yigitcan, 2026-11-03** (plan-gate, written in the conversation), with DC-1…DC-13 exactly as
 > recommended in §13, plus **G1** (the start-gate script refuses to run in the Vienna minutes :55–:05) and, asked and
-> answered during R1, **DC-5 ruled: Purge P1/P2 are IN this phase** (§13, DC-5's row). **R1–R4 done; every C row is done or declined in writing except C-6, the owner's Airtable
-> token revocation** (the last section, 2026-11-04). *(Said "R1 in progress" until 2026-11-04, then "the C rows are the
-> owner's" until the final rulings of the same day; corrected in place.)* Recorded in
+> answered during R1, **DC-5 ruled: Purge P1/P2 are IN this phase** (§13, DC-5's row). **CLOSED 2026-11-04** — R1–R4 done, every C row done or declined in writing (the last
+> section, "CLOSE-OUT closed"). *(Said "R1 in progress" until 2026-11-04, then "the C rows are the owner's", then "every
+> C row … except C-6" the same day; corrected in place.)* Recorded in
 > `ARCHITECTURE-DECISIONS.md` (2026-11-03 rows). *(This line said "PLAN ONLY — awaiting Yigitcan's written
 > 'approved'" until the approval; corrected in place.)* No Main, staged, site, dashboard or infra change is made by
 > this file. Written from `47c9bc9` (2026-11-03).
@@ -259,8 +259,9 @@ read-only reads as `salon_ro` and through the n8n API.
   3. Delete the base.
 
   *Check:* an API call with the old token is refused. CC reads nothing else of Airtable.
-  **Scope ruled 2026-11-04** (ruling 3, the last section): step 2 only. The base is **kept** (synthetic demo data), so
-  steps 1 and 3 do not run.
+  **Scope ruled 2026-11-04** (ruling 3, the section "The final rulings"): step 2 only. The base is **kept** (synthetic
+  demo data), so steps 1 and 3 do not run. ✅ **Step 2 done 2026-11-04** (the last section): three tokens revoked by the
+  owner, the old read-only one refused with `401` by CC's check.
 - **C-7 the Loom (DC-9)** and **C-8 the screenshot (DC-10).** *Ruled 2026-11-04 (the last section):* the Loom is
   deferred by the owner, outside this phase; the screenshot was taken by CC, headless, and committed.
 
@@ -291,11 +292,12 @@ committed:*
   … open as CC's" until then; corrected in place.)*
 - **2 ✅** — every B and B-v2 row is written with its decision and trigger in ENGINEERING-NOTES, "Closed by decision —
   CLOSE-OUT".
-- **3 ⏳ open** — C-1 (GitHub About), C-2 (Vercel token), C-3 (#17's rotations), C-4…C-6 and the Loom (DC-9) are the
+- **3 ✅** — C-1 (GitHub About), C-2 (Vercel token), C-3 (#17's rotations), C-4…C-6 and the Loom (DC-9) are the
   owner's steps, handed over at the end of R4. *Updated 2026-11-04 (the last section):* C-1, C-2 and C-4 done; C-3 and
   C-5 declined in writing; the Loom deferred by the owner, outside this phase, in writing; the screenshot done (by CC,
-  by ruling 6). **Open: C-6**, the owner's Airtable token revocation and then CC's check. (X1 is an A row: criterion 1.)
-  *(Said "C-4, C-5, C-6, the Loom and the screenshot open" until the final rulings; corrected in place.)*
+  by ruling 6). C-6 done: the owner revoked the tokens and CC's check got `401` (the last section). (X1 is an A row:
+  criterion 1.) *(Said "⏳ open … C-4, C-5, C-6, the Loom and the screenshot open", then "Open: C-6", until each was
+  closed; corrected in place.)*
 - **4 ✅** — Main, Purge, the site and the dashboard each changed once, in the R3 window. The owner's run was read back in
   R4: executions 4947–4959 and `salon_ro`.
 - **5 ✅** — after promotion (`d9f770a`), both parity guards are 0 against the committed exports (content 5/5;
@@ -722,7 +724,8 @@ reasoning does not reach:
 
    CC keeps its root-command plan for the trigger. Per OPS-6, the plan stays out of the repo.
 3. **C-6 — scope ruled.** The owner revokes the Airtable token(s) only. **The base is kept** (synthetic demo data), so
-   §6 steps 1 (the Gate 1 export) and 3 (deleting the base) do not run. **Open:** the revocation, then CC's check.
+   §6 steps 1 (the Gate 1 export) and 3 (deleting the base) do not run. The revocation, then CC's check: done the same
+   day (the last section).
 4. **X1 — done** (below).
 5. **The Loom — deferred by the owner, outside this phase.**
 6. **The README screenshot — CC takes it** (below). DC-10's owner changes from Yigitcan to CC.
@@ -783,18 +786,74 @@ rules. Agent-measured, output not committed.
   - Read back: `git worktree list` shows the main tree only, and the directory is empty.
   - One removed worktree held an ignored copy of `CLAUDE.local.md`. It went with the worktree, so there is one fewer
     copy of the host.
-- **Kept, for his word:** the branch `worktree-agent-af15a34530d82564d`. It was the third worktree's first branch, not
+- **Kept, by his ruling (2026-11-04, the owner's no-deletion preference):** the branch
+  `worktree-agent-af15a34530d82564d`, tip **`4bfcc23`**. It was the third worktree's first branch, not
   checked out.
   - One of its two commits, `3db1a1d` (a first version of DC-3's single sender-mask formula), is **not** on main. Main
     took a different route by ruling: D1, the counter only (`911f0ef`), not this formula.
   - Deleting the branch would lose that draft. The ruling's "their branches" assumed nothing would be lost, so the
-    branch is held.
+    branch was held and asked about; he ruled to keep it.
 
-**Left open in the phase:**
+**Left open in the phase at that point** *(both rows closed the same day: the next section)*:
 
 | Item | Owner | Next step | Check |
 |---|---|---|---|
 | C-6, the Airtable token(s) | Yigitcan | revoke them in Airtable (§6 C-6 step 2; the base is kept) | CC: *if* the dashboard env still holds the old read-only token (not re-measured in this round), a call with it answers `401`, and its line then leaves the dashboard env under ⚠ ONAY. A token CC cannot reach (the n8n one: n8n's credential was deleted at D6c) is recorded as an operator statement |
 | The kept branch `worktree-agent-af15a34530d82564d` | Yigitcan | his word: delete it (one superseded draft lost), or keep it | `git branch --list` |
 
-The phase closes when C-6's check passes. The close is then recorded here.
+The phase closes when C-6's check passes. The close is recorded in the next section.
+
+## CLOSE-OUT closed (2026-11-04)
+
+**C-6, done.**
+- **Operator statement (Yigitcan, 2026-11-04):** he deleted this project's three Airtable tokens in Airtable:
+  `barber_bot` (created 2026-07-10), `Barber Bot` (2026-08-09) and `salon-dashboard-readonly` (2026-09-11). A fourth
+  token, created before this project for another one, was deliberately kept. The base is kept (ruling 3).
+- **CC's check, on the one copy CC can reach** (terminal-measured, output not committed):
+  - the dashboard env still held the old read-only token, one line;
+  - a single call to Airtable's `whoami` with it answered **`401`**. Only the status was printed; the value was never
+    printed, and never put on a command line.
+  - Not shown: a live token would answer `200`, and no valid token was at hand to show that side. The `401` shows that
+    Airtable refuses this value today.
+  - That the value is the token he named `salon-dashboard-readonly` is an inference from its role, not a measurement.
+- **The env line removed,** under the ⚠ ONAY in the same brief. The file keeps mode 0600. Read back by variable name
+  only: the token's name is gone. `AIRTABLE_BASE_ID` stays; it is not a secret on its own, and the base is kept. No
+  code reads the removed name: a `git grep` finds it only in a comment in `.vercelignore` and in ROADMAP's history.
+  Nothing needed restarting.
+- **The other two revocations are operator statements.** CC holds no copy of either: n8n's Airtable credential was
+  deleted at D6c. Older copies of the revoked values may still sit in the restore points. They are revoked, and they
+  are behind X1's deny rules.
+
+**The kept branch:** `worktree-agent-af15a34530d82564d`, tip `4bfcc23`, kept by his ruling. One of its commits,
+`3db1a1d`, is not on main (the previous section).
+
+**Cleaned:** the X1 settings backup and this round's headless browser profiles. Each was deleted on its literal
+scratchpad path, and its absence read back.
+
+**The close statement.** CLOSE-OUT is **closed** on 2026-11-04, against its §9 criteria:
+1. **✅ Every A row is done, with its evidence:**
+   - G1, M1–M3, P1/P2, S1/S2, D1 (the counter, by ruling) and D2, the docs rows, and the reads of rows 13 and 57:
+     R1–R4;
+   - X1: the section "The final rulings", measured both ways.
+2. **✅ Every B and B-v2 row is written,** with its decision and trigger, in ENGINEERING-NOTES, "Closed by decision —
+   CLOSE-OUT".
+3. **✅ Every C row is done, or declined by Yigitcan in writing:**
+   - **done:** C-1 (GitHub About), C-2 (the Vercel token), C-4's 24 h, C-6's token revocation, and the README
+     screenshot (DC-10, taken by CC by ruling 6);
+   - **declined, each with its trigger or reason:**
+     - C-3, the #17b–d rotations (trigger: before the first real client, or anyone else's server access);
+     - C-4's session revocation;
+     - C-5, the tunnel credential (trigger: before the first real client);
+     - C-6's export and base deletion (the base is kept);
+   - **deferred by the owner, outside this phase:** the Loom (DC-9, #20).
+4. **✅** Main, the site and the dashboard each changed once, in R3, and the owner's run was read back in R4.
+5. **✅** Both parity guards are 0 against the committed exports (since `d9f770a`), and `check-all` is 0.
+6. **✅** No open item in ROADMAP is without a class, and the public-demo row is ✅.
+
+**What stays open is open by decision, each with its trigger, not by omission.** It is in ENGINEERING-NOTES ("Closed
+by decision — CLOSE-OUT", tables B, B-v2 and C) and in ROADMAP. In particular:
+- the v2 rows;
+- #15, the hidden-container check;
+- #18, Access's configuration measured from outside the repo;
+- the Loom.
+
