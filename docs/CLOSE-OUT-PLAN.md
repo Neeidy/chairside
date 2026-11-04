@@ -2,7 +2,8 @@
 
 > **Status: APPROVED by Yigitcan, 2026-11-03** (plan-gate, written in the conversation), with DC-1…DC-13 exactly as
 > recommended in §13, plus **G1** (the start-gate script refuses to run in the Vienna minutes :55–:05) and, asked and
-> answered during R1, **DC-5 ruled: Purge P1/P2 are IN this phase** (§13, DC-5's row). **R1 in progress.** Recorded in
+> answered during R1, **DC-5 ruled: Purge P1/P2 are IN this phase** (§13, DC-5's row). **R1–R4 done; the C rows are the owner's** (the last sections). *(Said "R1 in progress" until
+> 2026-11-04; corrected in place.)* Recorded in
 > `ARCHITECTURE-DECISIONS.md` (2026-11-03 rows). *(This line said "PLAN ONLY — awaiting Yigitcan's written
 > 'approved'" until the approval; corrected in place.)* No Main, staged, site, dashboard or infra change is made by
 > this file. Written from `47c9bc9` (2026-11-03).
@@ -228,7 +229,8 @@ read-only reads as `salon_ro` and through the n8n API.
 - **C-2 Vercel token, AFTER R3's redeploy:** Vercel → avatar → **Account Settings → Tokens** → the token created
   2026-10-30 for the demo (team scope) → **Delete**. *Check:* `scratchpad/vercel-token-probe.py` gives 401/403 (it
   gave 200 on 2026-11-03), then the file is deleted under ⚠ ONAY and its absence read back.
-- **C-3 rotations, AFTER R3** (the window uses them):
+- **C-3 rotations, AFTER R3** (the window uses them). ⚠ **Declined by decision, 2026-11-04** (Yigitcan; section "C-3
+  declined" at the end): the steps below are what runs when its trigger fires.
   - **(b)** the `/api` Access service token;
   - **(c)** the owner-path Access service token;
   - **(d)** the n8n API key.
@@ -243,7 +245,8 @@ read-only reads as `salon_ro` and through the n8n API.
 - **C-4 Access sessions:** Zero Trust → **My Team → Users** → revoke the sessions; **Access → Applications** → the
   dashboard application → session duration **24 hours**. *Check:* an unauthenticated request still gets `302`; the
   duration itself is an operator statement unless the read-only token can read the application.
-- **C-5 the tunnel credential:** move it to a root-only file, as root, with the commands CC writes in R1. *Check:* the
+- **C-5 the tunnel credential:** move it to a root-only file, as root, with the commands CC writes in R1 *(not written
+  in R1 — found 2026-11-04; CC hands them over in the conversation, not in the repo, per OPS-6)*. *Check:* the
   tunnel still answers, and the file is not readable by the build user.
 - **C-6 Airtable:**
   1. Gate 1 export, per MIGRATION §7a.
@@ -278,12 +281,14 @@ committed:*
 - **2 ✅** — every B and B-v2 row is written with its decision and trigger in ENGINEERING-NOTES, "Closed by decision —
   CLOSE-OUT".
 - **3 ⏳ open** — C-1 (GitHub About), C-2 (Vercel token), C-3 (#17's rotations), C-4…C-6 and the Loom (DC-9) are the
-  owner's steps, handed over at the end of R4.
+  owner's steps, handed over at the end of R4. *Updated 2026-11-04:* C-1 and C-2 done; C-3 declined in writing; C-4,
+  C-5, C-6, the Loom, the screenshot and X1 (row 42's A half, found not done) open — the last section.
 - **4 ✅** — Main, Purge, the site and the dashboard each changed once, in the R3 window. The owner's run was read back in
   R4: executions 4947–4959 and `salon_ro`.
 - **5 ✅** — after promotion (`d9f770a`), both parity guards are 0 against the committed exports (content 5/5;
   structure 198/198 nodes, 280/280 connections), and `check-all` is 0.
-- **6 ⏳ open** — the ROADMAP rows are classed. The public-demo row stays ◐ until C-1 and C-2 are done.
+- **6 ✅** — the ROADMAP rows are classed, and the public-demo row is ✅ since C-1 and C-2 (2026-11-04). *(Said "⏳ open
+  … stays ◐ until C-1 and C-2 are done" until then; corrected in place.)*
 
 1. Every A row is done with its evidence: a commit, a test that fails before and passes after, or a read.
 2. Every B and B-v2 row has its decision text and trigger in ENGINEERING-NOTES or the plan it belongs to.
@@ -616,5 +621,67 @@ when each of them is done, or explicitly declined by Yigitcan.
   variable name in the probe's own parser.
 - **Consequence, recorded in RUNBOOK §8:** the shell pause path and this machine's deploy route are closed. A new
   deployment needs a new token from the owner.
-- **The phase stays OPEN** on C-3 (#17's three rotations), C-4 (Access sessions), C-5 (the tunnel credential), C-6
-  (Airtable), the Loom and the README screenshot.
+- **The phase stayed OPEN** on C-3…C-6, the Loom and the README screenshot; C-3 was then declined (next section).
+
+## C-3 declined by decision; C-4 and C-5 kept open (2026-11-04)
+
+**Ruling (Yigitcan, 2026-11-04):** C-3, #17's three rotations, is **declined for now, closed by decision**:
+- 17d, the n8n API key;
+- 17b, the `/api` Access service token;
+- 17c, the owner-path Access service token.
+
+- **His reasons:**
+  - The 2026-09-13 exposure was CC's own transcript, on the same server that holds the env files. Against the realistic
+    threat, rotation adds little: access to that server yields the env files directly.
+  - The `/api` path needs both the API key and the Access token.
+  - Turnstile, the spend cap and the pause bound the worst case.
+- **Trigger:** before the first real client, or before anyone else gets access to the server.
+- **Steps when it fires:** §6 C-3, unchanged, in the order the ruling names (17d → 17b → 17c). For each one: the new
+  value goes into a new 0600 file → CC checks the old one and the new one → the owner revokes the old one → CC checks
+  again → the rename, under ⚠ ONAY.
+
+**The same rule, applied to C-4 and C-5 as the ruling asks.** Neither closes, because each §6 row carries a risk the
+reasoning does not reach:
+
+- **C-5, the tunnel credential (OPS-6) — stays OPEN.**
+  - It is not a rotation. OPS-6 already ruled out rotating it (2026-10-19); the step is a move into a root-only file.
+  - The reasoning's first premise is that server access yields the env files anyway. C-5 is the one step that changes
+    what the build user's access yields. OPS-6 measured the credential as readable more widely than intended,
+    including by the account the agent runs as; after the move, that account cannot read it. "It is on the server
+    anyway" is the condition C-5 removes, not a reason against it. The global rule says the same: an agent never
+    holds a production credential.
+  - The worst-case bounds do not reach it either. Turnstile, the spend cap and the pause limit the bot's cost. A
+    tunnel credential lets its holder run a connector for the tunnel that serves this deployment's hostnames
+    (Cloudflare's documented behaviour, not measured here).
+  - **Also found:** the root commands §6 says "CC writes in R1" were never written. CC hands them over in the
+    conversation when the owner schedules C-5. Per OPS-6 they do not go into the repo before the fix lands.
+- **C-4, the Access sessions — stays OPEN, for its second half.**
+  - *The revocation half fits the reasoning.* The session material CC exposed sat on this server, in Owner Actions'
+    stored executions. Those were deleted (PHASE-7-PLAN T-4: 91 → 0), and the live sessions run to their configured
+    expiry.
+  - *The duration half does not.* The dashboard's 730 h session lives in the owner's browser, on his devices, not on
+    the server. Whoever holds such a device holds the dashboard for up to a month: customer names and messages, and
+    the release write. Turnstile, the spend cap and the pause do not bound the dashboard.
+  - CC's recommendation, for his ruling: set the 24 h duration (one field, §6 C-4), and decline the revocation by the
+    same reasoning.
+
+**Found while reading row 42: X1 is not done.**
+- Row 42 is C + A. Its A half, X1, is CC's under ⚠ ONAY (§4): deny rules for the secret-file copies.
+- It is recorded as done nowhere: not in R1–R4, and not in §9's criterion 1.
+- The user-level settings, read 2026-11-04, hold a deny rule for one secret file outside the repo. Which other copies
+  exist, and whether they are covered, was not measured, because the step was never run.
+- It was missed, not ruled. The deny layer guards against CC's own accidental reads, the channel of the 2026-09-13
+  exposure, so the ruling's reasoning does not argue against it.
+- It stays OPEN as CC's, waiting for his ⚠ ONAY or a written decline.
+
+**Left open in the phase, each with its next step:**
+
+| Item | Owner | Next step | Check |
+|---|---|---|---|
+| C-4 (duration) | Yigitcan | Zero Trust → Access → Applications → the dashboard application → session duration **24 hours**; rule on the revocation half | CC: an unauthenticated request still gets `302`; the duration is an operator statement unless a read-only token can read the application |
+| C-5 | Yigitcan, with CC's commands | CC writes the root commands in the conversation → he runs them as root | CC: the tunnel still answers, and the file is not readable by the build user |
+| C-6 Airtable | Yigitcan | the Gate 1 export (MIGRATION §7a) → revoke the tokens → delete the base | CC: a call with the old token is refused; the token's name line then leaves the dashboard env under ⚠ ONAY |
+| X1 | CC | his ⚠ ONAY, or a written decline | each deny rule measured from a sub-agent (§4) |
+| The Loom (DC-9, #20) | Yigitcan | his decision on the approach, or a written decline or deferral | — |
+| The README screenshot (DC-10) | Yigitcan | one screenshot in his browser: the chat panel only, cropped, no address bar | CC checks it for a hostname, then commits it |
+| The three agent worktrees and their branches under `.claude/worktrees` | CC | removed under ⚠ ONAY at the phase close | `git worktree list` shows the main tree only |

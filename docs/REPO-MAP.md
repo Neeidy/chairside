@@ -862,6 +862,7 @@
   - ## R4 — the live run read back, promoted, the A rows closed (2026-11-04)
   - ### Definition of Done — CLOSE-OUT
   - ## C-1 and C-2 — done (2026-11-04)
+  - ## C-3 declined by decision; C-4 and C-5 kept open (2026-11-04)
 
 ### `docs/CP4-RESCHEDULE-EXECUTE-PLAN.md`
   - ## What this replaces

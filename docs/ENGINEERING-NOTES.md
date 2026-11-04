@@ -148,7 +148,8 @@ EUR only (`priceEUR`, and `€` written in two nodes), customer text in English,
 ## Closed by decision — CLOSE-OUT (2026-11-03)
 
 > **What this section is:** every **B** and **B-v2** row of the CLOSE-OUT inventory
-> ([`CLOSE-OUT-PLAN.md`](CLOSE-OUT-PLAN.md) §0), closed by a written decision rather than by a build (plan approved
+> ([`CLOSE-OUT-PLAN.md`](CLOSE-OUT-PLAN.md) §0), and since 2026-11-04 the one **C** row the owner declined (the last
+> table), closed by a written decision rather than by a build (plan approved
 > 2026-11-03 with DC-1…DC-13 as recommended, `ARCHITECTURE-DECISIONS.md` 2026-11-03 rows). **Nothing below is built by
 > the CLOSE-OUT** (its NOT-build list, §2). "Reopens when" is the trigger the plan or the item's own record names; where
 > neither names one, the row says so instead of inventing it. "Steps" are the plan's §5 steps where it gives them.
@@ -195,3 +196,12 @@ names no trigger for these rows, so "Reopens when" quotes what each item's own r
 | 31 | The older v2 / LATER bucket (the idempotent replay's stored reply, required template keys, the transcript lost on navigation, font subsetting, a `Customers` table, BULGU-4, R2) | v2 since 2026-09-17 (PHASE-7-PLAN, Open items) | no trigger named: "they improve the product but do not change whether it can be sold" | — . ⚠ **Correction:** the plan's row 31 and the bucket's moved text above also list "the W57/W58/W60 text mismatch"; that item was **closed on 2026-09-13** (CP 6c-3, ruling K-4, `SCREEN-INVENTORY.md` §2.10.1a), so it is not re-affirmed here |
 | 32 | F5, F6, F9, F10, F11, F13, the `handoffShown` twin, W64/W65 | v2 (PHASE-7-PLAN §4b; this file, "Not yet — deferred to v2") | the condition each row's reason relies on stops holding — e.g. F9: a `.mts`/`.cts` file appears; F11: a writer that can produce such a value; F13: more than a hundred cancellations inside the window | per row, as its reason says (F11: a migration file and an operator apply) |
 | 38 | The 7-2 CONVERGE deploy-tool, secret-scan and masking LOWs | v2 (7-2 R4, ruled 2026-10-26; this file's 7-2 CONVERGE table) | the condition each row's "why it waits" relies on stops holding (each row names it) | per row |
+
+**C — an owner step declined by the owner (2026-11-04)**
+
+The C rows are the owner's steps (plan §6). One of them is closed by his written decision rather than done; C-4 and C-5
+were weighed against the same reasoning and stay OPEN (plan, section "C-3 declined"), so they are not in this table.
+
+| # | Item | Decision | Reopens when | Steps when it fires |
+|---|---|---|---|---|
+| 40 | #17b–d: the `/api` Access service token, the owner-path Access service token, the n8n API key (leaked into CC's report on 2026-09-13; 17a done, 17e accepted) | **declined for now** (Yigitcan, 2026-11-04): the exposure was CC's own transcript on the server that holds the env files, so rotation adds little against the realistic threat (server access yields the env files directly); the `/api` path needs both the API key and the Access token; Turnstile, the spend cap and the pause bound the worst case | before the first real client, or before anyone else gets access to the server | plan §6 C-3, in the order 17d → 17b → 17c: the new value into a new 0600 file → CC checks the old and the new → the owner revokes the old → CC checks → the rename under ⚠ ONAY |
