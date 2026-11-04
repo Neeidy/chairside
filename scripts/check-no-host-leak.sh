@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 # Host-leak guard — the real production n8n host must NEVER reach this PUBLIC repo.
 #
-# The literal host is deliberately NOT stored in this script (that would itself leak it). It is read from:
-#   1) $N8N_HOST, or
-#   2) a line "N8N_HOST=<host>" in the gitignored CLAUDE.local.md.
+# The literal host is deliberately NOT stored in this script (that would itself leak it). The targets are read from
+# the gitignored CLAUDE.local.md (every `<NAME>_HOST=<value>` line), which MUST be present; $N8N_HOST, if set, adds one
+# more. *(Corrected 2026-11-04, CLOSE-OUT R4: this said "$N8N_HOST, or CLAUDE.local.md", but with the file absent the
+# env-only path crashed on an unset counter, and had it run it would have scanned a subset of the declared targets and
+# called that clean. It now refuses, with that reason.)*
 #
 # THREE SCANS, because no single one covers what a commit can carry. Each was MEASURED, and the third
 # was found only because the second was drilled against a real file that legitimately contains the host
@@ -67,6 +69,14 @@ unquote() { sed -E "s/^[\"']+//; s/[\"']+\$//"; }
 TARGETS=""
 if [ -n "${N8N_HOST:-}" ]; then TARGETS="$(printf '%s\n' "$N8N_HOST" | unquote)"; fi
 DECLARED=0
+PARSED=0
+# The declared targets live in CLAUDE.local.md. Without it, $N8N_HOST alone would scan ONE of them and print "clean" —
+# the narrowing this guard exists to prevent — so the absent file is an error, whatever the environment holds.
+if [ ! -e CLAUDE.local.md ]; then
+  echo "host-leak guard: CANNOT CHECK — CLAUDE.local.md is absent here (run from a checkout that has it; a worktree"
+  echo "  or a scratch copy does not). The redaction targets are declared there; \$N8N_HOST alone would scan a subset."
+  exit 2
+fi
 if [ -f CLAUDE.local.md ] && [ ! -r CLAUDE.local.md ]; then
   # Bulgu 3: `grep -c … || true` left DECLARED empty when the file could not be read, the numeric test
   # errored, and the guard fell through to its full green sentence with exit 0 — a FAIL-OPEN inside the
@@ -101,7 +111,7 @@ if [ -n "$TARGETS" ]; then
 fi
 
 if [ -z "$TARGETS" ]; then
-  echo "host-leak guard: NOT CONFIGURED — set \$N8N_HOST or add '<NAME>_HOST=<value>' to CLAUDE.local.md"
+  echo "host-leak guard: NOT CONFIGURED — CLAUDE.local.md declares no target; add '<NAME>_HOST=<value>' to it"
   exit 2
 fi
 COUNT="$(printf '%s\n' "$TARGETS" | wc -l | tr -d ' ')"

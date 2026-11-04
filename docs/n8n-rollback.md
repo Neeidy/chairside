@@ -139,8 +139,8 @@ so drift means auditing something that is not the running system. Two machine ch
    compares node count · node-name set · connection topology (never the heavy Code bodies). Exit 0 = OK,
    1 = DRIFT → **stop and reconcile before commit**. (Host is behind Cloudflare; the script sends a
    browser User-Agent to clear the 1010 browser-integrity block — the API key still authenticates.)
-2. **Host-leak guard** — `bash scripts/check-no-host-leak.sh` (reads the real host from `$N8N_HOST` /
-   gitignored `CLAUDE.local.md`, git-greps tracked files). Exit 0 = clean, 1 = LEAK → **fix before commit**.
+2. **Host-leak guard** — `bash scripts/check-no-host-leak.sh` (reads the redaction targets from the gitignored
+   `CLAUDE.local.md`, which must be present — `$N8N_HOST` only adds one — and git-greps tracked files). Exit 0 = clean, 1 = LEAK → **fix before commit**.
 3. **computed_reply coverage** (Refactor #5 invariant) — `python3 scripts/check-computed-reply-coverage.py`
    asserts EVERY reply-producing builder (nearest Code ancestor of a Save State) sets `computed_reply`. The
    thin-reader Build Reply Payload reads the reply from that column, so a builder that forgets it emits an

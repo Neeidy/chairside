@@ -444,6 +444,7 @@
 - `tests/unit/eval-spend-mutants.py`
 - `tests/unit/golden-set.test.cjs`
 - `tests/unit/guards-tur2.test.py`
+- `tests/unit/host-leak-local-file.test.py`
 - `tests/unit/leads-purge-mutants.py`
 - `tests/unit/leads-purge-read-error.test.cjs`
 - `tests/unit/live-parity-target.test.py`

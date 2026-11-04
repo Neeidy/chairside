@@ -15,8 +15,9 @@ Scan before any push / screenshot / export:
 - **Webhook verification:** Zernio HMAC present; website widget has rate-limit + bot-protection (no shared secret in browser).
 - **Control-plane:** n8n editor/admin UI is not exposed publicly (webhook endpoints only).
 - **Production host leak (machine check):** the real n8n instance host must appear in NO tracked file.
-  Run `bash scripts/check-no-host-leak.sh` — it reads the host from `$N8N_HOST` or the gitignored
-  `CLAUDE.local.md` (`N8N_HOST=`) and git-greps tracked files; a non-zero exit is a **FAIL**. Never write
+  Run `bash scripts/check-no-host-leak.sh` — it reads every `<NAME>_HOST=` target from the gitignored
+  `CLAUDE.local.md`, which must be present (it refuses without it since 2026-11-04; `$N8N_HOST` only adds one), and
+  git-greps tracked files; a non-zero exit is a **FAIL**. Never write
   the literal host into any committed file (that leaks it). The webhook PATH (`barber-inbound`) is an
   accepted template path; the HOST is not.
 
