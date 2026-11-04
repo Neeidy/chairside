@@ -718,8 +718,7 @@ reasoning does not reach:
    measurement.
 2. **C-5 — closed by decision.** **Trigger:** before the first real client. The reason is its own, not C-3's:
    - the demo holds no real customer data: the dashboard and the webhook traffic are synthetic or demo;
-   - the tunnel is the live system's only tunnel, and a root-level change to it carries a break risk larger than
-     today's benefit.
+   - a root-level change to the live system's tunnel carries a break risk larger than today's benefit.
 
    CC keeps its root-command plan for the trigger. Per OPS-6, the plan stays out of the repo.
 3. **C-6 — scope ruled.** The owner revokes the Airtable token(s) only. **The base is kept** (synthetic demo data), so
@@ -738,16 +737,14 @@ the session scratchpad, mode 0600. Twelve rules were added:
 - By location:
   - the n8n API env and every copy beside it, which covers an existing backup copy and C-3's `.new` file;
   - the read-only DB env and its backups (already denied in the project settings, now for every project);
-  - a secrets folder under the Claude config;
-  - the Claude and Codex CLI login files;
-  - the restore points (env copies, and the n8n config and database archives).
+  - the other credential and backup locations enumerated under the home directory in this round.
 
 The specific paths are deliberately not written in this public repo.
 
 *The test, both directions, from a sub-agent using the Read tool only.* The main session does not apply the deny
 rules. Agent-measured, output not committed.
 - **Probes.** Eleven harmless marker files were placed where the new rules must match, one shape per rule class. A
-  temporary exact-path rule stood in for the login files.
+  temporary exact-path rule stood in for the rules that name a single file.
   - Before the rules: nine were read. Two were already refused, one by the project settings' DB-env rule and one by
     the in-repo `.env.*` rule.
   - After the rules: all eleven were refused.
@@ -765,7 +762,8 @@ rules. Agent-measured, output not committed.
 **The screenshot, done.** The image is `docs/images/hero-chat.png`, placed under the README's live-demo line.
 - **How it was taken:** headless Chromium on this machine, driven over CDP, on the live homepage:
   - reduced motion forced, so the panel holds its first scenario;
-  - every request to the n8n host blocked: 0 attempted, and 0 non-GET requests in total;
+  - every request to the n8n host blocked: 0 attempted, and 0 non-GET requests in total (terminal-measured, output not
+    committed);
   - cropped to the panel element.
 - **What was checked:**
   - Read as an image: no address bar, no hostname. The only name is the mock business name; the rest is the scripted
@@ -788,7 +786,7 @@ rules. Agent-measured, output not committed.
 - **Kept, for his word:** the branch `worktree-agent-af15a34530d82564d`. It was the third worktree's first branch, not
   checked out.
   - One of its two commits, `3db1a1d` (a first version of DC-3's single sender-mask formula), is **not** on main. Main
-    carries a different implementation (`911f0ef`).
+    took a different route by ruling: D1, the counter only (`911f0ef`), not this formula.
   - Deleting the branch would lose that draft. The ruling's "their branches" assumed nothing would be lost, so the
     branch is held.
 

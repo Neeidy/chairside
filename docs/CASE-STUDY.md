@@ -103,8 +103,9 @@ Postgres was ruled on 2026-10-19 (`docs/MIGRATION-PLAN.md`).
 - **Retirement (D6c, 2026-10-27):** the five originals archived, n8n's Airtable credential deleted, the copies renamed
   to their clean names through the reviewed deploy tool, one workflow at a time with a rehearsal on a scratch first;
   every webhook path and id read back unchanged (`docs/MIGRATION-PLAN.md` §7a). The archived Main original was deleted
-  in 7-4 B (2026-10-28); revoking the Airtable token and deleting the base are deferred by the owner, recorded
-  (PHASE-7-PLAN §4j).
+  in 7-4 B (2026-10-28); revoking the Airtable token and deleting the base were deferred by the owner, recorded
+  (PHASE-7-PLAN §4j). *(Since 2026-11-04 the base is kept and the token revocation is CLOSE-OUT C-6, open at this
+  writing.)*
 
 **What Postgres costs instead:** a database to run, back up and restore for every client.
 
