@@ -519,3 +519,86 @@ against the committed exports.
 **Next round:** read the owner's run (executions and `salon_ro`), then promotion. Promotion means: staged → committed
 for Main and Purge, `n8n/staged/` empty, both parity guards 0 against the committed exports, and the snapshots, mirror
 and old dashboard build deleted. Then C-2 (the Vercel token) and C-3 (#17's rotations), and the phase close.
+
+## R4 — the live run read back, promoted, the A rows closed (2026-11-04)
+
+*(Every read and number below terminal-measured, output not committed, unless a committed test holds it.)*
+
+**The run.** Cowork ran both scripts at Yigitcan's request in his own browser (Chrome), each in a fresh tab, with a real
+Turnstile token (2026-11-04, Vienna). Every reply matched the script, by Cowork's reading. **Read back by GET on the n8n
+executions:** Main 4947–4959, ten turns (7 + 3), every one `success`; 4929 and 4960 are gate probes. Nothing ran on
+Owner Actions or Drill State; Reminders and Purge ran only on their schedules.
+
+| Turn | Execution | What the engine did |
+|---|---|---|
+| ask (Thursday 11:00, the name) | 4947–4948 | the confirm asked and stamped `confirm_turn = '2'` |
+| — about three hours' pause — | — | nothing expired and nothing handed off; the stored state carried on |
+| "how much is it?" | 4952 | the price list; stage stays `confirming`, `turn_count` advances to 3 |
+| "yes" | 4953 | **`Booking Fresh?` STALE** (stamp 2, turn 3): availability read again, the confirm asked again, **no calendar or appointment write** (M2 / DC-13) |
+| "yes" | 4954 | **FRESH** (stamp 4, turn 4): `Book Appointment` → `Verify Slot` → `Write Appointment`, booked once |
+| "cancel my haircut" → "yes" | 4955–4956 | the cancel ask; then `Delete Booking Event` 204 and `Update Appointment Cancelled` |
+| script 2: the ask, then "no" | 4957–4959 | `declined`: slots and name kept, **no owner alert** |
+
+- **The transient-turn bound did not apply:** every turn was saved, and `turn_count` advanced each time.
+- **M1 was not exercised live:** the model did not echo the stored date on the "no" (`alert_withheld` absent), so the
+  missing alert shows only that M1 added none. Its evidence stays offline (`close-out-main`).
+
+**The store, as `salon_ro` (READ ONLY):**
+- one appointment created in the run, the Haircut on 5 Nov 10:00Z (11:00 Vienna), now `cancelled`;
+- the two conversations end `cancelled` and `collecting` / `declined` (slots kept);
+- `processed_messages` holds 10 claims;
+- **row 13:** one conversation at `confirming`, without a name or a stamp, not a `pd-` seed, last updated 2026-11-01.
+  M2 is live, so its "yes" now asks for the name. It is kept by DC-11.
+
+**P1 live:** the night's Purge (4935, 2026-11-04 04:00 Vienna) refused `no_candidates` (0 of 4). `Purge Error (leads)`
+gave 0 items and no alert node ran — the first quiet night since go-live.
+
+**S2 live (Cowork's reading):** the panel shows "Times in shop time (Europe/Vienna)", and the message stamps are in
+Vienna time.
+
+**Dashboard** (rendered on 127.0.0.1, counted, the page not kept):
+- **D2 shown live:** the data holds the case D2 fixed, a cancelled appointment tomorrow. The block reads "No bookings
+  today", and the old "in this window, none" text is absent.
+- **D1 not shown live:** the handoff queue is empty, so the absence of the "re-masked" notice proves nothing. D1 rests on
+  the offline render comparison and Codex pass 1.
+
+**#15 — a real-key interactive challenge (Cowork's observation, not interpreted):** during run 1, after the confirm ask,
+a REAL Turnstile "Verify you are human" box rendered inside the panel at full size. Nobody clicked it. By the time the
+owner looked it had gone, and the next send carried a valid token. This is the first sighting of the real key's
+interactive path. DC-6's recorded bound (the real key's challenge never seen) is narrowed to what this one sighting
+cannot show: how a challenge that needs a click behaves when nobody clicks, or what a failed one looks like.
+
+**Promoted** (`d9f770a`):
+- the staged Main and Purge became the committed exports, byte-identical to the pushed staged files;
+- `n8n/staged/` holds nothing tracked;
+- the cancel-validation single-source guard covers `Booking Fresh?`: the `confirm_turn` regex 4x, and its TTL equals
+  `Confirm Fresh?`'s plus exactly the stage scope; two of our mutants and four of the auditor's are red.
+
+After the push, both parity guards are 0 against the committed exports: content 5/5, structure 198/198 nodes and
+280/280 connections. `check-all` is 0. **Cleaned** (⚠ ONAY of this brief): the two pre-put snapshots, the parity mirror
+and the previous dashboard build were deleted on literal paths, and their absence was read back. The dashboard still
+answers 200 and the unit is active.
+
+**Found and fixed during R4:**
+1. **The replay harness pinned Luxon but not the plain JS `Date`.** Five nodes read `Date.now()`, so three tests (a
+   number that grew through the day) went red on 2026-11-04, the day their fixed booking day arrived (`c1b3a37`).
+2. **The host-leak guard without `CLAUDE.local.md`** (R1's new item). It refuses with exit 2 and its reason. With the
+   counter fixed alone, it printed "clean — 1 target" over a subset of the declared targets, which a mutant measured. It
+   works from the work-tree root wherever it is started. `host-leak-local-file` covers it with 6 cases, and the
+   c51497a guard is the control (`5b0f7a6`, `b05db37`).
+
+### Definition of Done — CLOSE-OUT
+| Item | Status | Evidence |
+|---|---|---|
+| Built | ✅ | R1 (G1, M1–M3, P1/P2, S1/S2, D1/D2, docs), live since R3, promoted at `d9f770a` |
+| Tested (happy + key edge) | ✅ | the suites and mutants in R1–R2; Codex two passes; the owner's live run read back (above) |
+| Cleaned | ✅ | `n8n/staged/` empty; snapshots, mirror and the old dashboard build deleted, absence read back |
+| Sanitized (secrets and PII) | ✅ | `security-auditor` GO before every push of the phase; synthetic names only |
+| README / case-study | ✅ | README D1/D2 (`86893c0`); the case study is unchanged by this phase's behaviour, and its §13 still holds |
+| Pushed | ✅ | origin/main = the records commit of this round |
+| Resume-point memory written AND read back | ✅ | the progress memory, read back in this round |
+
+**The phase is NOT closed.** The A rows are closed and the B rows are written. **The C rows are the owner's** (§6, and the
+steps handed over at the end of this round): C-1 GitHub About, C-2 the Vercel token, C-3 #17's rotations, C-4 Access
+sessions, C-5 the tunnel credential, C-6 Airtable, the Loom (DC-9) and the README screenshot (DC-10). The phase closes
+when each of them is done, or explicitly declined by Yigitcan.

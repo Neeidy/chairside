@@ -859,6 +859,8 @@
   - ## R2 — Codex pass 1 and the fixes (2026-11-03)
   - ## R2 recheck — Codex pass 2, the last (2026-11-03)
   - ## R3 — LIVE: Main and Purge put, site redeployed, dashboard rebuilt; ⏸ STOPPED for the owner run (2026-11-03)
+  - ## R4 — the live run read back, promoted, the A rows closed (2026-11-04)
+  - ### Definition of Done — CLOSE-OUT
 
 ### `docs/CP4-RESCHEDULE-EXECUTE-PLAN.md`
   - ## What this replaces
