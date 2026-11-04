@@ -91,9 +91,9 @@ deleted (they held an Access token and a cookie); the archived Main original del
 | Item | Status | What bounds it meanwhile |
 |---|---|---|
 | The leaked `/api` and owner-path Access service tokens, and the n8n API key | deferred by the owner, recorded → **declined by decision 2026-11-04** (the last table of "Closed by decision — CLOSE-OUT", row 40) | the copies are on this machine (transcripts, backups), not public; `/api` needs the service token and the API key, the owner path needs a signed request as well; one later rotation voids every copy at once |
-| Revoking the Access sessions; a 24 h dashboard session | deferred by the owner, recorded | the stored executions that held a session token are deleted |
-| The Airtable token and base | deferred by the owner, recorded | no workflow and no n8n credential reaches it since D6c; the base is kept until its export (MIGRATION-PLAN §7, Gate 1) |
-| Deny rules for every secret-file copy; the tunnel credential in a root-only file; a pinned backup script; an off-server backup target | deferred by the owner, recorded | the secret files are mode 0600 and outside git; the nightly dump is restored and compared before it counts, but it lives on the same server |
+| Revoking the Access sessions; a 24 h dashboard session | deferred by the owner, recorded → **2026-11-04: the 24 h set (CLOSE-OUT C-4), the revocation declined** (the last table of "Closed by decision — CLOSE-OUT", row 41) | the stored executions that held a session token are deleted |
+| The Airtable token and base | deferred by the owner, recorded → **2026-11-04: the token revocation is CLOSE-OUT C-6 (open, the owner's); the base is kept, with no export and no deletion** (row 44 of the same table) | no workflow and no n8n credential reaches it since D6c; the base is kept until its export (MIGRATION-PLAN §7, Gate 1) *(the last clause held until 2026-11-04; the base is now kept by ruling, not pending an export)* |
+| Deny rules for every secret-file copy; the tunnel credential in a root-only file; a pinned backup script; an off-server backup target | deferred by the owner, recorded → **2026-11-04: the deny rules done (CLOSE-OUT X1); the tunnel credential's move closed by decision (C-5, row 42 of the same table)**; the backup items are CLOSE-OUT B rows (DC-8, above) | the secret files are mode 0600 and outside git; the nightly dump is restored and compared before it counts, but it lives on the same server |
 | `salon_ro` reads every column; the dashboard's write check is cached; the dashboard logs and shows raw driver errors | v2 | the database role is read-only and the dashboard sits behind Access |
 | The infra owner alerts take `sender`/`channel`/`stage` from the error item; a stale line in the intent prompt (reschedule "routed to a human") | v2 | both need a Main edit; with the stale line the model still classifies `reschedule` (G11, 7-4 A), and routing is the workflow's |
 
@@ -148,12 +148,14 @@ EUR only (`priceEUR`, and `€` written in two nodes), customer text in English,
 ## Closed by decision — CLOSE-OUT (2026-11-03)
 
 > **What this section is:** every **B** and **B-v2** row of the CLOSE-OUT inventory
-> ([`CLOSE-OUT-PLAN.md`](CLOSE-OUT-PLAN.md) §0), and since 2026-11-04 the one **C** row the owner declined (the last
+> ([`CLOSE-OUT-PLAN.md`](CLOSE-OUT-PLAN.md) §0), and since 2026-11-04 the **C** rows the owner declined or deferred (the last
 > table), closed by a written decision rather than by a build (plan approved
 > 2026-11-03 with DC-1…DC-13 as recommended, `ARCHITECTURE-DECISIONS.md` 2026-11-03 rows). **Nothing below is built by
 > the CLOSE-OUT** (its NOT-build list, §2). "Reopens when" is the trigger the plan or the item's own record names; where
 > neither names one, the row says so instead of inventing it. "Steps" are the plan's §5 steps where it gives them.
-> Row numbers are the plan's §0 numbers. The sections above this one are unchanged.
+> Row numbers are the plan's §0 numbers. The sections above this one are unchanged, except the 7-4 B table's status
+> cells, which link to the rows below (2026-11-04). *(Said "the one C row" and "unchanged" without the exception until
+> then; corrected in place.)*
 
 **B — closed by a decision, with a trigger**
 
@@ -197,11 +199,18 @@ names no trigger for these rows, so "Reopens when" quotes what each item's own r
 | 32 | F5, F6, F9, F10, F11, F13, the `handoffShown` twin, W64/W65 | v2 (PHASE-7-PLAN §4b; this file, "Not yet — deferred to v2") | the condition each row's reason relies on stops holding — e.g. F9: a `.mts`/`.cts` file appears; F11: a writer that can produce such a value; F13: more than a hundred cancellations inside the window | per row, as its reason says (F11: a migration file and an operator apply) |
 | 38 | The 7-2 CONVERGE deploy-tool, secret-scan and masking LOWs | v2 (7-2 R4, ruled 2026-10-26; this file's 7-2 CONVERGE table) | the condition each row's "why it waits" relies on stops holding (each row names it) | per row |
 
-**C — an owner step declined by the owner (2026-11-04)**
+**C — owner steps declined, or deferred, by the owner (2026-11-04)**
 
-The C rows are the owner's steps (plan §6). One of them is closed by his written decision rather than done; C-4 and C-5
-were weighed against the same reasoning and stay OPEN (plan, section "C-3 declined"), so they are not in this table.
+The C rows are the owner's steps (plan §6). The rows below are closed by his written decision rather than done. Row 40
+came first; C-4 and C-5 were weighed against its reasoning and stayed open, until the final rulings the same day closed
+them on their own grounds (plan, the last section). *(This paragraph said C-4 and C-5 "stay OPEN" and were "not in this
+table" until then; corrected in place.)* What was DONE in the C rows is not here: C-1, C-2, C-4's 24 h, the screenshot
+(plan, the last sections).
 
 | # | Item | Decision | Reopens when | Steps when it fires |
 |---|---|---|---|---|
 | 40 | #17b–d: the `/api` Access service token, the owner-path Access service token, the n8n API key (leaked into CC's report on 2026-09-13; 17a done, 17e accepted) | **declined for now** (Yigitcan, 2026-11-04): the exposure was CC's own transcript on the server that holds the env files, so rotation adds little against the realistic threat (server access yields the env files directly); the `/api` path needs both the API key and the Access token; Turnstile, the spend cap and the pause bound the worst case | before the first real client, or before anyone else gets access to the server | plan §6 C-3, in the order 17d → 17b → 17c: the new value into a new 0600 file → CC checks the old and the new → the owner revokes the old → CC checks → the rename under ⚠ ONAY |
+| 41 | Revoking the existing Access sessions (C-4's first half; its second half, the 24 h dashboard session, is done) | **declined** (Yigitcan, 2026-11-04): the leaked session material lived on this server and was deleted (PHASE-7-PLAN T-4, 91 → 0) | not written in the ruling | plan §6 C-4: Zero Trust → My Team → Users → revoke |
+| 42 | The tunnel credential into a root-only file (C-5; row 42's A half, the deny rules, is done: X1) | **closed by decision** (Yigitcan, 2026-11-04), on its own grounds: the demo holds no real customer data (dashboard and webhook traffic are synthetic or demo); the tunnel is the live system's only tunnel, and a root-level change to it carries a break risk larger than today's benefit | before the first real client | the root commands CC hands over in the conversation, never in the repo (OPS-6); *check:* the tunnel still answers and the file is not readable by the build user |
+| 44 | Airtable: the Gate 1 export and deleting the base (C-6 steps 1 and 3; step 2, the token revocation, stays open as the owner's) | **declined — the base is kept** (Yigitcan, 2026-11-04): it holds synthetic demo data | not written in the ruling | MIGRATION-PLAN §7 Gate 1, then the deletion as a separate decision |
+| 45 | The Loom (#20) and the "CC builds" exception review it carries | **deferred by the owner, outside this phase** (Yigitcan, 2026-11-04; first deferred 2026-10-28) | his decision on the approach | [LOOM-SCRIPT.md](LOOM-SCRIPT.md) |

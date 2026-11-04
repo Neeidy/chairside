@@ -7,8 +7,9 @@
 > win and this page is wrong. Machine-checkable message contracts live in [`../schemas/`](../schemas/).
 >
 > **Airtable was retired at D6c (2026-10-27, MIGRATION-PLAN §7a):** the original workflows are archived and n8n's
-> Airtable credential is deleted, so nothing reaches the base; revoking its token and deleting the base are on the final
-> security pass list. Its description is kept at the bottom of this page as history, not as the current model.
+> Airtable credential is deleted, so nothing reaches the base. Since the CLOSE-OUT ruling of 2026-11-04 (C-6) the base is
+> **kept** (synthetic demo data) and its token(s) are to be revoked by the owner (open at this writing). *(Said "revoking its token and deleting
+> the base are on the final security pass list" until then; corrected in place.)* Its description is kept at the bottom of this page as history, not as the current model.
 
 Five tables. `leads` / `appointments` are the CRM; `conversations` / `processed_messages` / `bot_metrics` are the
 engine's state (multi-turn · idempotency · spend meter).
@@ -198,4 +199,6 @@ these differences, all from 001_init.sql:
 - The upsert keys (`sender_key`, `gcal_event_id`, `period_key`) and the dedupe key (`message_id`) are declared as
   `UNIQUE` constraints in the schema now.
 
-The base is not deleted by D6c; it stays as an exported, unreferenced archive (MIGRATION-PLAN §7, step 5).
+The base is not deleted by D6c, and by ruling (2026-11-04, CLOSE-OUT C-6) it is kept: an unreferenced archive of synthetic
+demo data. It was never exported — MIGRATION-PLAN §7's Gate 1 did not run, and with the base kept it does not need to.
+*(Said "stays as an exported, unreferenced archive" until then, while the export had not run; corrected in place.)*

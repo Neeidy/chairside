@@ -209,7 +209,10 @@ What stands between that sentence and a fact, stated (`.claude/rules/honesty-dem
   token replaced by a read-only one that expires (scopes measured by Cowork), the stored Owner Actions executions that held an Access token and a
   cookie deleted, the archived Main original deleted. **Deferred by the owner, recorded** as accepted risks until the
   system is complete: rotating the leaked Access service tokens and the n8n API key, revoking the Access sessions and a
-  24 h session, the Airtable token and base, the root-side steps and an off-server backup target. **v2:** splitting the
+  24 h session, the Airtable token and base, the root-side steps and an off-server backup target. *(Since the CLOSE-OUT
+  of 2026-11-04: the 24 h session set; the service-token rotations, the session revocation and the root-side tunnel move
+  closed by written decisions with triggers; the Airtable base kept, its token(s) to be revoked by the owner (open at this writing) — CLOSE-OUT-PLAN,
+  last sections.)* **v2:** splitting the
   read-only role's column access, the dashboard's error handling, the infra alerts' sender fields, a stale prompt line
   (PHASE-7-PLAN §4j; `docs/ENGINEERING-NOTES.md`, "The final security pass: what stays open" — moved there from the
   README on 2026-11-03).
@@ -316,7 +319,8 @@ row):
   INTERACTION-ONLY).
 
 **What stays open, by the owner's reason:** the Managed-mode hidden-container check (ship gate #15, v2); the leaked
-service tokens and the n8n API key (#17, deferred until the system is complete); the Loom walkthrough (#20, deferred)
+service tokens and the n8n API key (#17, deferred until the system is complete — declined by decision on 2026-11-04,
+CLOSE-OUT C-3); the Loom walkthrough (#20, deferred — and on 2026-11-04 deferred outside the CLOSE-OUT phase)
 (`docs/ROADMAP.md`, "Ship gate after D6c").
 
 ## 11 · The name the bot never asked for — and the date the tests never sent (NAME-CAPTURE, 2026-11-01)

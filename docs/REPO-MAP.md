@@ -270,6 +270,10 @@
 - `docs/codex/public-demo/prompt.md`
 - `docs/codex/public-demo/run.sh`
 
+### docs/images
+
+- `docs/images/hero-chat.png`
+
 ### docs/n1
 
 - `docs/n1/alert-4905-replay.cjs`
@@ -862,7 +866,8 @@
   - ## R4 — the live run read back, promoted, the A rows closed (2026-11-04)
   - ### Definition of Done — CLOSE-OUT
   - ## C-1 and C-2 — done (2026-11-04)
-  - ## C-3 declined by decision; C-4 and C-5 kept open (2026-11-04)
+  - ## C-3 declined by decision; C-4 and C-5 weighed (2026-11-04)
+  - ## The final rulings, X1, the screenshot and the worktrees (2026-11-04)
 
 ### `docs/CP4-RESCHEDULE-EXECUTE-PLAN.md`
   - ## What this replaces
@@ -1213,6 +1218,7 @@
   - ### docs/codex/name-capture
   - ### docs/codex/phase-8
   - ### docs/codex/public-demo
+  - ### docs/images
   - ### docs/n1
   - ### n8n
   - ### n8n/screenshots

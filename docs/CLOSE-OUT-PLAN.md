@@ -2,8 +2,9 @@
 
 > **Status: APPROVED by Yigitcan, 2026-11-03** (plan-gate, written in the conversation), with DC-1…DC-13 exactly as
 > recommended in §13, plus **G1** (the start-gate script refuses to run in the Vienna minutes :55–:05) and, asked and
-> answered during R1, **DC-5 ruled: Purge P1/P2 are IN this phase** (§13, DC-5's row). **R1–R4 done; the C rows are the owner's** (the last sections). *(Said "R1 in progress" until
-> 2026-11-04; corrected in place.)* Recorded in
+> answered during R1, **DC-5 ruled: Purge P1/P2 are IN this phase** (§13, DC-5's row). **R1–R4 done; every C row is done or declined in writing except C-6, the owner's Airtable
+> token revocation** (the last section, 2026-11-04). *(Said "R1 in progress" until 2026-11-04, then "the C rows are the
+> owner's" until the final rulings of the same day; corrected in place.)* Recorded in
 > `ARCHITECTURE-DECISIONS.md` (2026-11-03 rows). *(This line said "PLAN ONLY — awaiting Yigitcan's written
 > 'approved'" until the approval; corrected in place.)* No Main, staged, site, dashboard or infra change is made by
 > this file. Written from `47c9bc9` (2026-11-03).
@@ -188,7 +189,7 @@ read-only reads as `salon_ro` and through the n8n API.
   D2 reproduces.
 - **Purge** (if DC-5): the alert IF of the no-candidates branch; two comments.
 - **X1 (⚠ ONAY):** deny rules for the secret-file copies, in the user-level Claude settings (outside the repo), each
-  measured from a sub-agent.
+  measured from a sub-agent. ✅ **Done 2026-11-04** under his ⚠ ONAY (the last section).
 - **docs:** ARCH-DEC rows, the stale listings, README D1/D2, RUNBOOK, PHASE-6-BACKLOG dispositions, ENG-NOTES' v2
   table re-affirmed with triggers.
 - **tests:** M1 / M2 / M3 tests and mutants, S2's zone test, D1/D2 fixtures.
@@ -245,16 +246,23 @@ read-only reads as `salon_ro` and through the n8n API.
 - **C-4 Access sessions:** Zero Trust → **My Team → Users** → revoke the sessions; **Access → Applications** → the
   dashboard application → session duration **24 hours**. *Check:* an unauthenticated request still gets `302`; the
   duration itself is an operator statement unless the read-only token can read the application.
+  ✅ **Done 2026-11-04** (ruling 1, the last section): the 24 h set by Cowork through the Cloudflare API with Yigitcan's
+  approval; the revocation **declined**. CC's unauthenticated request: `302` to the Access login.
 - **C-5 the tunnel credential:** move it to a root-only file, as root, with the commands CC writes in R1 *(not written
   in R1 — found 2026-11-04; CC hands them over in the conversation, not in the repo, per OPS-6)*. *Check:* the
   tunnel still answers, and the file is not readable by the build user.
+  ⚠ **Closed by decision 2026-11-04** (ruling 2, the last section): the steps above run when its trigger fires (before
+  the first real client).
 - **C-6 Airtable:**
   1. Gate 1 export, per MIGRATION §7a.
   2. Revoke the tokens.
   3. Delete the base.
 
   *Check:* an API call with the old token is refused. CC reads nothing else of Airtable.
-- **C-7 the Loom (DC-9)** and **C-8 the screenshot (DC-10).**
+  **Scope ruled 2026-11-04** (ruling 3, the last section): step 2 only. The base is **kept** (synthetic demo data), so
+  steps 1 and 3 do not run.
+- **C-7 the Loom (DC-9)** and **C-8 the screenshot (DC-10).** *Ruled 2026-11-04 (the last section):* the Loom is
+  deferred by the owner, outside this phase; the screenshot was taken by CC, headless, and committed.
 
 ## 7. Mock data
 
@@ -276,15 +284,18 @@ writes, cancels or blocks a booking wrongly is a stop.
 
 *Status at R4 (2026-11-04), each line with its evidence or its reason; the live reads are terminal-measured, output not
 committed:*
-- **1 ◐** — every A row of the build is done. G1, M1–M3, P1/P2, S1/S2, D1/D2, the docs rows and the reads (rows 13, 57)
+- **1 ✅** — every A row of the build is done. G1, M1–M3, P1/P2, S1/S2, D1/D2, the docs rows and the reads (rows 13, 57)
   are done; the evidence is in R1–R4. The new finding (`check-no-host-leak.sh` without `CLAUDE.local.md`) is R4's step 3.
-  *Updated 2026-11-04:* **X1** (row 42's A half, the deny rules) is NOT done — found while weighing C-5; open as CC's
-  under ⚠ ONAY (the last section).
+  *Updated 2026-11-04:* **X1** (row 42's A half, the deny rules) was found not done while weighing C-5, and was done
+  under his ⚠ ONAY the same day, measured in both directions (the last section). *(This line was "◐ … X1 is NOT done
+  … open as CC's" until then; corrected in place.)*
 - **2 ✅** — every B and B-v2 row is written with its decision and trigger in ENGINEERING-NOTES, "Closed by decision —
   CLOSE-OUT".
 - **3 ⏳ open** — C-1 (GitHub About), C-2 (Vercel token), C-3 (#17's rotations), C-4…C-6 and the Loom (DC-9) are the
-  owner's steps, handed over at the end of R4. *Updated 2026-11-04:* C-1 and C-2 done; C-3 declined in writing; C-4,
-  C-5, C-6, the Loom and the screenshot open — the last section (X1 is an A row: criterion 1).
+  owner's steps, handed over at the end of R4. *Updated 2026-11-04 (the last section):* C-1, C-2 and C-4 done; C-3 and
+  C-5 declined in writing; the Loom deferred by the owner, outside this phase, in writing; the screenshot done (by CC,
+  by ruling 6). **Open: C-6**, the owner's Airtable token revocation and then CC's check. (X1 is an A row: criterion 1.)
+  *(Said "C-4, C-5, C-6, the Loom and the screenshot open" until the final rulings; corrected in place.)*
 - **4 ✅** — Main, Purge, the site and the dashboard each changed once, in the R3 window. The owner's run was read back in
   R4: executions 4947–4959 and `salon_ro`.
 - **5 ✅** — after promotion (`d9f770a`), both parity guards are 0 against the committed exports (content 5/5;
@@ -356,8 +367,8 @@ Neither `/loop` nor `/goal`. Each round ends at an approval or an owner step.
 | DC-6 | #15 under interaction-only | **Close by decision.** The forced-interactive TEST key showed the challenge inside the panel (DOMAIN + INTERACTION-ONLY). The real key's challenge was never seen, because the owner's runs passed without one; that is recorded as the bound |
 | DC-7 | The engine's `hostname` check and the secret in a credential | **B, with provisioning (#34).** The hostname list is per client and comes from the widget's creation |
 | DC-8 | An off-server backup | **B, trigger: the first real client**, unless you name a target now |
-| DC-9 | The Loom | **Your call on the approach.** Until then the row is open with your reason, and the phase closes with it explicitly declined or deferred in writing |
-| DC-10 | README D3, the screenshot | **You take one in your browser** (the chat panel only, cropped, no address bar). CC checks it for a hostname and commits it |
+| DC-9 | The Loom | **Your call on the approach.** Until then the row is open with your reason, and the phase closes with it explicitly declined or deferred in writing — *ruled 2026-11-04 (ruling 5): deferred by the owner, outside this phase* |
+| DC-10 | README D3, the screenshot | **You take one in your browser** (the chat panel only, cropped, no address bar). CC checks it for a hostname and commits it — *changed 2026-11-04 (ruling 6): CC took it headless from the live page, checked it and committed it* |
 | DC-11 | The old nameless `confirming` row | **Keep it.** With M2 its "yes" re-asks, and it is the owner's row (never deleted without his word) |
 | DC-12 | The Codex cap | **2 passes per surface**, as the brief says |
 | DC-13 | M2's stale "yes" | **Show the confirm again**, availability re-read, nothing written. A handoff would page the owner for a customer who only asked a question |
@@ -625,7 +636,10 @@ when each of them is done, or explicitly declined by Yigitcan.
   deployment needs a new token from the owner.
 - **The phase stayed OPEN** on C-3…C-6, the Loom and the README screenshot; C-3 was then declined (next section).
 
-## C-3 declined by decision; C-4 and C-5 kept open (2026-11-04)
+## C-3 declined by decision; C-4 and C-5 weighed (2026-11-04)
+
+*(The heading said "C-4 and C-5 kept open". They were, on this section's reasoning, until the final rulings the same
+day closed them on their own grounds: the next section. The bullets below are corrected where they said "stays".)*
 
 **Ruling (Yigitcan, 2026-11-04):** C-3, #17's three rotations, is **declined for now, closed by decision**:
 - 17d, the n8n API key;
@@ -645,7 +659,8 @@ when each of them is done, or explicitly declined by Yigitcan.
 **The same rule, applied to C-4 and C-5 as the ruling asks.** Neither closes, because each §6 row carries a risk the
 reasoning does not reach:
 
-- **C-5, the tunnel credential (OPS-6) — stays OPEN.**
+- **C-5, the tunnel credential (OPS-6) — stayed OPEN on this reasoning; then closed by its own decision (next
+  section, ruling 2).**
   - It is not a rotation. OPS-6 already ruled out rotating it (2026-10-19); the step is a move into a root-only file.
   - The reasoning's first premise is that server access yields the env files anyway. C-5 is the one step that changes
     what the build user's access yields. OPS-6 measured the credential as readable more widely than intended,
@@ -657,7 +672,8 @@ reasoning does not reach:
     (Cloudflare's documented behaviour, not measured here).
   - **Also found:** the root commands §6 says "CC writes in R1" were never written. CC hands them over in the
     conversation when the owner schedules C-5. Per OPS-6 they do not go into the repo before the fix lands.
-- **C-4, the Access sessions — stays OPEN, for its second half.**
+- **C-4, the Access sessions — stayed OPEN for its second half; the 24 h was then set and the revocation declined
+  (next section, ruling 1).**
   - *The revocation half fits the reasoning.* The session material CC exposed sat on this server, in Owner Actions'
     stored executions. Those were deleted (PHASE-7-PLAN T-4: 91 → 0), and the live sessions run to their configured
     expiry.
@@ -676,9 +692,9 @@ reasoning does not reach:
   #5), this plan took X1 in as CC's A item, and it was not run. Not yet counted when X1 is done: the committed project
   settings already deny one secret file and its backup patterns (MIGRATION-PLAN). The deny layer guards against CC's own accidental reads, the channel of the 2026-09-13
   exposure, so the ruling's reasoning does not argue against it.
-- It stays OPEN as CC's, waiting for his ⚠ ONAY or a written decline.
+- It stayed OPEN as CC's until his ⚠ ONAY the same day; done (next section, ruling 4).
 
-**Left open in the phase, each with its next step:**
+**Left open in the phase at that point, each with its next step** *(each row's outcome: the next section)*:
 
 | Item | Owner | Next step | Check |
 |---|---|---|---|
@@ -689,3 +705,98 @@ reasoning does not reach:
 | The Loom (DC-9, #20) | Yigitcan | his decision on the approach, or a written decline or deferral | — |
 | The README screenshot (DC-10) | Yigitcan | one screenshot in his browser: the chat panel only, cropped, no address bar | CC checks it for a hostname, then commits it |
 | The three agent worktrees and their branches under `.claude/worktrees` | CC | removed under ⚠ ONAY at the phase close | `git worktree list` shows the main tree only |
+
+## The final rulings, X1, the screenshot and the worktrees (2026-11-04)
+
+**Rulings (Yigitcan, 2026-11-04, a written "onaylıyorum" to Cowork's items 1–7):**
+
+1. **C-4 — done.** The dashboard Access application's session duration was set from 730 h to **24 h** by Cowork through
+   the Cloudflare API, with his approval. Cowork read it back: the same application and AUD, the "Dashboard" policy
+   unchanged. **Revoking the existing sessions is declined:** the leaked session material lived on this server and was
+   deleted (PHASE-7-PLAN T-4, 91 → 0). *CC's check:* an unauthenticated request to `barber-dashboard.<apex>` gets `302`
+   to an Access login (terminal-measured, output not committed). The 24 h value itself is Cowork's read-back, not CC's
+   measurement.
+2. **C-5 — closed by decision.** **Trigger:** before the first real client. The reason is its own, not C-3's:
+   - the demo holds no real customer data: the dashboard and the webhook traffic are synthetic or demo;
+   - the tunnel is the live system's only tunnel, and a root-level change to it carries a break risk larger than
+     today's benefit.
+
+   CC keeps its root-command plan for the trigger. Per OPS-6, the plan stays out of the repo.
+3. **C-6 — scope ruled.** The owner revokes the Airtable token(s) only. **The base is kept** (synthetic demo data), so
+   §6 steps 1 (the Gate 1 export) and 3 (deleting the base) do not run. **Open:** the revocation, then CC's check.
+4. **X1 — done** (below).
+5. **The Loom — deferred by the owner, outside this phase.**
+6. **The README screenshot — CC takes it** (below). DC-10's owner changes from Yigitcan to CC.
+7. **The three agent worktrees and their branches — removed** (below), with one branch kept.
+
+**X1, done.** The deny rules are in the user-level Claude settings, outside the repo. The file was backed up first to
+the session scratchpad, mode 0600. Twelve rules were added:
+- Home-wide, by shape, on top of the in-repo `**/` rules (which match only inside a project):
+  - every `.env`, `*.env`, `.env.*` and `*.env.*` under the home directory; this covers the dashboard's and the
+    site's `.env.local` when a session runs outside the repo;
+  - every `*.pem` and `*.key` under the home directory.
+- By location:
+  - the n8n API env and every copy beside it, which covers an existing backup copy and C-3's `.new` file;
+  - the read-only DB env and its backups (already denied in the project settings, now for every project);
+  - a secrets folder under the Claude config;
+  - the Claude and Codex CLI login files;
+  - the restore points (env copies, and the n8n config and database archives).
+
+The specific paths are deliberately not written in this public repo.
+
+*The test, both directions, from a sub-agent using the Read tool only.* The main session does not apply the deny
+rules. Agent-measured, output not committed.
+- **Probes.** Eleven harmless marker files were placed where the new rules must match, one shape per rule class. A
+  temporary exact-path rule stood in for the login files.
+  - Before the rules: nine were read. Two were already refused, one by the project settings' DB-env rule and one by
+    the in-repo `.env.*` rule.
+  - After the rules: all eleven were refused.
+- **Controls.** Six ordinary files were read both before and after: the README, this plan, both settings files, a
+  script and the Main export. Two more were read after the rules, as added controls: the scan-ignore file and a
+  `package.json`. `.env.example` was refused both before and after, by the existing blanket deny (ruled 2026-09-12;
+  `git show HEAD:.env.example` stays the route to it).
+- **No real secret file was read in the test.** A rule that failed to match would have put its content into the
+  sub-agent's context.
+- **Cleanup.** The temporary rule was removed. The probes were deleted on their literal paths, and their absence was
+  read back.
+- **What the rules do not do:** they are anti-accident only (`security-secrets.md`). A `Read` rule does not stop a
+  shell read.
+
+**The screenshot, done.** The image is `docs/images/hero-chat.png`, placed under the README's live-demo line.
+- **How it was taken:** headless Chromium on this machine, driven over CDP, on the live homepage:
+  - reduced motion forced, so the panel holds its first scenario;
+  - every request to the n8n host blocked: 0 attempted, and 0 non-GET requests in total;
+  - cropped to the panel element.
+- **What was checked:**
+  - Read as an image: no address bar, no hostname. The only name is the mock business name; the rest is the scripted
+    lines.
+  - The panel's text: no host value, no `@`, no run of seven or more digits.
+  - The PNG holds only its image chunks (no metadata), and none of the three redaction targets' bytes.
+- **The caption** says it is the scripted sample, not a live chat. It also says the sample leaves the name out: the
+  engine asks for a name when it is missing and puts it in the confirm (`Compute Availability`).
+
+**The worktrees.**
+- **Removed:** the three worktrees under `.claude/worktrees`, with `git worktree remove` on their literal paths. Each
+  was clean: no modified or untracked file.
+- **Their three checked-out branches deleted.**
+  - All 10 commits on them are patch-equivalent on main: `git cherry` shows `-` for each.
+  - `git branch -d` refused, because the hashes differ (the commits reached main by cherry-pick). So they were deleted
+    with `-D`. The tips, kept here: `290365d`, `d9a94c9`, `85cce52`.
+  - Read back: `git worktree list` shows the main tree only, and the directory is empty.
+  - One removed worktree held an ignored copy of `CLAUDE.local.md`. It went with the worktree, so there is one fewer
+    copy of the host.
+- **Kept, for his word:** the branch `worktree-agent-af15a34530d82564d`. It was the third worktree's first branch, not
+  checked out.
+  - One of its two commits, `3db1a1d` (a first version of DC-3's single sender-mask formula), is **not** on main. Main
+    carries a different implementation (`911f0ef`).
+  - Deleting the branch would lose that draft. The ruling's "their branches" assumed nothing would be lost, so the
+    branch is held.
+
+**Left open in the phase:**
+
+| Item | Owner | Next step | Check |
+|---|---|---|---|
+| C-6, the Airtable token(s) | Yigitcan | revoke them in Airtable (§6 C-6 step 2; the base is kept) | CC: *if* the dashboard env still holds the old read-only token (not re-measured in this round), a call with it answers `401`, and its line then leaves the dashboard env under ⚠ ONAY. A token CC cannot reach (the n8n one: n8n's credential was deleted at D6c) is recorded as an operator statement |
+| The kept branch `worktree-agent-af15a34530d82564d` | Yigitcan | his word: delete it (one superseded draft lost), or keep it | `git branch --list` |
+
+The phase closes when C-6's check passes. The close is then recorded here.
