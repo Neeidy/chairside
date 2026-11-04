@@ -9,8 +9,8 @@
 #   1. gid shape regex  ^[0-9a-v]{5,1024}$  — MUST be identical everywhere; 5x
 #      (Event ID Valid?, Cancel Lookup ask structOk, Validate Cancel Target, Reschedule Lookup — CP4,
 #      Validate Reschedule Target — CP4 sub-step 3a).
-#   2. confirm_turn canonical regex  ^[1-9][0-9]*$  — 3x (Confirm Fresh?, Verify Confirm Live,
-#      Reschedule Fresh? — CP4 sub-step 2).
+#   2. confirm_turn canonical regex  ^[1-9][0-9]*$  — 4x (Confirm Fresh?, Verify Confirm Live,
+#      Reschedule Fresh? — CP4 sub-step 2; Booking Fresh? — CLOSE-OUT M2, 2026-11-03).
 #   3. cancel-target structural rule parity — Cancel Lookup (ask structOk), Validate Cancel Target,
 #      Reschedule Lookup (CP4), AND Validate Reschedule Target (CP4 sub-step 3a) must ALL validate
 #      {finite start_utc, gid shape, calendar_id present}.
@@ -73,8 +73,8 @@ elif gid_forms[('5', '1024')] != len(GID_NODES):
     # guard would report a number that no longer matches its own expectation.
     fails.append(f"gid shape regex count {gid_forms[('5', '1024')]} != {len(GID_NODES)} — expected in {GID_NODES}, found in {sorted(set(gid_seen))}")
 
-# 2) confirm_turn canonical regex ^[1-9][0-9]*$ — exactly the three confirm-freshness gates
-CT_NODES = ['Confirm Fresh?', 'Verify Confirm Live', 'Reschedule Fresh?']
+# 2) confirm_turn canonical regex ^[1-9][0-9]*$ — exactly the four confirm-freshness gates
+CT_NODES = ['Confirm Fresh?', 'Verify Confirm Live', 'Reschedule Fresh?', 'Booking Fresh?']
 ct_seen = sorted(name for name, t in ALL.items() if re.search(r'\[1-9\]\[0-9\]\*', t))
 if ct_seen != sorted(CT_NODES):
     fails.append(f"confirm_turn canonical regex ^[1-9][0-9]*$ nodes {ct_seen} != {sorted(CT_NODES)} (a weakened/moved confirm-turn check?)")
@@ -111,6 +111,14 @@ if cf_ttl is None or rf_ttl is None:
 elif cf_ttl != rf_ttl:
     fails.append("confirm-TTL DRIFT — Confirm Fresh? and Reschedule Fresh? leftValue not byte-identical "
                  "(reschedule must reuse the cancel-confirm TTL verbatim)")
+# 4b) CLOSE-OUT M2: Booking Fresh? is the same TTL with ONE declared difference — its stage scope (only a pending booking
+#     confirm is checked; any other stage passes, which keeps N1's D-6 route). Anything else is drift.
+BF_SCOPE = "if ($json.state.stage !== 'confirming') return true; "
+bf_ttl = if_leftvalue('Booking Fresh?')
+if bf_ttl is None or cf_ttl is None:
+    fails.append(f"booking-confirm TTL node missing (Booking Fresh?={bf_ttl is not None})")
+elif bf_ttl != cf_ttl.replace('{{ (() => { ', '{{ (() => { ' + BF_SCOPE, 1):
+    fails.append("booking-confirm TTL DRIFT — Booking Fresh? is not Confirm Fresh?'s TTL plus exactly its stage scope")
 
 # 5) *_confirming ↔ stageContext — every *_confirming stage keyed in an IF/Switch routing condition
 #    must have a matching branch in Build LLM Request's stageContext ternary.
@@ -231,9 +239,10 @@ if fails:
 
 print(f'cancel-validation parity OK — gid regex {len(GID_NODES)}x identical [0-9a-v]{{5,1024}} (incl. Reschedule Lookup + '
       'Validate Reschedule Target); '
-      'confirm_turn regex 3x ^[1-9][0-9]*$ (Confirm Fresh?, Verify Confirm Live, Reschedule Fresh?); '
+      'confirm_turn regex 4x ^[1-9][0-9]*$ (Confirm Fresh?, Verify Confirm Live, Reschedule Fresh?, Booking Fresh?); '
       'Cancel Lookup + Validate Cancel Target + Reschedule Lookup all check {finite start_utc, gid shape, '
       'calendar_id present}; Confirm Fresh?==Reschedule Fresh? TTL byte-identical; '
+      'Booking Fresh? == that TTL + its stage scope; '
       f'routed *_confirming {sorted(routed)} all have a Build LLM Request stageContext branch; '
       'two Load Configs share identical business.timezone + bot.killSwitch; '
       'three Load Configs share identical ownerAlert.enabled + throttleMinutes; '

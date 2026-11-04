@@ -23,7 +23,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Compute Purge Cutoff (CP5e) — delete processed_messages older than 30 days (dedupe only needs to\n// survive the provider retry window = hours; 30d is amply safe). created_at is an ISO-8601 UTC string,\n// so a lexicographic '<' compare is chronological.\nreturn [{ json: { cutoff: $now.minus({ days: 30 }).toUTC().toISO() } }];"
+        "jsCode": "// Compute Purge Cutoff (CP5e) — delete processed_messages older than 30 days (dedupe only needs to\n// survive the provider retry window = hours; 30d is amply safe). The cutoff is an ISO-8601 UTC string, and the\n// query casts it to timestamptz, so the compare is chronological. (Corrected 2026-11-03: this said \"a lexicographic\n// '<' compare\" — the Airtable-era text-column reading.)\nreturn [{ json: { cutoff: $now.minus({ days: 30 }).toUTC().toISO() } }];"
       },
       "id": "7c8584e1-b9eb-43e2-a567-86fa7f3fa4cb",
       "name": "Compute Purge Cutoff",
@@ -276,7 +276,7 @@
         520
       ],
       "parameters": {
-        "jsCode": "\n// B1 · Compute Leads Cutoff — the public demo's lead capture takes REAL phone numbers from strangers\n// (ARCH-DEC D-11) and `leads` had no TTL at all. This is the third fan-out from Load Config (Purge).\n//\n// FAIL-CLOSED ON PURPOSE: when `leadsRetentionDays` is absent the branch deletes NOTHING and routes to the\n// alert. A retention policy that quietly defaults to a number nobody chose is exactly how one arithmetic\n// slip becomes a swept table — and Airtable has no undo.\nconst lc = $('Load Config (Purge)').first().json;\nconst days = ((lc && lc.config) || {}).leadsRetentionDays;\nif (!Number.isInteger(days) || days < 1) {\n  return [{ json: { _purge_branch: 'leads', _leads_refused: 'no_retention_configured' } }];\n}\nreturn [{ json: { cutoff: $now.minus({ days }).toUTC().toISO(), retention_days: days } }];\n"
+        "jsCode": "\n// B1 · Compute Leads Cutoff — the public demo's lead capture takes REAL phone numbers from strangers\n// (ARCH-DEC D-11) and `leads` had no TTL at all. This is the third fan-out from Load Config (Purge).\n//\n// FAIL-CLOSED ON PURPOSE: when `leadsRetentionDays` is absent the branch deletes NOTHING and routes to the\n// alert. A retention policy that quietly defaults to a number nobody chose is exactly how one arithmetic\n// slip becomes a swept table — and a DELETE has no undo. (Corrected 2026-11-03: this said \"Airtable has no undo\".)\nconst lc = $('Load Config (Purge)').first().json;\nconst days = ((lc && lc.config) || {}).leadsRetentionDays;\nif (!Number.isInteger(days) || days < 1) {\n  return [{ json: { _purge_branch: 'leads', _leads_refused: 'no_retention_configured' } }];\n}\nreturn [{ json: { cutoff: $now.minus({ days }).toUTC().toISO(), retention_days: days } }];\n"
       }
     },
     {
@@ -491,7 +491,7 @@
         660
       ],
       "parameters": {
-        "jsCode": "\n// Error + refusal collector for the leads branch. n8n's error item does not carry the failing node name,\n// so the branch is identified by this node's own identity — the same topology trick the other two\n// collectors use. Keyed per branch so the two existing branches cannot swallow this one's alert\n// (drill-corrected once already, exec 1631).\nreturn $input.all().map(i => ({ json: { ...i.json, _purge_branch: 'leads' } }));\n"
+        "jsCode": "\n// Error + refusal collector for the leads branch. n8n's error item does not carry the failing node name,\n// so the branch is identified by this node's own identity — the same topology trick the other two\n// collectors use. Keyed per branch so the two existing branches cannot swallow this one's alert\n// (drill-corrected once already, exec 1631).\n// CLOSE-OUT P1 (ruling 2026-11-03): \"nothing old to delete\" is not a fault — 3 of 3 nightly runs after go-live paged\n// the owner for it (0 candidates). Such an item ends here, still visible in Leads Purge Sane?'s output. Every other\n// refusal (capped, an unreadable shape, no retention configured) and every error item alerts as before.\nreturn $input.all().filter(i => i.json._leads_refused !== 'no_candidates')\n  .map(i => ({ json: { ...i.json, _purge_branch: 'leads' } }));\n"
       }
     },
     {
