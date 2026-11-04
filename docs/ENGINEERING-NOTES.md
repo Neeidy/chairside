@@ -90,7 +90,7 @@ deleted (they held an Access token and a cookie); the archived Main original del
 
 | Item | Status | What bounds it meanwhile |
 |---|---|---|
-| The leaked `/api` and owner-path Access service tokens, and the n8n API key | deferred by the owner, recorded | the copies are on this machine (transcripts, backups), not public; `/api` needs the service token and the API key, the owner path needs a signed request as well; one later rotation voids every copy at once |
+| The leaked `/api` and owner-path Access service tokens, and the n8n API key | deferred by the owner, recorded → **declined by decision 2026-11-04** (the last table of "Closed by decision — CLOSE-OUT", row 40) | the copies are on this machine (transcripts, backups), not public; `/api` needs the service token and the API key, the owner path needs a signed request as well; one later rotation voids every copy at once |
 | Revoking the Access sessions; a 24 h dashboard session | deferred by the owner, recorded | the stored executions that held a session token are deleted |
 | The Airtable token and base | deferred by the owner, recorded | no workflow and no n8n credential reaches it since D6c; the base is kept until its export (MIGRATION-PLAN §7, Gate 1) |
 | Deny rules for every secret-file copy; the tunnel credential in a root-only file; a pinned backup script; an off-server backup target | deferred by the owner, recorded | the secret files are mode 0600 and outside git; the nightly dump is restored and compared before it counts, but it lives on the same server |

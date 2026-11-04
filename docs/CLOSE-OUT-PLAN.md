@@ -278,11 +278,13 @@ writes, cancels or blocks a booking wrongly is a stop.
 committed:*
 - **1 ◐** — every A row of the build is done. G1, M1–M3, P1/P2, S1/S2, D1/D2, the docs rows and the reads (rows 13, 57)
   are done; the evidence is in R1–R4. The new finding (`check-no-host-leak.sh` without `CLAUDE.local.md`) is R4's step 3.
+  *Updated 2026-11-04:* **X1** (row 42's A half, the deny rules) is NOT done — found while weighing C-5; open as CC's
+  under ⚠ ONAY (the last section).
 - **2 ✅** — every B and B-v2 row is written with its decision and trigger in ENGINEERING-NOTES, "Closed by decision —
   CLOSE-OUT".
 - **3 ⏳ open** — C-1 (GitHub About), C-2 (Vercel token), C-3 (#17's rotations), C-4…C-6 and the Loom (DC-9) are the
   owner's steps, handed over at the end of R4. *Updated 2026-11-04:* C-1 and C-2 done; C-3 declined in writing; C-4,
-  C-5, C-6, the Loom, the screenshot and X1 (row 42's A half, found not done) open — the last section.
+  C-5, C-6, the Loom and the screenshot open — the last section (X1 is an A row: criterion 1).
 - **4 ✅** — Main, Purge, the site and the dashboard each changed once, in the R3 window. The owner's run was read back in
   R4: executions 4947–4959 and `salon_ro`.
 - **5 ✅** — after promotion (`d9f770a`), both parity guards are 0 against the committed exports (content 5/5;
@@ -670,7 +672,9 @@ reasoning does not reach:
 - It is recorded as done nowhere: not in R1–R4, and not in §9's criterion 1.
 - The user-level settings, read 2026-11-04, hold a deny rule for one secret file outside the repo. Which other copies
   exist, and whether they are covered, was not measured, because the step was never run.
-- It was missed, not ruled. The deny layer guards against CC's own accidental reads, the channel of the 2026-09-13
+- Within CLOSE-OUT it was missed, not ruled: 7-4 B recorded the deny rules as deferred by the owner (PHASE-7-PLAN §4j
+  #5), this plan took X1 in as CC's A item, and it was not run. Not yet counted when X1 is done: the committed project
+  settings already deny one secret file and its backup patterns (MIGRATION-PLAN). The deny layer guards against CC's own accidental reads, the channel of the 2026-09-13
   exposure, so the ruling's reasoning does not argue against it.
 - It stays OPEN as CC's, waiting for his ⚠ ONAY or a written decline.
 
