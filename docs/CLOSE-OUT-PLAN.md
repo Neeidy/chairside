@@ -271,6 +271,20 @@ writes, cancels or blocks a booking wrongly is a stop.
 
 ## 9. Acceptance criteria — "phase closed" means
 
+*Status at R4 (2026-11-04), each line with its evidence or its reason; the live reads are terminal-measured, output not
+committed:*
+- **1 ◐** — every A row of the build is done. G1, M1–M3, P1/P2, S1/S2, D1/D2, the docs rows and the reads (rows 13, 57)
+  are done; the evidence is in R1–R4. The new finding (`check-no-host-leak.sh` without `CLAUDE.local.md`) is R4's step 3.
+- **2 ✅** — every B and B-v2 row is written with its decision and trigger in ENGINEERING-NOTES, "Closed by decision —
+  CLOSE-OUT".
+- **3 ⏳ open** — C-1 (GitHub About), C-2 (Vercel token), C-3 (#17's rotations), C-4…C-6 and the Loom (DC-9) are the
+  owner's steps, handed over at the end of R4.
+- **4 ✅** — Main, Purge, the site and the dashboard each changed once, in the R3 window. The owner's run was read back in
+  R4: executions 4947–4959 and `salon_ro`.
+- **5 ✅** — after promotion (`d9f770a`), both parity guards are 0 against the committed exports (content 5/5;
+  structure 198/198 nodes, 280/280 connections), and `check-all` is 0.
+- **6 ⏳ open** — the ROADMAP rows are classed. The public-demo row stays ◐ until C-1 and C-2 are done.
+
 1. Every A row is done with its evidence: a commit, a test that fails before and passes after, or a read.
 2. Every B and B-v2 row has its decision text and trigger in ENGINEERING-NOTES or the plan it belongs to.
 3. Every C row is done (and checked as §6 says) or explicitly declined by Yigitcan, in writing.
