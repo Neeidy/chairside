@@ -164,9 +164,9 @@ Several tools and one person, each with a named job ([`CLAUDE.md`](CLAUDE.md), "
 - **Widget identity has session strength, not a verified identity.** A customer can only reach their own booking, keyed
   by the channel's sender, but on the widget that key comes from the browser session.
 - **Dates:** English only, no ranges ("early next week"), and a 30-day booking horizon.
-- **A known false alarm:** when a customer says "no" at the confirm, the model sometimes repeats the stored date
-  without the customer's words. The date guard then sends the owner an unnecessary alert. It is named and carried
-  ([`docs/N1-CONFIRM-NO-PLAN.md`](docs/N1-CONFIRM-NO-PLAN.md), "R4").
+- **A "yes" counts on the turn right after its confirm — among saved turns.** A turn that saves no state (an outage
+  reply, a guard trip) does not stale the confirm, so the next "yes" books the slot shown; the cancel and reschedule
+  confirms share the bound ([`docs/CLOSE-OUT-PLAN.md`](docs/CLOSE-OUT-PLAN.md), "R2").
 - **A second client is shown offline only.** A config file and its secrets render a second client's workflows with no
   hand edit, but this has not yet run on a real second deployment.
 - **The full v2 list and every recorded bound:** [`docs/ENGINEERING-NOTES.md`](docs/ENGINEERING-NOTES.md) and the live

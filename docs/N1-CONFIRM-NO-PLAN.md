@@ -609,7 +609,8 @@ brief's step 1 said "no alert", and Cowork recorded that wording as its own brie
 from the N1 nodes", and the N1 nodes raised none. The stop came first and the round waited for the ruling.
 **Ruling (Yigitcan, 2026-11-03):** a pre-existing bound, independent of N1. §8's criteria 1 and 5 were reworded in place.
 **Named and carried, not built now:** *a false owner alert at a pending confirm when the model echoes the stored slots
-without a `dateExpr` (`date_expr_missing`): an alarm-fatigue candidate.* **Recorded observation, no action (ruling):**
+without a `dateExpr` (`date_expr_missing`): an alarm-fatigue candidate.* *(Built since: CLOSE-OUT M1 withholds that ping,
+live since 2026-11-03 and promoted at `d9f770a` — `docs/CLOSE-OUT-PLAN.md`.)* **Recorded observation, no action (ruling):**
 the cancelled conversation still holds the declined Beard Trim slots. It is not at a confirm stage, so nothing can book
 them.
 
@@ -639,7 +640,7 @@ secret-scan 0, hook-drift OK, listeners OK, 0 project containers.
 | Resume-point memory written AND read back | ✅ | the progress memory, read back in this round |
 
 **N1 is CLOSED**, with no DoD item open: the README / case-study row closed at the public-demo close (2026-11-03). *(Said "with one DoD item recorded as open (above)" after that row went ✅; corrected in place 2026-11-03, CLOSE-OUT row 55.)* **Carried:**
-- the `date_expr_missing` false alert at a pending confirm (named above);
+- the `date_expr_missing` false alert at a pending confirm (named above) *(closed by CLOSE-OUT M1, 2026-11-03)*;
 - v2: a freshness check on the booking confirm;
 - the README / case-study *(closed at the public-demo close, 2026-11-03)*;
 - Cloudflare's default retry beside ours (unmeasured);
