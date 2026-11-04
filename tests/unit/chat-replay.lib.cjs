@@ -34,7 +34,8 @@ function makeReplay(exportJson, { nowISO, sender = 'widget:w-replay', configPatc
   const now = () => clock.now();
   // The plain JS clock as well: `Date.now()` and an argument-less `new Date()` are the pinned instant too. Five nodes read
   // `Date.now()` (the cancel and reschedule lookups and validators, Build Owner Alert); with only Luxon pinned, a replay
-  // dated before today saw today's real clock there, and three tests went red the day their fixed booking day arrived
+  // dated before today saw today's real clock there, and tests went red the day their fixed booking day arrived — three
+  // when first measured, more as that day went on (the count follows the real hour)
   // (CLOSE-OUT R4, 2026-11-04: "too close to its time to reschedule").
   const PinnedDate = nowISO ? class extends Date {
     constructor(...a) { if (a.length === 0) super(pinned().toMillis()); else super(...a); }

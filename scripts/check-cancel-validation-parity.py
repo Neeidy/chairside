@@ -6,7 +6,7 @@
 # `*.copy.sanitized.json` files, beside the parked Airtable originals).
 #
 # Concepts guarded:
-#   1. gid shape regex  ^[0-9a-v]{5,1024}$  — MUST be identical everywhere; 5x
+#   1. gid shape regex  ^[0-9a-v]{5,1024}$  — MUST be identical everywhere; 6x
 #      (Event ID Valid?, Cancel Lookup ask structOk, Validate Cancel Target, Reschedule Lookup — CP4,
 #      Validate Reschedule Target — CP4 sub-step 3a).
 #   2. confirm_turn canonical regex  ^[1-9][0-9]*$  — 4x (Confirm Fresh?, Verify Confirm Live,
