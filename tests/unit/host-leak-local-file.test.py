@@ -63,6 +63,10 @@ def main():
         rc, out = guard(d)
         case('CLAUDE.local.md present, a clean tree → exit 0, the target counted', rc == 0 and 'clean' in out and '1 redaction target' in out,
              f'rc {rc} {out[-160:]!r}')
+        os.makedirs(os.path.join(d, 'sub'))
+        rc, out = guard(os.path.join(d, 'sub'))
+        case('started from a sub-directory → it works at the root (exit 0, the same target), not "absent"',
+             rc == 0 and '1 redaction target' in out, f'rc {rc} {out[-160:]!r}')
     with tempfile.TemporaryDirectory(prefix='hl-') as d:
         repo(d, local='notes\nSYNTHETIC_HOST=%s\n' % TARGET, leak=True)
         rc, out = guard(d)

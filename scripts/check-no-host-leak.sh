@@ -48,6 +48,9 @@ if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   echo "host-leak guard: CANNOT CHECK — not inside a git work tree"
   exit 2
 fi
+# Every path below is the work tree's root, wherever the guard is started from (a run from scripts/ looked for
+# CLAUDE.local.md in scripts/ and refused with "absent" while the file sat at the root — security-auditor, 2026-11-04).
+cd "$(git rev-parse --show-toplevel)" || { echo "host-leak guard: CANNOT CHECK — the work tree root is unreachable"; exit 2; }
 
 # EVERY redaction target, not just one. This guard read a single N8N_HOST until 2026-09-12, when a
 # SECOND target had to be recorded — the machine's ORIGIN IP, needed for ssh because the Cloudflare
