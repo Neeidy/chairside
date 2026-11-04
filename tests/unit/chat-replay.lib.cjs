@@ -32,6 +32,14 @@ function makeReplay(exportJson, { nowISO, sender = 'widget:w-replay', configPatc
   const clock = nowISO ? new Proxy(DateTime, { get: (t, p) => (p === 'now' ? pinned
     : p === 'utc' ? (...a) => (a.length ? DateTime.utc(...a) : pinned()) : Reflect.get(t, p)) }) : DateTime;
   const now = () => clock.now();
+  // The plain JS clock as well: `Date.now()` and an argument-less `new Date()` are the pinned instant too. Five nodes read
+  // `Date.now()` (the cancel and reschedule lookups and validators, Build Owner Alert); with only Luxon pinned, a replay
+  // dated before today saw today's real clock there, and three tests went red the day their fixed booking day arrived
+  // (CLOSE-OUT R4, 2026-11-04: "too close to its time to reschedule").
+  const PinnedDate = nowISO ? class extends Date {
+    constructor(...a) { if (a.length === 0) super(pinned().toMillis()); else super(...a); }
+    static now() { return pinned().toMillis(); }
+  } : Date;
   const db = { conv: null, appts: [], calendar: [], alerts: [] };
   const staticData = {};
   let out, outAll, path, replies, model, turnNo = 0;
@@ -45,7 +53,7 @@ function makeReplay(exportJson, { nowISO, sender = 'widget:w-replay', configPatc
   const ev = (s, j) => {
     if (typeof s !== 'string' || !s.startsWith('=')) return s;
     const body = s.slice(1);
-    const f = (e) => new Function('$', '$json', '$now', 'DateTime', `return (${e});`)($, j, now(), clock);
+    const f = (e) => new Function('$', '$json', '$now', 'DateTime', 'Date', `return (${e});`)($, j, now(), clock, PinnedDate);
     const whole = body.match(/^\s*\{\{([\s\S]*)\}\}\s*$/);
     if (whole) return f(whole[1]);
     return body.replace(/\{\{([\s\S]*?)\}\}/g, (_, e) => String(f(e)));
@@ -127,8 +135,8 @@ function makeReplay(exportJson, { nowISO, sender = 'widget:w-replay', configPatc
     if (path.length > UPSTREAM_LIMIT) throw new Error('replay: the walk did not end');
     if (STUB[name]) { const r = STUB[name](j); return r && r.__outputs ? r.__outputs : [r]; }
     if (t === 'code') {
-      const r = new Function('$', '$json', '$input', 'DateTime', '$now', '$getWorkflowStaticData', n.parameters.jsCode)(
-        $, j, { all: () => items.map((x) => ({ json: x })), first: () => ({ json: j }), item: { json: j } }, clock, now(), () => staticData);
+      const r = new Function('$', '$json', '$input', 'DateTime', '$now', '$getWorkflowStaticData', 'Date', n.parameters.jsCode)(
+        $, j, { all: () => items.map((x) => ({ json: x })), first: () => ({ json: j }), item: { json: j } }, clock, now(), () => staticData, PinnedDate);
       return [r.map((x) => x.json)];
     }
     if (t === 'if') { const tr = [], fa = []; for (const it of items) (all(n.parameters.conditions, it) ? tr : fa).push(it); return [tr, fa]; }
