@@ -807,8 +807,8 @@ The phase closes when C-6's check passes. The close is recorded in the next sect
 
 **C-6, done.**
 - **Operator statement (Yigitcan, 2026-11-04):** he deleted this project's three Airtable tokens in Airtable:
-  `barber_bot` (created 2026-07-10), `Barber Bot` (2026-08-09) and `salon-dashboard-readonly` (2026-09-11). A fourth
-  token, created before this project for another one, was deliberately kept. The base is kept (ruling 3).
+  `barber_bot` (created 2026-07-10), `Barber Bot` (2026-08-09) and `salon-dashboard-readonly` (2026-09-11). The base is
+  kept (ruling 3).
 - **CC's check, on the one copy CC can reach** (terminal-measured, output not committed):
   - the dashboard env still held the old read-only token, one line;
   - a single call to Airtable's `whoami` with it answered **`401`**. Only the status was printed; the value was never
@@ -847,7 +847,8 @@ scratchpad path, and its absence read back.
      - C-6's export and base deletion (the base is kept);
    - **deferred by the owner, outside this phase:** the Loom (DC-9, #20).
 4. **✅** Main, the site and the dashboard each changed once, in R3, and the owner's run was read back in R4.
-5. **✅** Both parity guards are 0 against the committed exports (since `d9f770a`), and `check-all` is 0.
+5. **✅** Both parity guards were 0 against the committed exports after promotion (`d9f770a`; measured in R4, and the
+   start gates of 2026-11-04 read both green again). `check-all` is 0 at this commit.
 6. **✅** No open item in ROADMAP is without a class, and the public-demo row is ✅.
 
 **What stays open is open by decision, each with its trigger, not by omission.** It is in ENGINEERING-NOTES ("Closed
