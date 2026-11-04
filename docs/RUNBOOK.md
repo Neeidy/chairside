@@ -212,9 +212,9 @@ and deactivating Main, do not.
   project did unpause** — it waits for a 200 and the site answers 302 (auditor LOW-6, R2f; recorded, the script is
   unchanged). Read the state with `measure` (exit 5 = neither online nor paused; under protection it is the 302) instead of reading exit 1 as a failure.
   The shell `pause`/`unpause` have not been run live; the R2f drill used the Vercel connection.
-  **Revoking the Vercel token closes this shell path too** — it is planned after the CLOSE-OUT's live window
-  (`docs/CLOSE-OUT-PLAN.md` §6 C-2, then `~/.vercel-demo.env` deleted); from then on the pause is the Vercel-connection
-  path above.
+  **This shell path is CLOSED since 2026-11-04:** the Vercel token was revoked (C-2; a read-only probe that answered 200
+  the day before answered 403) and `~/.vercel-demo.env` was deleted, absence read back. The pause is the Vercel-connection
+  path above. A new deployment from this machine needs a new token, created by the owner, in a new 0600 file.
 
 **The engine edits — DEPLOYED and PROMOTED 2026-10-30 (R2a)**; kept here as the record of how they were deployed, so a
 later edit follows the same path. They were staged in `n8n/staged/` (emptied by the promotion): `Eval Spend` fail-closed (Main, `--delta-file
@@ -247,7 +247,7 @@ line said "entered by Yigitcan" until R2c.)* **The route (ruled 2026-10-30, R2d)
 installed into a scratch prefix, never globally) with the team-scoped token from `~/.vercel-demo.env` (0600), read into
 the deploying process's environment — never `--token`, never printed; a REST call that needs it (e.g. reading build
 events, which the CLI's `inspect` cannot do with a team-scoped token) passes it in a temporary 0600 header file removed
-by the script's exit trap; the token is revoked at the phase close. The
+by the script's exit trap. *(The token was revoked on 2026-11-04, CLOSE-OUT C-2; this route needs a new one.)* The
 Vercel connection is not the route: it carries files only inline or as base64, which cannot reliably carry the two
 binary fonts (R2c). *(This sentence said "the route is open" until R2d.)* **The install must run at the `web/`
 workspace root:** R2d's first build ran Vercel's default install inside `web/site`, which (inferred from the package counts, not a

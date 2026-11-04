@@ -861,6 +861,7 @@
   - ## R3 — LIVE: Main and Purge put, site redeployed, dashboard rebuilt; ⏸ STOPPED for the owner run (2026-11-03)
   - ## R4 — the live run read back, promoted, the A rows closed (2026-11-04)
   - ### Definition of Done — CLOSE-OUT
+  - ## C-1 and C-2 — done (2026-11-04)
 
 ### `docs/CP4-RESCHEDULE-EXECUTE-PLAN.md`
   - ## What this replaces

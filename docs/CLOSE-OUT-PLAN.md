@@ -602,3 +602,19 @@ answers 200 and the unit is active.
 steps handed over at the end of this round): C-1 GitHub About, C-2 the Vercel token, C-3 #17's rotations, C-4 Access
 sessions, C-5 the tunnel credential, C-6 Airtable, the Loom (DC-9) and the README screenshot (DC-10). The phase closes
 when each of them is done, or explicitly declined by Yigitcan.
+
+## C-1 and C-2 — done (2026-11-04)
+
+*(The read-backs and the probe below are CC's, terminal-measured, output not committed.)*
+
+- **C-1, the GitHub About fields:** set by Cowork in the owner's browser. CC read them back from the public API
+  (unauthenticated). The homepage equals `https://barber-demo.<apex>` (compared, not printed), the description equals the
+  README's first sentence, and the topics are exactly the seven.
+- **C-2, the Vercel token:** revoked by Yigitcan in the dashboard. CC's read-only probe (`GET` the demo project) answered
+  200 on 2026-11-03 and **403** after the revocation. Only then was `~/.vercel-demo.env` deleted on its literal path
+  (⚠ ONAY), and its absence read back. A count over the session's scratchpad found no token value; the only match is the
+  variable name in the probe's own parser.
+- **Consequence, recorded in RUNBOOK §8:** the shell pause path and this machine's deploy route are closed. A new
+  deployment needs a new token from the owner.
+- **The phase stays OPEN** on C-3 (#17's three rotations), C-4 (Access sessions), C-5 (the tunnel credential), C-6
+  (Airtable), the Loom and the README screenshot.
