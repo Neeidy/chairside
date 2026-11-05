@@ -6,12 +6,17 @@
 //
 // The conversation is MOCK demo data; every BOT line is engine-verbatim and labelled with its source:
 //   W61 frontend welcome (K4) · W10 messageTemplates.askService · W11 messageTemplates.askDateTime
-//   W12 literal in `Compute Availability` · W13 messageTemplates.bookingConfirmed
-// Making this panel LIVE (real endpoint, Turnstile, the 65 W-states) is slice 2 — not done here.
+//   messageTemplates.askName (Slot Gate, NAME-CAPTURE D-1) · W12 literal in `Compute Availability` ·
+//   W13 messageTemplates.bookingConfirmed — the last three from lib/heroScenarios.ts `bookingLines`, the SAME source as
+//   the hero, and the slot from the shop clock at request time (lib/heroSlot.ts; app/page.tsx is force-dynamic).
+// This static panel renders only when the endpoint is NOT configured (app/page.tsx) — the live site shows LiveChatPanel.
 import { config } from '../../lib/config';
+import { bookingLines, DEMO_CUSTOMER } from '../../lib/heroScenarios';
+import { heroSlot } from '../../lib/heroSlot';
 
 export function SitePanel() {
   const name = config.business.name;
+  const lines = bookingLines(config, heroSlot(new Date(), config.business.timezone));
   const initials = name.split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
   const serviceList = config.services.map((s) => s.name).join(' / ');
   return (
@@ -47,22 +52,28 @@ export function SitePanel() {
           <div className="msg bot" data-step="4">What day and time works for you?<span className="stamp">14:01</span></div>
         </div>
         <div className="msg user" data-step="5">Friday at 15:30<span className="stamp">14:02</span></div>
-        {/* W12 · literal in `Compute Availability` */}
+        {/* messageTemplates.askName · node: Slot Gate — the name is asked last, before availability */}
         <div className="pair">
           <div className="typing" data-typing="6" aria-hidden="true"><i /><i /><i /></div>
-          <div className="msg bot" data-step="6">Haircut, Friday 4 Sep 2026 15:30 — shall I book it? (yes / no)
+          <div className="msg bot" data-step="6">{lines.askName}<span className="stamp">14:02</span></div>
+        </div>
+        <div className="msg user" data-step="7">{DEMO_CUSTOMER}<span className="stamp">14:02</span></div>
+        {/* W12 · literal in `Compute Availability`, with the name */}
+        <div className="pair">
+          <div className="typing" data-typing="8" aria-hidden="true"><i /><i /><i /></div>
+          <div className="msg bot" data-step="8">{lines.confirm}
             <span className="slots">
               <span className="chip chip-on">yes</span>
               <span className="chip">no</span>
             </span>
-            <span className="stamp">14:02</span>
+            <span className="stamp">14:03</span>
           </div>
         </div>
-        <div className="msg user" data-step="7">yes<span className="stamp">14:02</span></div>
+        <div className="msg user" data-step="9">yes<span className="stamp">14:03</span></div>
         {/* W13 · messageTemplates.bookingConfirmed · node: Build Booked State */}
         <div className="pair">
-          <div className="typing" data-typing="8" aria-hidden="true"><i /><i /><i /></div>
-          <div className="msg bot confirm" data-step="8"><strong>✓</strong> You&apos;re booked: Haircut, Friday 4 Sep 15:30. See you then!<span className="stamp">14:03</span></div>
+          <div className="typing" data-typing="10" aria-hidden="true"><i /><i /><i /></div>
+          <div className="msg bot confirm" data-step="10"><strong>✓</strong> {lines.booked}<span className="stamp">14:03</span></div>
         </div>
       </div>
       <div className="panel-foot" aria-hidden="true">

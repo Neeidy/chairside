@@ -16,6 +16,12 @@ import { SiteChrome } from '../components/site/SiteChrome';
 import { SiteMotion } from '../components/site/SiteMotion';
 import { config } from '../lib/config';
 
+// Rendered per request, not at build: the hero's sample booking date is derived from the shop clock (lib/heroSlot.ts),
+// and a prerendered page freezes it at deploy time — the old fixed sample date went into the past exactly that way
+// (CLOSE-OUT hero round, ruling 1). The cost, accepted: every view is a server render instead of a CDN copy.
+// scripts/check-hero-engine-text.cjs fails if this line goes.
+export const dynamic = 'force-dynamic';
+
 export default function Page() {
   // LIVE panel when the endpoint is configured; the static transcription otherwise, so a checkout
   // without .env.local still builds and renders honestly rather than shipping a dead input box.

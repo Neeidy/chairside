@@ -13,6 +13,10 @@
  * client's hero correct automatically: a shop with different services and hours gets its own numbers.
  */
 import type { ClientConfig } from '@salon/shared/config';
+import { heroSlot, type HeroSlot } from './heroSlot';
+
+/** The demo's customer — a synthetic name (repo tests use the same one). Never a real person. */
+export const DEMO_CUSTOMER = 'Kim Moss';
 
 export interface Bubble {
   from: 'bot' | 'user';
@@ -40,16 +44,32 @@ function hoursAnswer(cfg: ClientConfig): string {
 const fill = (tpl: string, vars: Record<string, string>) =>
   tpl.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? `{${k}}`);
 
-export function heroScenarios(cfg: ClientConfig): Scenario[] {
+/**
+ * The booking flow's three bot lines, shared by the hero's 'booking' scenario AND the static SitePanel, so the two
+ * cannot drift apart. The engine's order (NAME-CAPTURE D-1): `Slot Gate` asks the name LAST, before availability;
+ * `Compute Availability` then confirms WITH the name.
+ */
+export function bookingLines(cfg: ClientConfig, slot: HeroSlot) {
   const svc = cfg.services[0];                       // the demo books the first configured service
   const t = cfg.messageTemplates as Record<string, string>;
-  // Sample slot. The ENGINE formats with Luxon 'cccc d LLL HH:mm' in the shop timezone — and the confirm ask with
-  // 'cccc d LLL yyyy HH:mm' (DATE-PHRASING R2d, ruling 2026-11-02: the year is shown before any write); these are the
-  // approved mockup's sample values, kept so the demo reads like a real Friday afternoon booking.
-  const when = 'Friday 4 Sep 15:30';
-  const whenConfirm = 'Friday 4 Sep 2026 15:30';   // scripts/check-hero-engine-text.cjs parses it with the engine's format
-  const date = 'Friday 4 Sep';
-  const time = '15:30';
+  return {
+    // messageTemplates.askName — asked by `Slot Gate` (`next_ask` falls through to t.askName)
+    askName: t.askName,
+    // W12 — literal in `Compute Availability`:
+    //   `${svcName}, ${fmtConfirm}${slots.customerName ? ' for ' + slots.customerName : ''} — shall I book it? (yes / no)`
+    confirm: `${svc.name}, ${slot.whenConfirm} for ${DEMO_CUSTOMER} — shall I book it? (yes / no)`,
+    // W13 — messageTemplates.bookingConfirmed, filled in `Build Booked State` (the template carries no name)
+    booked: fill(t.bookingConfirmed, { service: svc.name, date: slot.date, time: slot.time }),
+  };
+}
+
+/** `now` is the request (app/page.tsx is force-dynamic); the slot is derived from it — see lib/heroSlot.ts. */
+export function heroScenarios(cfg: ClientConfig, now: Date = new Date()): Scenario[] {
+  const svc = cfg.services[0];                       // the demo books the first configured service
+  const t = cfg.messageTemplates as Record<string, string>;
+  const slot = heroSlot(now, cfg.business.timezone);
+  const when = slot.when;
+  const lines = bookingLines(cfg, slot);
 
   return [
     {
@@ -57,12 +77,12 @@ export function heroScenarios(cfg: ClientConfig): Scenario[] {
       label: 'Booking',
       bubbles: [
         { from: 'user', text: `Can I get a ${svc.name.toLowerCase()} Friday at 15:30?`, stamp: '14:02' },
-        // W12 — literal in `Compute Availability`: `${svcName}, ${fmtConfirm} — shall I book it? (yes / no)`
-        { from: 'bot', text: `${svc.name}, ${whenConfirm} — shall I book it? (yes / no)`, stamp: '14:02',
+        { from: 'bot', text: lines.askName, stamp: '14:02', source: 'messageTemplates.askName · Slot Gate (NAME-CAPTURE D-1)' },
+        { from: 'user', text: DEMO_CUSTOMER, stamp: '14:02' },
+        { from: 'bot', text: lines.confirm, stamp: '14:03',
           source: 'W12 · literal in Compute Availability', chips: ['yes', 'no'] },
         { from: 'user', text: 'yes', stamp: '14:03' },
-        // W13 — messageTemplates.bookingConfirmed, filled in `Build Booked State`
-        { from: 'bot', text: fill(t.bookingConfirmed, { service: svc.name, date, time }), stamp: '14:03',
+        { from: 'bot', text: lines.booked, stamp: '14:03',
           source: 'W13 · messageTemplates.bookingConfirmed', confirm: true },
       ],
     },
