@@ -12,11 +12,12 @@ reads the message; deterministic rules make every decision.**
 **Live demo:** the **Website** link in the About box at the top right of this GitHub page. The salon, its services and
 its prices are mock data. The engine behind the chat is the real one.
 
-<img src="docs/images/hero-chat.png" alt="The demo homepage's chat panel: a customer asks for a haircut on Friday at 15:30, the bot asks to confirm with the full date and year, the customer says yes, and the bot confirms the booking." width="420">
+<img src="docs/images/hero-chat.png" alt="The demo homepage's chat panel: a customer asks for a haircut on Friday at 15:30, the bot asks what name to book under, the customer answers with a synthetic name, the bot asks to confirm with the full date, year and that name, the customer says yes, and the bot confirms the booking." width="420">
 
-*The homepage's scripted sample conversation, not a live chat. Its bot lines are the engine's own text, checked by
-`scripts/check-hero-engine-text.cjs`. It leaves the name out: a real booking asks for one when it is missing and adds
-it to the confirm. Captured headless from the live page on 2026-11-04; nothing was sent.*
+*The homepage's scripted sample conversation, not a live chat. Its bot lines are the engine's own text and order —
+the name is asked before the slot is confirmed, and the confirm carries it — checked by
+`scripts/check-hero-engine-text.cjs`. The sample date is the next Friday after the day the page is served, so it is
+never in the past; the name is synthetic. Captured headless from the live page on 2026-11-05; nothing was sent.*
 
 > **Honest status:** a **demo / learning build** with no paying client and no real customers; the public demo went
 > live on 2026-11-01 ([`docs/PUBLIC-DEMO-PLAN.md`](docs/PUBLIC-DEMO-PLAN.md), "GO-LIVE"). Every claim and count on
