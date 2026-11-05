@@ -858,3 +858,61 @@ by decision — CLOSE-OUT", tables B, B-v2 and C) and in ROADMAP. In particular:
 - #18, Access's configuration measured from outside the repo;
 - the Loom.
 
+
+## The final revision round (2026-11-05) — closed
+
+Run after the close above, on three briefs from Yigitcan, each with its ⚠ ONAY or its written "approved". Nothing in
+n8n, the database schema or the calendar changed.
+
+**1 · The dashboard capture — `a60eb89`.** `docs/images/dashboard-synthetic.png`: the top bar and "Waiting for you"
+with ONE synthetic handoff conversation, seeded through the seed tool's existing `pd-conv-insert` (session `w-pd-…`) and
+captured headless on the dashboard's loopback port. The crop ends above "Coming up", which holds a non-synthetic row; the
+leads panel sits below it, so no lead was seeded. The seed workflow went up, did its two calls and was deleted (`GET`
+afterwards 404); the active set read back as before.
+
+**2 · The `pd-` clean-up.** `clean-pd` answered **2 conversations, 4 leads** *(the seed tool's answer, terminal-measured, not committed)*: the one seeded conversation, plus
+earlier `pd-` drill rows still in the table — 4 leads and 1 conversation. That they were the public demo's #13 Purge
+seed and #19's seed conversation is inferred from the counts (the 2026-10-31 record: 4 `pd-` leads and no other lead),
+not read. They carried no name and no phone (the insert refuses both in SQL). ⚠ Before the clean-up, the build reported
+the 4 leads as "not `pd-`": the count looked for the prefix in the page's text, and the leads panel never shows the
+message, so the instrument could not see it (`reporting.md`, "An EMPTY result is a claim about the INSTRUMENT").
+**Ruling (Yigitcan, 2026-11-05): the deleted rows are not re-seeded.**
+
+**3 · The hero fix — `e67715c` (code), `30d5446` (README).** The homepage's sample booking said "Friday 4 Sep 2026
+15:30" — a fixed date that had gone into the past — and had no name step, while the engine asks the name before
+availability and names it in the confirm.
+- `web/site/lib/heroSlot.ts`: the first Friday strictly after today in the shop's timezone, at 15:30, in the engine's
+  three formats.
+- `bookingLines()` in `heroScenarios.ts`: the name ask, the synthetic name "Kim Moss", the named confirm and the booked
+  line, shared by the hero and the static `SitePanel`.
+- `app/page.tsx` is `force-dynamic` (ruling 1), so the date comes from the request, not from the deploy.
+- `scripts/check-hero-engine-text.cjs` also checks the name step and its order, the engine's named confirm, no fixed
+  date, the page's `force-dynamic`, and `heroSlot` against Luxon's engine formatting over 400 days plus 10 edge instants.
+  Nine embedded mutants run on every invocation and must go red (ruling 2).
+- **Measured on the live page after the push** (read-only GETs, no booking; every value in this bullet is
+  terminal-measured, not committed): the confirm read "Friday 6 Nov 2026 15:30
+  for Kim Moss" on Thursday 5 Nov (Vienna); the order is ask → name → confirm → booked; "4 Sep" is gone; `/privacy` and
+  `/install` are byte-identical to before. TTFB of `/`, five GETs each: the old prerendered CDN copy, median 111 ms; the
+  per-request render, median 202 ms (recorded per ruling 1, no action taken).
+- The README's hero image was re-captured from the live page, and its alt text and caption corrected (ruling 3).
+
+**4 · Vercel is Git-connected.** Yigitcan connected the Vercel project to the GitHub repository (his statement). It
+was **measured** by the push of `e67715c`: the homepage changed from the prerendered `HIT` to the new hero with
+`no-store` on the poll's second read (the poll reads every 20 s, up to 10 min), with no token *(terminal-measured,
+not committed)*. **The token-based CLI route is retired** (RUNBOOK §8, corrected in place).
+⚠ **Ship gate #16(c) is re-opened for re-measurement.** Its evidence — no file under `web/dashboard` in the deployment's
+file list — was measured on CLI uploads of a `git archive` that left the dashboard out. A Git deployment clones the
+whole repository; `.vercelignore` names `web/dashboard`, but whether Vercel applies it to a Git deployment was not
+measured: CC's Vercel connection answers 403 on the project's deployments.
+
+**5 · The portfolio case study** is built outside this repository: no repo change.
+
+**Yigitcan's rulings on the open items of `a60eb89` (2026-11-05):**
+1. the deleted `pd-` rows are not re-seeded;
+2. the local branch `backup/close-lows-pre-amend` stays as it is — no deletion;
+3. the dashboard image is not linked from `CASE-STUDY.md`.
+
+**The round is closed.** Open after it: #16(c)'s re-measurement on a Git deployment (above), plus what was already open
+by decision at the close — the v2 rows, #15, #18 and the Loom. Two stale texts outside this round's permitted files,
+found by `security-auditor` and left for a ruling: `CASE-STUDY.md`'s "what stays open" list does not name #16(c), and
+the `.vercelignore` header still says there is no Vercel project and names the Airtable PAT.

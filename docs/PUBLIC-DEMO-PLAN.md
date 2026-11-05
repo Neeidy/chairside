@@ -387,7 +387,8 @@ is empty, so it deletes nothing — measurement 2).
 
 **Vercel (2026-10-30, the ⚠ ONAY in the R2a brief):** account plan **Hobby** (read from the API). Project
 `salon-booking-demo` created with `framework: nextjs`, `rootDirectory: web/site` and **NO git link**, so no push can
-deploy it before the go-live checks — the first deployment is a deliberate step. **Protection, measured as far as it can
+deploy it before the go-live checks — the first deployment is a deliberate step. *(Since 2026-11-05 the project IS Git-linked —
+Yigitcan connected it; a push to `main` deploys it, measured with `e67715c`. CLOSE-OUT-PLAN, "The final revision round".)* **Protection, measured as far as it can
 be without a deployment:** `ssoProtection: {deploymentType: "all"}` (Vercel Authentication on every deployment,
 production domains included) was ACCEPTED on Hobby and reads back `enabled: true, deploymentType: all`; whether it
 actually refuses a visitor on the production domain is measurable only on a deployment, so it is **not yet measured**
@@ -1018,7 +1019,8 @@ past the fixed range (a version at least two weeks old) or accept with this reas
 ### R2d — first deployment attempted (2026-10-30, the R2d brief; no go-live) — ⚠ stopped: Vercel's build was red
 **Start gates (20:43 Vienna):** all green, as before. **The route (ruling of 2026-10-30, reversing R2a's "no token"):**
 a team-scoped Vercel token created by Yigitcan in `~/.vercel-demo.env` (mode 0600, this user — measured), used only
-for this phase and revoked at its close; Git integration stays off. **CLI:** `vercel@64.3.1` — the newest stable
+for this phase and revoked at its close; Git integration stays off. *(Superseded 2026-11-05: the token was revoked at C-2, and the project is now
+Git-connected — RUNBOOK §8.)* **CLI:** `vercel@64.3.1` — the newest stable
 release published at least two weeks earlier (2026-10-15) — installed into a scratch prefix. Its own code reads
 `VERCEL_TOKEN` from the environment (`tokenSource = "env"`), so for the deployment the token went from the 0600 file into
 the deploying process's environment: never `--token`, never printed; the CLI's global config pointed at a scratch

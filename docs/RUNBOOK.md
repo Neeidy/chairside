@@ -214,7 +214,9 @@ and deactivating Main, do not.
   The shell `pause`/`unpause` have not been run live; the R2f drill used the Vercel connection.
   **This shell path is CLOSED since 2026-11-04:** the Vercel token was revoked (C-2; a read-only probe that answered 200
   the day before answered 403) and `~/.vercel-demo.env` was deleted, absence read back. The pause is the Vercel-connection
-  path above. A new deployment from this machine needs a new token, created by the owner, in a new 0600 file.
+  path above. **Deploying the site no longer needs a token at all:** since 2026-11-05 the Vercel project is connected
+  to the GitHub repository, and a push to `main` deploys it (below). *(This line said "a new deployment from this machine
+  needs a new token" until 2026-11-05.)*
 
 **The engine edits — DEPLOYED and PROMOTED 2026-10-30 (R2a)**; kept here as the record of how they were deployed, so a
 later edit follows the same path. They were staged in `n8n/staged/` (emptied by the promotion): `Eval Spend` fail-closed (Main, `--delta-file
@@ -243,7 +245,13 @@ both values in force" until R2b — true before R2a, stale after it.)*
 `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and `NEXT_PUBLIC_WEBHOOK_URL`, so both must be in the Vercel project env first — both
 are SET since R2c (read back on Production + Preview). The site key reaches CC in the brief (a public value), never by
 printing the server's env file, and is compared with that file by a script that prints only MATCH / DIFFERENT. *(This
-line said "entered by Yigitcan" until R2c.)* **The route (ruled 2026-10-30, R2d):** a pinned Vercel CLI (`vercel@64.3.1`,
+line said "entered by Yigitcan" until R2c.)* **The route since 2026-11-05: a push to `main`.** Yigitcan connected the
+Vercel project to the GitHub repository (his statement); the push of `e67715c` measured it — the live homepage changed
+on the poll's second read, with no token *(terminal-measured, not committed)*. The push gates (`security-auditor`, the pre-push secret-scan) are therefore
+also the site's deploy gates: **a push to `main` is a production release of the public page.**
+⚠ Ship gate #16(c) — no `web/dashboard` file in the deployment — was measured on CLI uploads only; a Git deployment
+clones the whole repository, and whether Vercel applies `.vercelignore` to it is NOT measured (CLOSE-OUT-PLAN, "The final
+revision round"). **The retired route, kept as the record (ruled 2026-10-30, R2d):** a pinned Vercel CLI (`vercel@64.3.1`,
 installed into a scratch prefix, never globally) with the team-scoped token from `~/.vercel-demo.env` (0600), read into
 the deploying process's environment — never `--token`, never printed; a REST call that needs it (e.g. reading build
 events, which the CLI's `inspect` cannot do with a team-scoped token) passes it in a temporary 0600 header file removed
@@ -260,7 +268,7 @@ is green on 24.x, locally and on Vercel; Node 26 was NOT re-measured on 16.4.1, 
 **⚠ `web/` is also the LIVE owner dashboard's directory** (OPS-10): its service runs `next start` in `web/dashboard`
 on the shared `web/node_modules`, so an `npm install` or `next build` in `web/` replaces what the running dashboard
 loads, and its next request can fail. Build a dependency change in a scratch copy; if it was built in place, restart the
-dashboard at once (`systemctl --user restart salon-dashboard.service`) and measure `/` on its loopback port. The deployment uploads the committed tree only — `git archive HEAD` of
+dashboard at once (`systemctl --user restart salon-dashboard.service`) and measure `/` on its loopback port. The CLI deployments (until 2026-11-04) uploaded the committed tree only — `git archive HEAD` of
 `web/package.json web/package-lock.json web/shared web/site web/snippet config/client.config.example.json
 schemas/client.config.schema.json` (54 files at R2b, nothing under `web/dashboard`) — with protection ON; it is
 measured as an unauthenticated visitor before anything else (go-live check 8). If the page itself answers on the demo
