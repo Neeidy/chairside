@@ -319,9 +319,12 @@ row):
   INTERACTION-ONLY).
 
 **What stays open, by the owner's reason:** the Managed-mode hidden-container check (ship gate #15, v2); the leaked
-service tokens and the n8n API key (#17, deferred until the system is complete — declined by decision on 2026-11-04,
-CLOSE-OUT C-3); the Loom walkthrough (#20, deferred — and on 2026-11-04 deferred outside the CLOSE-OUT phase)
-(`docs/ROADMAP.md`, "Ship gate after D6c").
+service tokens and the n8n API key (#17b–d, deferred until the system is complete — declined by decision on 2026-11-04,
+CLOSE-OUT C-3); Access in front of the dashboard (#18, measured at K-6 but its configuration lives outside this repo);
+the Loom walkthrough (#20, deferred — and on 2026-11-04 deferred outside the CLOSE-OUT phase) (`docs/ROADMAP.md`,
+"Ship gate after D6c"). *(This list did not name #18 until 2026-11-06. #16(c) — the dashboard kept off the public
+site — was re-opened when the site became Git-deployed on 2026-11-05 and closed again on 2026-11-06, measured from
+the outside: CLOSE-OUT-PLAN, "The final revision round".)*
 
 ## 11 · The name the bot never asked for — and the date the tests never sent (NAME-CAPTURE, 2026-11-01)
 

@@ -1,14 +1,12 @@
-# ⚠⚠ UNVERIFIED PRE-PROVISIONING. THIS FILE IS **NOT A CONTROL.**
+# This file excludes `web/dashboard` (the owner dashboard, which reads customer data) from a Vercel deployment.
 #
-# There is no Vercel project for this repo (confirmed by Yigitcan, 2026-09-12). No deployment, no root
-# directory setting, no platform to honour anything written here. Whether this file is ever read — and
-# whether its pattern is even written against the right base directory — CANNOT BE MEASURED until a
-# target platform is chosen and provisioned. It is kept because it is two lines and it should already be
-# in place on deployment day, not because it protects anything today.
-#
-# It was briefly written up as though it enforced something. It does not, and the difference matters
-# more here than anywhere: the thing it would exclude is `web/dashboard`, the only holder of the
-# Airtable PAT.
+# What is measured now (2026-11-06): the Vercel project deploys from Git — a push to `main` deploys the public site
+# (measured with the push of e67715c, 2026-11-05) — and its root directory is `web/site` (read back through the API
+# during the public demo; the Git deployment built and served that app). Whether Vercel APPLIES this file to a Git
+# deployment is NOT measured: CC's Vercel connection is refused (403) on the team's deployments. So this file is not
+# the evidence that the dashboard stays off the public site. The evidence is measured from the outside instead (ship
+# gate #16(c), CLOSE-OUT-PLAN "The final revision round"): the dashboard's routes answer 404 on the public host, and
+# none of its strings appears in any page, RSC stream or asset the site serves.
 #
 # WHAT IS ACTUALLY A CONTROL — and it is a separate thing, mentioned separately on purpose:
 # `scripts/check-deploy-separation.sh` measures the REPO (no publicly-deployed package reaches the
