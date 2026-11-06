@@ -900,7 +900,8 @@ availability and names it in the confirm.
 was **measured** by the push of `e67715c`: the homepage changed from the prerendered `HIT` to the new hero with
 `no-store` on the poll's second read (the poll reads every 20 s, up to 10 min), with no token *(terminal-measured,
 not committed)*. **The token-based CLI route is retired** (RUNBOOK §8, corrected in place).
-⚠ **Ship gate #16(c) is re-opened for re-measurement.** Its evidence — no file under `web/dashboard` in the deployment's
+⚠ **Ship gate #16(c) is re-opened for re-measurement** *(closed again on 2026-11-06 under a new criterion — the
+subsection below)*. Its evidence — no file under `web/dashboard` in the deployment's
 file list — was measured on CLI uploads of a `git archive` that left the dashboard out. A Git deployment clones the
 whole repository; `.vercelignore` names `web/dashboard`, but whether Vercel applies it to a Git deployment was not
 measured: CC's Vercel connection answers 403 on the project's deployments.
@@ -912,7 +913,48 @@ measured: CC's Vercel connection answers 403 on the project's deployments.
 2. the local branch `backup/close-lows-pre-amend` stays as it is — no deletion;
 3. the dashboard image is not linked from `CASE-STUDY.md`.
 
-**The round is closed.** Open after it: #16(c)'s re-measurement on a Git deployment (above), plus what was already open
+**The round is closed.** Open after it *(as of 2026-11-05; the first two items closed on 2026-11-06, below)*: #16(c)'s
+re-measurement on a Git deployment (above), plus what was already open
 by decision at the close — the v2 rows, #15, #18 and the Loom. Two stale texts outside this round's permitted files,
 found by `security-auditor` and left for a ruling: `CASE-STUDY.md`'s "what stays open" list does not name #16(c), and
 the `.vercelignore` header still says there is no Vercel project and names the Airtable PAT.
+
+### #16(c) re-measured, the two stale texts, and the close (2026-11-06)
+
+**#16(c) — the criterion changed, by Yigitcan's approval.** The old wording, "no `web/dashboard` file in the
+deployment", cannot be measured without team access to Vercel's API, which answers 403. The new criterion is **"web/dashboard
+code is neither served nor viewable from the public site deployment"**, measured from the outside with read-only GETs
+on the public host *(every value below: terminal-measured, not committed)*:
+- **a) The dashboard's routes**, listed from the repo (`web/dashboard/app`): `/api/export/appointments`,
+  `/api/export/leads` and `/api/release` each answer **404**. The dashboard's `/` is the same path as the site's own home
+  page, so it is covered by b).
+- **b) Everything the site serves**: `/`, `/privacy` and `/install` as HTML and as RSC streams, `/barber-widget.js`, and
+  every chunk they reference, followed recursively (8 assets: 7 JS, 1 CSS) — **15 bodies**. Seven strings that exist
+  only in `web/dashboard` (each checked absent from `web/site`, `web/shared` and `web/snippet`): "Waiting for you",
+  "Release to the bot", "database reads", "Owner dashboard", "No one has left their details", "notification NOT
+  confirmed", `readHandoffQueue` → **0 hits each**.
+- **c) `/_src` and `/_logs`** answer **307** to vercel.com's login, with a 15-byte body that is neither source nor log.
+- **d) The positive controls, through the same scan:** "shall I book it? (yes / no)" 3 hits and "What name should I put
+  the booking under" 5 hits in the pages; `prefers-reduced-motion` and `intro-play` 2 hits each inside the JS chunks.
+  So the scan can find a string in each kind of body it reports 0 for.
+- **The bound, stated:** chunks are found by the references the served files contain; a chunk whose name exists only
+  when it is computed at run time is outside the scan. A broader reference pattern found the same 8 assets.
+**#16(c) is done under the new criterion.** The scripts: the session scratchpad's `w1-probe.py` (not in the repo; it
+holds no host — it reads it from `CLAUDE.local.md`).
+
+**Vercel's project settings, measured by Cowork on 2026-11-06** (Yigitcan's browser): Git connected to the repository;
+**Git Fork Protection ON** (this closes `security-auditor`'s I-1); **Build Logs and Source Protection ON** — `/_src` and
+`/_logs` need a Vercel team login, which c) above agrees with from the outside.
+
+**L-1 and L-2 closed.** `docs/CASE-STUDY.md`'s "what stays open" list now matches the ship-gate status (#15 v2, #17b–d
+and #20 deferred, #18 open; it had not named #18 either). The `.vercelignore` header no longer says there is no Vercel
+project or calls the dashboard the holder of the Airtable PAT (its dated 2026-09-13 measurement block still lists
+`AIRTABLE_PAT_READONLY` among the strings that grep searched for — a record of the search, not a claim); it states the Git-connected deploy and the `web/site` root, and says plainly that
+whether Vercel applies the file to a Git deployment is NOT measured.
+
+**Local refs, kept by ruling — no deletion:** `backup/close-lows-pre-amend` and `backup/b5-pre-label-amend`. Neither is
+pushed.
+
+**The final revision round is closed.** What stays open is open by decision: the v2 rows, #15, #18 and the Loom; #17b–d
+was declined by decision (ROADMAP counts row 17 closed on that ruling; CASE-STUDY names it among the exposures the
+owner chose to keep, with its trigger).

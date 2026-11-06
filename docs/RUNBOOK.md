@@ -249,9 +249,10 @@ line said "entered by Yigitcan" until R2c.)* **The route since 2026-11-05: a pus
 Vercel project to the GitHub repository (his statement); the push of `e67715c` measured it — the live homepage changed
 on the poll's second read, with no token *(terminal-measured, not committed)*. The push gates (`security-auditor`, the pre-push secret-scan) are therefore
 also the site's deploy gates: **a push to `main` is a production release of the public page.**
-⚠ Ship gate #16(c) — no `web/dashboard` file in the deployment — was measured on CLI uploads only; a Git deployment
-clones the whole repository, and whether Vercel applies `.vercelignore` to it is NOT measured (CLOSE-OUT-PLAN, "The final
-revision round"). **The retired route, kept as the record (ruled 2026-10-30, R2d):** a pinned Vercel CLI (`vercel@64.3.1`,
+Ship gate #16(c) is measured from the OUTSIDE since 2026-11-06: the dashboard's routes 404 on the public host and none
+of its strings is in any page or asset the site serves (CLOSE-OUT-PLAN, "#16(c) re-measured"). Whether Vercel applies
+`.vercelignore` to a Git deployment is still NOT measured (team API 403). *(This sentence said only "measured on CLI
+uploads" until 2026-11-06.)* **The retired route, kept as the record (ruled 2026-10-30, R2d):** a pinned Vercel CLI (`vercel@64.3.1`,
 installed into a scratch prefix, never globally) with the team-scoped token from `~/.vercel-demo.env` (0600), read into
 the deploying process's environment — never `--token`, never printed; a REST call that needs it (e.g. reading build
 events, which the CLI's `inspect` cannot do with a team-scoped token) passes it in a temporary 0600 header file removed
