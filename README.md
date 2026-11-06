@@ -1,4 +1,4 @@
-# salon-booking-bot
+# Chairside — AI booking agent
 
 **A salon booking chatbot that turns a customer's free-text message into a confirmed calendar appointment. An LLM
 reads the message; deterministic rules make every decision.**
