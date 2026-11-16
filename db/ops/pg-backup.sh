@@ -65,8 +65,11 @@ verify() {   # verify <dump file>
   [ "$listed" = "${#TABLES[@]}" ] || die "verify: the dump's table of contents lists $listed of ${#TABLES[@]} tables' data"
   img="$(docker inspect -f '{{.Image}}' "$ct")" || die "verify: reading the running image"
   r="pg-backup-restore-$$"
+  # -v on every removal: the image declares a VOLUME, so each throwaway gets an anonymous volume holding the restored
+  # copy, and a forced removal without -v leaves it behind (`--rm` does not remove it when `rm -f` gets there first).
+  # Measured 2026-11-16: 26 dangling volumes, one per logged backup run that verified (CLOSE-OUT-PLAN, pre-post L3).
   # shellcheck disable=SC2064  # the name is fixed now, on purpose
-  trap "docker rm -f '$r' >/dev/null 2>&1 || true" EXIT
+  trap "docker rm -f -v '$r' >/dev/null 2>&1 || true" EXIT
   docker run -d --rm --network none --name "$r" -e POSTGRES_HOST_AUTH_METHOD=trust "$img" >/dev/null || die "verify: starting the throwaway"
   local i=0
   # TCP, not the socket: the image's first-start server listens on the socket only and then restarts, so a socket
@@ -80,7 +83,7 @@ verify() {   # verify <dump file>
     || die "verify: pg_restore into the throwaway"
   stats="$(stats_sql | docker exec -i "$r" psql -X -At -q -v ON_ERROR_STOP=1 -U postgres -d "$DB")" || die "verify: reading the restored stats"
   [ "$stats" = "$(cat "$f.stats")" ] || die "verify: the restored rows differ from the dump-time stats"
-  docker rm -f "$r" >/dev/null 2>&1 || true
+  docker rm -f -v "$r" >/dev/null 2>&1 || true
   trap - EXIT
   echo "pg-backup: verify OK — checksum, ${#TABLES[@]} tables in the TOC, full restore into a throwaway, stats equal ($(awk '{s += $2} END {print s + 0}' "$f.stats") rows)"
 }

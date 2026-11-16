@@ -85,7 +85,7 @@ check "happy: the dump, its .sha256 and its .stats are mode 600" '[ "$(stat -c %
 check "happy: pg_dump received the exported snapshot" 'grep -q -- "pg_dump -U postgres -Fc --snapshot=00000003-0000001B-1 salon" "$ARGV"'
 check "happy: the stats were read in the snapshot session (5 lines recorded)" '[ "$(wc -l < "$D.stats")" = 5 ]'
 check "happy: the throwaway ran with no network, from the running image" 'grep -q -- "run -d --rm --network none --name pg-backup-restore-[0-9]* -e POSTGRES_HOST_AUTH_METHOD=trust sha256:fakeimage" "$ARGV"'
-check "happy: the throwaway was removed" '[ ! -e "$T/state-happy.throwaway" ] && grep -q "^rm -f pg-backup-restore-" "$ARGV"'
+check "happy: the throwaway was removed" '[ ! -e "$T/state-happy.throwaway" ] && grep -q "^rm -f -v pg-backup-restore-" "$ARGV"'
 check "happy: restore without owners or privileges, stopping at the first error" 'grep -q -- "pg_restore -U postgres -d salon --no-owner --no-privileges --exit-on-error" "$ARGV"'
 check "happy: readiness is asked over TCP, not the socket" 'grep -q -- "pg_isready -h 127.0.0.1 -U postgres -q" "$ARGV"'
 # No secret in argv: nothing names a password, and the only -e is the throwaway's trust setting.
