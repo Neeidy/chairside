@@ -874,6 +874,7 @@
   - ## The final revision round (2026-11-05) — closed
   - ### #16(c) re-measured, the two stale texts, and the close (2026-11-06)
   - ## Pre-post live check (2026-11-16) — report only, nothing changed
+  - ### Closing the open items (2026-11-16, W1–W7) — Yigitcan's ⚠ ONAY for W1–W3, as written
 
 ### `docs/CP4-RESCHEDULE-EXECUTE-PLAN.md`
   - ## What this replaces

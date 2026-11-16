@@ -1921,7 +1921,7 @@ Each CP waits for its own written approval (plan-gate).
 - ☐ **`dateExpr` has no `maxLength` in the committed schema** (`security-auditor`): `stripQualifiers` has quadratic
   backtracking, bounded today only by `max_tokens`. It only ever sees LLM output, never raw customer text (that is a
   linear `indexOf`), so this is LOW — a `maxLength` would close the class outright.
-- ☐ **LLM input length is uncapped** (`security-auditor`): customer `text` is concatenated into the request with no limit; `max_tokens` caps output only, so input tokens bill unbounded per request until `llmCostCapUsd` trips. Bounded in practice by Turnstile + HMAC, but `spend-safety.md` wants an explicit cap.
+- ☑ **LLM input length is uncapped** (`security-auditor`) — **closed: `Validate Payload` refuses a `text` longer than 1,000 characters before the claim and the LLM call** (read in the committed Main export, 2026-11-16; this item was ☐ until then and the text below is the original finding): customer `text` is concatenated into the request with no limit; `max_tokens` caps output only, so input tokens bill unbounded per request until `llmCostCapUsd` trips. Bounded in practice by Turnstile + HMAC, but `spend-safety.md` wants an explicit cap.
 - ☐ **`webhookId` UUID committed on `Receive Inbound Message`** (`security-auditor` round-3, F4). Half of a working
   test-endpoint URL; harmless while the host is absent (verified across all history), but it is an identifier that
   need not be in a public repo.

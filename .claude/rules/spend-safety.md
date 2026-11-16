@@ -21,8 +21,12 @@
     they do have an error route.
   Airtable was retired at D6c (2026-10-27): no workflow and no n8n credential reaches it.
 - **Dry-run default:** new/changed flows run in dry-run (no real writes) until explicitly switched to live.
-- **Global kill-switch:** `BOT_KILL_SWITCH=true` puts the bot into **handoff-only** mode instantly — every
-  message goes to a human, no LLM, no writes. This is the emergency stop.
+- **Global kill-switch:** `bot.killSwitch: true` in Main's `Load Config` node (and in Reminders' copy, which must match)
+  puts the bot into **handoff-only** mode — every message gets the handoff text and goes to a human, no LLM. The Turnstile
+  check and the dedupe claim still run before it. It is a literal inside a Code node, so flipping it is a live workflow
+  edit (⚠ ONAY), not an instant switch. **The emergency stop that needs no edit is deactivating Main** (RUNBOOK §8,
+  standing ruling of 2026-11-16). *(Corrected 2026-11-16: this line named an env var `BOT_KILL_SWITCH`, which no workflow
+  reads, and called it instant.)*
 
 The website widget is a public endpoint → also rate-limit + bot-protection so it can't be spammed into cost.
 

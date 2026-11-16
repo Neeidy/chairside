@@ -947,7 +947,7 @@ holds no host — it reads it from `CLAUDE.local.md`).
 `/_logs` need a Vercel team login, which c) above agrees with from the outside.
 
 **L-1 and L-2 closed.** `docs/CASE-STUDY.md`'s "what stays open" list now matches the ship-gate status (#15 v2, #17b–d
-and #20 deferred, #18 open; it had not named #18 either). The `.vercelignore` header no longer says there is no Vercel
+declined by decision, #20 deferred, #18 open; it had not named #18 either). The `.vercelignore` header no longer says there is no Vercel
 project or calls the dashboard the holder of the Airtable PAT (its dated 2026-09-13 measurement block still lists
 `AIRTABLE_PAT_READONLY` among the strings that grep searched for — a record of the search, not a claim); it states the Git-connected deploy and the `web/site` root, and says plainly that
 whether Vercel applies the file to a Git deployment is NOT measured.
@@ -955,9 +955,10 @@ whether Vercel applies the file to a Git deployment is NOT measured.
 **Local refs, kept by ruling — no deletion:** `backup/close-lows-pre-amend` and `backup/b5-pre-label-amend`. Neither is
 pushed.
 
-**The final revision round is closed.** What stays open is open by decision: the v2 rows, #15, #18 and the Loom; #17b–d
-was declined by decision (ROADMAP counts row 17 closed on that ruling; CASE-STUDY names it among the exposures the
-owner chose to keep, with its trigger).
+**The final revision round is closed.** What stays open: the v2 rows, #15 and the Loom, by decision; #18, because Access's
+configuration lives outside this repo; #17b–d was declined by decision (ROADMAP counts row 17 closed on that ruling and
+holds its trigger; CASE-STUDY names it among the exposures the owner chose to keep). *(Wording made exact on 2026-11-16,
+`security-auditor`'s three notes on `4fc5836`.)*
 
 ## Pre-post live check (2026-11-16) — report only, nothing changed
 
@@ -989,3 +990,27 @@ prompts — and none is a GitHub URL or remote. Nothing was renamed.
 3. Stale text, found and not corrected: `spend-safety.md` names a `BOT_KILL_SWITCH` env var that no workflow reads; RUNBOOK §8 still gives the Vercel-connection pause as working; ROADMAP:1924 still lists the server-side message-length cap as open, although `Validate Payload` enforces 1,000 characters.
 4. The three backup dumps with no recorded trigger (11-07, 11-08, 11-16); and no restore was tested today.
 5. A provider-side (Anthropic) spend limit is not recorded anywhere; the cap is the engine's own meter.
+
+### Closing the open items (2026-11-16, W1–W7) — Yigitcan's ⚠ ONAY for W1–W3, as written
+
+*Every value: terminal-measured, not committed. No live action ran in Vienna :55–:05 or around 04:00.*
+
+| W | Result | Evidence |
+|---|---|---|
+| W1 · revert Main's draft | **STOPPED** — the stop condition held | The reviewed path is `workflow-step.py`: `put` writes only to an INACTIVE workflow ("a PUT to an active workflow publishes at once"), and `activate` publishes the draft (published == draft read back; MIGRATION-PLAN: n8n drops `activeVersion` on deactivation, and activation publishes the draft). No API route writes the draft alone. The only route is deactivate → `put` the export (`--allow` the three sticky notes) → activate, which re-publishes a graph equal to the export. The executable nodes would match what runs today, and so would the stickies, because the published stickies already equal the export's. Not run; the draft is unchanged. |
+| W2 · emergency-stop rehearsal | **STOPPED** — needs W1 green first (the brief's order) | Not run: deactivating Main while the draft exists means the reactivation publishes it. One cycle can do both, W1's put inside W2's deactivate–activate, if that is ruled. The standing ruling ("botu durdur" → CC deactivates at once; reactivation only on his written approval) and the procedure are recorded in RUNBOOK §8, marked **not rehearsed**. |
+| W3 · rate limit from the outside | **Done — the recorded block was NOT re-confirmed** | One burst above the recorded threshold, with fake tokens. Every request answered 403 `turnstile_failed`, and the execution records show each one stopped at the Turnstile check: no claim, no LLM call, no write, no alert. The rule cannot be read with CC's token (403); the mode stays "recorded R2b/R2c, not re-read", and the token's scope was not widened. One burst only, as the brief said. |
+| W4 · the three extra backups | **Done — created by the host's backup script, started outside its nightly schedule; invoker unknown** | The backup log shows a full run starting at each of the three times (2026-11-07 23:48, 2026-11-08 14:10, 2026-11-16 12:57). Each ended with `pg-backup: verify OK`. No scheduled job on the host other than the nightly ones accounts for them. Each file is owned by the operator user, with birth time = name time. The log does not record who started a run. |
+| W5 · restore test | **Done** | The latest nightly dump (2026-11-16 03:30, sha256 OK) was restored into a throwaway container: network none, labelled, the production image read from metadata, nothing run in the production container. Row counts of every `salon` table, with live read through `salon_ro` = restored = dump-time stats: appointments 6 · bot_metrics 2 · conversations 12 · leads 0 · processed_messages 54. The container was removed, and so was its data volume, by its own name. Both are gone (0 labelled containers; volume inspect fails). |
+| W6 · repo hygiene | **Done** | Local `origin` now names the new repository; fetch exit 0; `main` = `origin/main`. The 23 tracked files that carry the old name stay as they are, **by ruling: historical text, not addresses**. Local refs kept by ruling, none pushed: `backup/74a-pre-amend`, `backup/74b-pre-amend`, `backup/b5-pre-label-amend`, `backup/close-lows-pre-amend`, `backup/d6c-records-pre-amend`, `backup/loom-pre-amend`, `backup/p7close-pre-amend`, `backup/p8r1-pre-amend`, `backup/p8r2-stopped`, `backup/p8r2b-lows-pre-amend`, `backup/pd-plan-pre-amend`, `backup/prepost-pre-wording-amend`, `backup/w3-pre-low-amend`; and the branch `worktree-agent-af15a34530d82564d`. |
+| W7 · the stale lines | **Done** (this commit) | `spend-safety.md`: the kill switch is `bot.killSwitch` in Load Config, a live edit, not an env var. RUNBOOK §8: the emergency stop (deactivate Main) replaces the dead Vercel route, with the rate-limit result above. ROADMAP's input-length item is closed by `Validate Payload` (≤ 1,000 characters). The three wording notes on `4fc5836` are fixed. |
+
+**Ruled limits (Yigitcan, 2026-11-16), accepted as they stand:**
+- Owner-alert flood: no global cap; about 50 alerts per 600 turns at the observed rate.
+- No Anthropic-side spend limit is set; the engine's 10.00 USD cap is the brake.
+- Whether `.vercelignore` applies to Git deploys is not measured; #16(c) stays closed by the outside criterion.
+
+**Found in this round, not changed — for a ruling:**
+1. **The edge rate limit's block was not re-confirmed on 2026-11-16** (W3). Finding the cause needs the rule read in the Cloudflare dashboard. Nothing was written or billed, because every request was refused at Turnstile.
+2. **The nightly backup's restore check appears to leave its restored database behind in an anonymous Docker volume.** `pg-backup.sh` removes its throwaway container with `docker rm -f` without `-v`, so the container goes and its data volume stays. That is read from the script; no volume's contents were inspected. **Dangling anonymous volumes exist on the host**, many of them created alongside logged backup runs; the 14-day backup retention does not cover them. Being probable copies of customer data outside retention, they need a ruling soon. A fix would be `-v` on that removal plus pruning the volumes, and pruning is a deletion (⚠ ONAY). W5's own volume was removed by name.
+3. W1/W2 as above: one ruling (re-publish a graph equal to the export inside one deactivate–activate cycle) would close both.
