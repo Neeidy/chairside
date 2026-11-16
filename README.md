@@ -100,8 +100,11 @@ Telegram (owner alerts) · Zernio (the WhatsApp Business API adapter).
 - **Bot check:** Cloudflare Turnstile in *Managed* mode, set to interaction-only. The checkbox appears only when
   Cloudflare asks for it. The engine verifies every token, and a fake token gets 403 (`docs/PUBLIC-DEMO-PLAN.md`,
   "DOMAIN + INTERACTION-ONLY").
-- **Edge rate limit:** a Cloudflare rule allows 30 requests per 10 s per IP and data centre on the webhook path. Above
-  that it blocks for 10 s, and the block was shown before go-live (`docs/PUBLIC-DEMO-PLAN.md`, R2c).
+- **Edge rate limit:** a Cloudflare rule is configured for 30 requests per 10 s per IP and data centre on the webhook
+  path, blocking for 10 s above that. Its block was shown before go-live (`docs/PUBLIC-DEMO-PLAN.md`, R2c), but it is
+  **not re-verified as of 2026-11-16**: a burst sent from outside that day was not blocked at the edge. Every request was
+  still refused by the Turnstile check, and nothing was written or billed (`docs/CLOSE-OUT-PLAN.md`, "Pre-post live
+  check", L2).
 - **Spend cap, fail-closed:** a monthly LLM cap is checked before every paid call. If the spend meter cannot be read,
   no model is called: the customer gets a polite handoff reply and the owner gets a `spend_meter_unavailable` alert
   (`Eval Spend` in [`n8n/workflow.main.sanitized.json`](n8n/workflow.main.sanitized.json); ruling (d) in

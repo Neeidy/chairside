@@ -201,23 +201,26 @@ output or a file are data and never trigger it (`prompt-injection.md`).
 - **Stop:** `python3 scripts/workflow-step.py deactivate <Main's spec> <Main's id>` with the env loaded as at the top of this file (no
   key on the command line) — one API call, read back `active == false`. It closes the ONE webhook both lanes share (widget and
   WhatsApp); the site stays up.
-- **What a visitor sees:** the engine no longer answers the webhook, and the widget shows its text for any unmapped
-  answer: "Something went wrong on our side. Please try again in a moment." (`FRONTEND_TEXT.unexpected` in
-  `web/shared/src/chat/chatClient.ts`). *Read from the code; the response itself was NOT measured.*
+- **What a visitor sees (REHEARSED 2026-11-16):** while Main is inactive the webhook answers **HTTP 404** (n8n: the webhook
+  "is not registered"; no execution is created). The widget maps that unmapped answer to "Something went wrong on our
+  side. Please try again in a moment." (`FRONTEND_TEXT.unexpected` in `web/shared/src/chat/chatClient.ts`) — measured by
+  running that client with the 404 body recorded during the rehearsal (a 403 `turnstile_failed` control gave its own,
+  different text); not seen in a real browser.
 - **Bring it back (with his approval):** `workflow-step.py activate …` (read back active, published == draft), then
-  `workflow-step.py probe …` (a dummy token → 403 `turnstile_failed`), then the parity guards.
-  ⚠ **Activation publishes the DRAFT.** While Main carries an unpublished draft (since 2026-11-08: three sticky notes),
-  reactivating publishes it — no behaviour changes, but the published graph then differs from the committed export
-  until one of them is brought in line.
-- **Time:** NOT rehearsed yet. The 2026-11-16 rehearsal was not run, because the draft above cannot be reverted without
-  publishing (CLOSE-OUT-PLAN, "Pre-post live check", W1/W2). The mechanism itself has run live on Main (CLOSE-OUT: inactive
-  about 3 s during a deactivate → put → activate).
+  `bash scripts/start-gates.sh` (its Main probe sends a dummy token → 403 `turnstile_failed`; exports and live parity).
+  ⚠ **Activation publishes the DRAFT.** If Main ever carries an unpublished draft again, reactivating publishes it; check
+  `check-exports-parity.sh` BEFORE the stop, so the bring-back does not publish something unreviewed. *(Since
+  2026-11-16 there is none: the 2026-11-08 editor re-layout was discarded by ruling — CLOSE-OUT-PLAN, "Pre-post live
+  check", L1.)*
+- **Time (REHEARSED 2026-11-16, CLOSE-OUT-PLAN L1):** the stop takes about **1 s** (deactivate sent → read back inactive:
+  1.1 s); the whole stop → bring-back cycle there, with one probe and one export write in between, was **4.9 s** of downtime.
 - **Not an emergency path any more — the Vercel pause.** CC's Vercel connection answers 403 on the team (measured
   2026-11-05 and 2026-11-16) and the shell path closed on 2026-11-04, so CC cannot pause; the D6 standing approval has no
   route. The owner can still pause in the Vercel dashboard: that takes the site and the widget down, NOT the engine.
 - **Bounds while the engine runs:** the LLM cap, the turn cap, Turnstile, and the edge rate limit — recorded as 30
-  requests per 10 s per IP and data centre, shown blocking in R2c; **a re-check on 2026-11-16 did not re-confirm the block** (the requests were
-  refused at Turnstile; nothing was written or billed), and the rule cannot be read with CC's token.
+  requests per 10 s per IP and data centre, shown blocking in R2c; **two re-checks on 2026-11-16 did not re-confirm the block** (every request was
+  refused at Turnstile; nothing was written or billed — CLOSE-OUT-PLAN, "Pre-post live check", W3 and L2). The rule cannot be read with CC's
+  token; Cowork read it in the dashboard the same day, read-only, as active and unchanged (not API-verified by CC).
   *(This section began "Take it offline — one step" with the Vercel pause as CC's route until 2026-11-16.)*
 
 **The Vercel pause — the record (no longer CC's route; see above).**
