@@ -37,8 +37,10 @@ marker; no `booked` drill row left. Main executions in the window: 21, all `succ
 
 **What it shows live:** F2 ("which one?" with two bookings, no lock; the named one cancelled, the other kept), F3 (at a
 cancel confirm a "no, keep it" keeps the booking; at a booking confirm a non-clear yes is asked again, then a clear yes
-books), F1 (a closed-day reschedule hands off AND alerts the owner), S5/K5 (the signed release reopens the conversation).
-**Not shown live:** F4 (needs a 30-minute session gap) and F5 (needs a slot to pass) — offline-proven only
+books), F1 on one branch (a closed-day reschedule hands off AND alerts the owner), and the signed owner release reopening
+a FRESH lock (B5→B6).
+**Not shown live:** the reschedule confirm (F3), the other F1 branches, F2's past-row exclusion, S5's >30-day bound and
+the K5 counter reset on release (not read back), F4 (needs a 30-minute session gap) and F5 (needs a slot to pass) — offline-proven only
 (`tests/unit/hardening-main.test.cjs`).
 
 **Product findings from the review, recorded:** after "which one?", a reply that names only the day and time ("saturday

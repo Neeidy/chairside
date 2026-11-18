@@ -24,7 +24,8 @@ the cancel "which one?" (no marker binding).
 
 **What nobody independent has covered yet** (both Codex passes reported themselves incomplete): the full handoff→alert
 inventory, every reader of `salon.processed_messages`, paid-turn loops across sessions, the dashboard PII comparison.
-The live B4 drill (in the docs commit after this note) covers F1/F2/F3 on real executions; F4/F5 are offline-proven only.
+The live B4 drill (in the docs commit after this note) covers parts of F1/F2/F3 on real executions (one F1 branch; the booking and cancel confirms) — the exact list is in
+`docs/hardening/B4-LIVE-DRILL.md`; F4/F5 and the >30-day release bound are offline-proven only.
 
 **Constraints for the run:** the same as the previous red-team round — public endpoints only, fake Turnstile tokens
 unless a window is opened by the owner, nothing written to the production calendar, no real recipient messaged.

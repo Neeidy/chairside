@@ -194,7 +194,8 @@ Several tools and one person, each with a named job ([`CLAUDE.md`](CLAUDE.md), "
     yes (CX2-1); an interior line break never consents.
   - A "which one?" question at cancel binds no marker, so the next turn is read fresh.
   - The F4 (session turn cap) and F5 (slot already started) fixes are proven offline only; the live drill of
-    2026-11-18 covered F1, F2, F3 and the owner release.
+    2026-11-18 covered parts of F1, F2 and F3 (one alerting branch; the booking and cancel confirms) and an owner
+    release of a fresh lock; the release of a lock older than 30 days is proven offline only.
 - **A second client is shown offline only.** A config file and its secrets render a second client's workflows with no
   hand edit, but this has not yet run on a real second deployment.
 - **The full v2 list and every recorded bound:** [`docs/ENGINEERING-NOTES.md`](docs/ENGINEERING-NOTES.md) and the live
