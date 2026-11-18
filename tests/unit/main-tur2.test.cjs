@@ -53,7 +53,8 @@ test('F1: Check Processed CLAIMS the id in one statement (INSERT … ON CONFLICT
   const p = node('Check Processed').parameters;
   assert.match(p.query, /^INSERT INTO salon\.processed_messages \(message_id, sender_key, channel\) VALUES \(\$1, \$2, \$3\) ON CONFLICT \(message_id\) DO NOTHING RETURNING id/);
   assert.doesNotMatch(p.query, /\bSELECT\b[^(]*\bFROM salon\.processed_messages\b/, 'a separate read would reopen the race');
-  assert.equal(p.options.queryReplacement, '={{ [$json.message_id, $json.sender_key, $json.channel] }}');
+  // HARDENING RT4-b: the claimed key is `<channel>:<message_id>` (an owner marker has no ':', so the two cannot collide).
+  assert.equal(p.options.queryReplacement, "={{ [$json.channel + ':' + $json.message_id, $json.sender_key, $json.channel] }}");
   assert.equal(node('Check Processed').alwaysOutputData, true, 'no row must still reach Dedupe Gate');
 });
 test('F1: Dedupe Gate — a returned row = claimed (not a duplicate); the empty alwaysOutputData item = already claimed', () => {

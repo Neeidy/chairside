@@ -4,7 +4,8 @@
 # Record run VERBATIM in node (tests/db/spend-nodes.cjs), and $2 is what the export's own queryReplacement passes.
 # Each n8n Postgres node is its own autocommit statement in its own pool checkout, so two turns are modelled as separate
 # psql invocations interleaved at statement level: no BEGIN spans a read and a write (none does in Main).
-# Two suites: STAGED (the edit, must pass everything) and COMMITTED (HEAD's export, the control: must FAIL S1–S4, i.e.
+# Two suites: STAGED (the edit — the staged Main, else the committed one after promotion — must pass everything) and
+# COMMITTED (Main BEFORE the edit, bb3f64b, the control: must FAIL S1–S4, i.e.
 # the defect reproduces), plus the increment under true concurrency. Exit 0 only when both hold.
 # Not in check-all: it needs Docker. Run: bash tests/db/spend-meter.test.sh [IMAGE]
 # The container is throwaway: labelled, no network, local-socket trust auth, removed with its volume on exit.
@@ -39,7 +40,7 @@ bad() { FAIL=$((FAIL+1)); echo "  ✗ $1"; RES["$V:${1%% *}"]=bad; }
 declare -A RES; V=setup
 
 PERIOD=2030-01
-exp() { [ "$1" = COMMITTED ] && echo HEAD || echo "$STAGED"; }
+exp() { [ "$1" = COMMITTED ] && echo PRE || echo "$STAGED"; }   # COMMITTED = Main before the edit (bb3f64b)
 # read_turn → prints Eval Spend's _spend JSON for what Read Spend returns now (Read Spend output item → Eval Spend jsCode)
 read_turn() {
   local row item

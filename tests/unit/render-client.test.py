@@ -361,9 +361,21 @@ def config_reads(strings):
                     destr.add(v + (key,))
                     alias[name] = v + (key,)
             else:
-                d = re.match(r'([A-Za-z_$][\w$]*)\s*=(?!=)\s*([^;\n]*)', text[i:])
-                if d and (v := _value(d.group(2), alias)):
-                    alias[d.group(1)] = v
+                # HARDENING: a declaration LIST (`const a = x, b = y`) is split at its top-level commas first — read whole,
+                # `a` took the deepest chain of the entire list (Build Clarify State's `t = cfg.messageTemplates`).
+                line = re.match(r'[^;\n]*', text[i:]).group(0)
+                parts, depth, cur = [], 0, ''
+                for ch in line:
+                    depth += (ch in '([{') - (ch in ')]}')
+                    if ch == ',' and depth == 0:
+                        parts.append(cur)
+                        cur = ''
+                    else:
+                        cur += ch
+                for part in parts + [cur]:
+                    d = re.match(r'\s*([A-Za-z_$][\w$]*)\s*=(?!=)\s*(.*)', part)
+                    if d and (v := _value(d.group(2), alias)):
+                        alias[d.group(1)] = v
         if alias == before:
             break
     return {c[2:] for c in set(_chains(text, alias)) | destr if c[:2] == ('json', 'config')}
@@ -706,6 +718,10 @@ def main():
         for label, snippet in SPELLINGS.items():
             got = [p for p in config_reads([head + snippet]) if not_held(p, literal_of['main'], optional['main'])]
             case(f'M2 scan negative control — {label}: the unknown key is caught', any('zz' in p[-1] or p[-1] == NESTED for p in got), got)
+        dl = config_reads(["const st = j.state || {}, s = st.slots || {}, t = cfg.messageTemplates; return t.askService;",
+                           "const cfg = $('Load Config').first().json.config;"])
+        case('M2 scan: a declaration list binds each name to its OWN value (t → messageTemplates, st/s → no config)',
+             ('messageTemplates', 'askService') in dl and not any('slots' in p for p in dl), sorted(dl))
         case('M2 scan: a read the literal does hold is not reported',
              not [p for p in config_reads([head + 'cfg?.messageTemplates?.["bookingConfirmed"]']) if not_held(p, literal_of['main'], optional['main'])])
         bo = json.load(open(B_CFG, encoding='utf-8'))

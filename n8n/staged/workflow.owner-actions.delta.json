@@ -1,9 +1,0 @@
-{
-  "_doc": "HARDENING R1 WU-6 (rulings K5, S5 of 2026-11-18): parameters only.",
-  "allow": [
-    "Build Owner Alert (Release)",
-    "Release Handoff Lock",
-    "Sticky — 3",
-    "Validate Release Target"
-  ]
-}

@@ -123,7 +123,9 @@ const saveStateBinding = () => {
   if (cols.length !== vals.length) die(`Save State lists ${cols.length} columns but ${vals.length} values.`);
   const rm = String((p.options || {}).queryReplacement || '').match(/^=\{\{([\s\S]+)\}\}$/);
   if (!rm) die('Save State.options.queryReplacement is not an ={{ }} expression — nothing binds the values.');
-  const params = new Function('$json', '$now', 'return (' + rm[1] + ');');
+  // HARDENING RM-1622: the binding reads the loaded gcal_event_id from Merge State, so `$` is a stub of that one node.
+  const fn = new Function('$', '$json', '$now', 'return (' + rm[1] + ');');
+  const params = (item, now) => fn((name) => ({ first: () => ({ json: name === 'Merge State' ? { state: {} } : {} }) }), item, now);
   const at = (col, missing) => {
     const i = cols.indexOf(col);
     const pm = i === -1 || cols.lastIndexOf(col) !== i ? null : vals[i].match(/^\$(\d+)(::\w+)?$/);
@@ -163,9 +165,10 @@ const persistedAfter = (raw) => {
   const row = { id: 'recDrill0000000001', createdTime: '2026-09-08T00:00:00.000Z',        // 4 the returned row
                 fields: { sender_key: CTX.sender_key, last_intent: written,
                           stage: writtenStage, turn_count: 1 } };
-  const mergeCtx = () => ({ first: () => ({ json: { channel: 'widget', senderId: 'test',
-                            sender_key: CTX.sender_key, text: 'next turn' } }) });
-  const merged = new Function('$json', '$', chainSrc('Merge State'))(row, mergeCtx)[0].json;   // 5 readback
+  // HARDENING K5: Merge State reads bot.sessionGapMinutes from Load Config and Luxon's DateTime (the session reset).
+  const mergeCtx = (n) => ({ first: () => ({ json: n === 'Load Config' ? { config: { bot: { sessionGapMinutes: 30 } } }
+    : { channel: 'widget', senderId: 'test', sender_key: CTX.sender_key, text: 'next turn' } }) });
+  const merged = new Function('$json', '$', 'DateTime', chainSrc('Merge State'))(row, mergeCtx, LUXON.DateTime)[0].json;   // 5 readback
   const readBack = merged.state.last_intent;
   return (readBack === undefined || readBack === '') ? null : readBack;
 };

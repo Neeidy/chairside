@@ -12,9 +12,10 @@ const { join, existsSync } = { ...require('node:path'), ...require('node:fs') };
 const REPO = join(__dirname, '..', '..');
 const { DateTime } = require(REPO + '/scripts/node_modules/luxon');
 const STAGED = join(REPO, 'n8n/staged/workflow.main.sanitized.json');
-// SPEND_EXPORT=HEAD reads the committed export straight from git (the control suite), so no temporary file is written.
-const src = process.env.SPEND_EXPORT === 'HEAD'
-  ? require('node:child_process').execFileSync('git', ['-C', REPO, 'show', 'HEAD:n8n/workflow.main.sanitized.json'], { encoding: 'utf8' })
+// SPEND_EXPORT=PRE reads Main as it was BEFORE the hardening edit (bb3f64b) straight from git — the control suite; it is
+// a fixed commit so the control still shows the defect after the promotion.
+const src = process.env.SPEND_EXPORT === 'PRE'
+  ? require('node:child_process').execFileSync('git', ['-C', REPO, 'show', 'bb3f64b:n8n/workflow.main.sanitized.json'], { encoding: 'utf8' })
   : readFileSync(process.env.SPEND_EXPORT || (existsSync(STAGED) ? STAGED : join(REPO, 'n8n/workflow.main.sanitized.json')), 'utf8');
 const wf = JSON.parse(src);
 const node = (name) => { const n = wf.nodes.find((x) => x.name === name); if (!n) throw new Error('no node ' + name); return n; };

@@ -311,13 +311,6 @@
 
 - `n8n/screenshots/.gitkeep`
 
-### n8n/staged
-
-- `n8n/staged/workflow.main.delta.json`
-- `n8n/staged/workflow.main.sanitized.json`
-- `n8n/staged/workflow.owner-actions.delta.json`
-- `n8n/staged/workflow.owner-actions.sanitized.json`
-
 ### ops/systemd
 
 - `ops/systemd/salon-dashboard.service`
@@ -1291,7 +1284,6 @@
   - ### docs/n1
   - ### n8n
   - ### n8n/screenshots
-  - ### n8n/staged
   - ### ops/systemd
   - ### prompts
   - ### schemas

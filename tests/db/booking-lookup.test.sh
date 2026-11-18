@@ -4,7 +4,7 @@
 # (else the committed one) and run VERBATIM (PREPARE … AS <query>) as salon_app on 001+002+003, with now as $2.
 # Rows for one sender: a booking that ended yesterday, one in progress, one tomorrow, a cancelled one, and another
 # sender's. Expected: exactly the in-progress and the future one (end_utc > now), in created_at order. The control: the
-# committed (HEAD) query returns the past row too — the F2 defect — or the test is not measuring it.
+# committed query BEFORE the edit (bb3f64b) returns the past row too — the F2 defect — or the test is not measuring it.
 # Not in check-all: it needs Docker. Run: bash tests/db/booking-lookup.test.sh [IMAGE]
 # The container is throwaway: labelled, no network, local-socket trust auth, removed with its volume on exit.
 set -euo pipefail
@@ -31,8 +31,8 @@ su()  { docker exec -i "$CID" psql -X -q -t -A -v ON_ERROR_STOP=1 -U postgres -d
 
 q() { python3 - "$1" "$2" <<'PY'
 import json, subprocess, sys
-src = subprocess.run(['git', '-C', sys.argv[3] if len(sys.argv) > 3 else '.', 'show', 'HEAD:n8n/workflow.main.sanitized.json'],
-                     capture_output=True, text=True, check=True).stdout if sys.argv[1] == 'HEAD' else open(sys.argv[1], encoding='utf-8').read()
+src = subprocess.run(['git', '-C', sys.argv[3] if len(sys.argv) > 3 else '.', 'show', 'bb3f64b:n8n/workflow.main.sanitized.json'],
+                     capture_output=True, text=True, check=True).stdout if sys.argv[1] == 'PRE' else open(sys.argv[1], encoding='utf-8').read()
 w = json.loads(src)
 print(next(n for n in w['nodes'] if n['name'] == sys.argv[2])['parameters']['query'])
 PY
@@ -54,9 +54,9 @@ ids() {   # <export> <node> — the ids the query returns, in order
 for N in 'Find Booking' 'Find Booking (Reschedule)' 'Find Old Booking (Reschedule)'; do
   got="$(ids "$STAGED" "$N")"
   [ "$got" = 'a-progress,a-future' ] && ok "$N: only bookings that have not ended, oldest created first ($got)" || bad "$N: got '$got', want 'a-progress,a-future'"
-  ctl="$(ids HEAD "$N")"
-  [[ "$ctl" == *a-past* ]] && ok "$N control (HEAD): the committed query returns the past row ($ctl) — the F2 defect is what this measures" \
-    || bad "$N control (HEAD): '$ctl' has no past row, so this test cannot see F2"
+  ctl="$(ids PRE "$N")"
+  [[ "$ctl" == *a-past* ]] && ok "$N control (bb3f64b, before the edit): the committed query returns the past row ($ctl) — the F2 defect is what this measures" \
+    || bad "$N control (bb3f64b, before the edit): '$ctl' has no past row, so this test cannot see F2"
 done
 echo "booking-lookup: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]
