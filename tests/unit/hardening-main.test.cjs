@@ -392,7 +392,7 @@ test('RM-2007: an uncertain turn while collecting asks for the missing day and t
 
 // ── K1 corpus: the as-built Read Pending Answer, run as written, over the red-team verification's synthetic sets ──
 // Read lazily: on an export without the node (the committed one, before the edit) the tests below go RED, never crash.
-const consentYes = (text, stage) => new Function('$', '$json', '$input', (node('Read Pending Answer') || { parameters: { jsCode: 'throw new Error("no Read Pending Answer node")' } }).parameters.jsCode)(() => ({ first: () => ({ json: { state: {} } }) }),
+const consentYes = (text, stage) => new Function('$', '$json', '$input', (node('Read Pending Answer') || { parameters: { jsCode: 'throw new Error("no Read Pending Answer node")' } }).parameters.jsCode)((n) => ({ first: () => ({ json: n === 'Normalize Inbound' ? { text } : { state: {} } }) }),
   { text, intent: 'confirm', state: { stage } }, { all: () => [] })[0].json._consent_yes === true;
 const STAGES = ['confirming', 'cancel_confirming', 'reschedule_confirming'];
 test('K1 corpus: every natural yes consents at every confirm (57 cells)', () => {
@@ -475,4 +475,36 @@ test('K5 twin: Merge State and Build Reply Payload use the same gap rule (minute
     r.turn('what are your hours', answer('answer_faq', 0.95, { faqTopic: 'hours' }));
     assert.equal(r.db.conv.turn_count, reset ? 1 : 8, `${ago} min`);
   }
+});
+
+// ── Codex hardening pass 1 ─────────────────────────────────────────────────────────────────────────────────────
+test('Codex p1 HIGH: a control character inside the yes ("ye<NUL>s") is not a clear yes — the original text decides', () => {
+  const r = replay(); book(r); r.turn('yes', answer('confirm', 0.95));
+  r.turn('cancel my booking', answer('cancel', 0.92)); assert.equal(r.db.conv.stage, 'cancel_confirming', 'setup');
+  r.turn('ye\u0000s', answer('confirm', 0.99));
+  assert.equal(booked(r).length, 1, 'the booking stands');
+  const r2 = replay(T0, 'widget:w-hd-p1b'); book(r2); r2.turn('y\u0007es', answer('confirm', 0.99));
+  assert.equal(booked(r2).length, 0, 'a booking needs a clean yes too');
+});
+test('Codex p1 MEDIUM: the reschedule marker does not survive a session gap', () => {
+  const r = replay(); book(r); r.turn('yes', answer('confirm', 0.95));
+  r.turn('I need to move my appointment', answer('reschedule', 0.9));
+  assert.equal(r.db.conv.last_intent, 'reschedule_ask', 'setup');
+  const r2 = later(r, '2026-11-18T12:00:00Z');                           // three hours later: a new session
+  r2.turn('a haircut on saturday at 12:00', answer('book', 0.92, { serviceId: 'haircut', dateExpr: 'saturday', time: '12:00' }));
+  assert.equal(r2.db.conv.stage, 'confirming', 'a new booking request, not a move');
+});
+test('Codex p1 MEDIUM: two bookings on one day — the named time picks one; the question asks for day and time', () => {
+  const r = replay(); book(r, 'friday', '11:00'); r.turn('yes', answer('confirm', 0.95));
+  r.turn('and a haircut friday at 15:00', answer('book', 0.92, { serviceId: 'haircut', dateExpr: 'friday', time: '15:00' }));
+  r.turn('yes', answer('confirm', 0.95)); assert.equal(booked(r).length, 2, 'setup');
+  const t = r.turn('cancel my friday booking', answer('cancel', 0.9, { dateExpr: 'friday' }));
+  assert.match(t.reply, /Tell me its day and time\./);
+  r.turn('the friday 15:00 one', answer('cancel', 0.9, { dateExpr: 'friday', time: '15:00' }));
+  r.turn('yes', answer('confirm', 0.95));
+  assert.deepEqual(booked(r).map((a) => a.start_utc), ['2026-11-20T10:00:00.000Z']);
+});
+test('Codex p1 LOW: a non-string recent_messages does not throw in the alert builder', () => {
+  const { out } = boa({ _outbound_kind: 'Handoff Lock Reply', state: { sender_key: 'widget:w-hd', stage: 'handoff', recent_messages: 12345 } });
+  assert.equal(out.length, 1);
 });

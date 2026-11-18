@@ -15,6 +15,7 @@
 - `.gitignore`
 - `.gitleaksignore`
 - `.vercelignore`
+- `CHAIRSIDE-REDTEAM-REPORT.md`
 - `CLAUDE.md`
 - `LICENSE`
 - `MASTER-BRIEF.md`
@@ -233,6 +234,11 @@
 - `docs/codex/date-phrasing/run-r6.sh`
 - `docs/codex/date-phrasing/run.sh`
 
+### docs/codex/hardening
+
+- `docs/codex/hardening/prompt.md`
+- `docs/codex/hardening/run.sh`
+
 ### docs/codex/n1
 
 - `docs/codex/n1/containment.md`
@@ -270,6 +276,12 @@
 - `docs/codex/public-demo/prompt.md`
 - `docs/codex/public-demo/run.sh`
 
+### docs/hardening
+
+- `docs/hardening/ITEMS.md`
+- `docs/hardening/PLAN.md`
+- `docs/hardening/register.md`
+
 ### docs/images
 
 - `docs/images/dashboard-synthetic.png`
@@ -294,6 +306,13 @@
 ### n8n/screenshots
 
 - `n8n/screenshots/.gitkeep`
+
+### n8n/staged
+
+- `n8n/staged/workflow.main.delta.json`
+- `n8n/staged/workflow.main.sanitized.json`
+- `n8n/staged/workflow.owner-actions.delta.json`
+- `n8n/staged/workflow.owner-actions.sanitized.json`
 
 ### ops/systemd
 
@@ -374,11 +393,14 @@
 
 ### tests/db
 
+- `tests/db/booking-lookup.test.sh`
 - `tests/db/claim-race.test.sh`
 - `tests/db/contract-run.cjs`
 - `tests/db/copy-contract.cjs`
 - `tests/db/ro-negatives.cjs`
 - `tests/db/slot-name.test.sh`
+- `tests/db/spend-meter.test.sh`
+- `tests/db/spend-nodes.cjs`
 
 ### tests/db/fixtures
 
@@ -419,6 +441,12 @@
 - `tests/fixtures/sql-params/good-no-params.json`
 - `tests/fixtures/sql-params/good-select-two-params.json`
 
+### tests/n8n-runtime/hardening-shapes
+
+- `tests/n8n-runtime/hardening-shapes/gen.py`
+- `tests/n8n-runtime/hardening-shapes/probe.js`
+- `tests/n8n-runtime/hardening-shapes/run.sh`
+
 ### tests/ops
 
 - `tests/ops/dashboard-serve.test.sh`
@@ -429,16 +457,20 @@
 ### tests/snippet
 
 - `tests/snippet/DRILLS.md`
+- `tests/snippet/double-insert.drill.sh`
 - `tests/snippet/host-demo.html`
 
 ### tests/unit
 
+- `tests/unit/cancel-validation-parity-hardening.test.py`
 - `tests/unit/chat-replay.lib.cjs`
 - `tests/unit/chat-replay.test.cjs`
 - `tests/unit/close-out-main-mutants.py`
 - `tests/unit/close-out-main.test.cjs`
 - `tests/unit/close-out-purge.test.cjs`
 - `tests/unit/codex-containment.test.py`
+- `tests/unit/config-generated-fresh.test.sh`
+- `tests/unit/content-parity-flags.test.py`
 - `tests/unit/content-parity-inactive.test.py`
 - `tests/unit/date-phrasing-mutants.py`
 - `tests/unit/date-phrasing.test.cjs`
@@ -449,6 +481,10 @@
 - `tests/unit/eval-spend-mutants.py`
 - `tests/unit/golden-set.test.cjs`
 - `tests/unit/guards-tur2.test.py`
+- `tests/unit/hardening-main-mutants.py`
+- `tests/unit/hardening-main.test.cjs`
+- `tests/unit/hardening-owner-mutants.py`
+- `tests/unit/hardening-owner.test.cjs`
 - `tests/unit/host-leak-local-file.test.py`
 - `tests/unit/leads-purge-mutants.py`
 - `tests/unit/leads-purge-read-error.test.cjs`
@@ -465,6 +501,7 @@
 - `tests/unit/owner-alert-detail.test.cjs`
 - `tests/unit/privacy-facts-mutants.py`
 - `tests/unit/privacy-facts.test.cjs`
+- `tests/unit/reminder-dst.test.cjs`
 - `tests/unit/render-client-askname.test.py`
 - `tests/unit/render-client-mutants.py`
 - `tests/unit/render-client-n1.test.py`
@@ -492,6 +529,7 @@
 
 ### web/dashboard
 
+- `web/dashboard/.env.example`
 - `web/dashboard/.gitkeep`
 - `web/dashboard/next-env.d.ts`
 - `web/dashboard/package.json`
@@ -535,6 +573,7 @@
 - `web/dashboard/lib/exportCsv.ts`
 - `web/dashboard/lib/handoffSender.test.ts`
 - `web/dashboard/lib/handoffSender.ts`
+- `web/dashboard/lib/hardening-panels.test.ts`
 - `web/dashboard/lib/mask.golden.ts`
 - `web/dashboard/lib/mask.test.ts`
 - `web/dashboard/lib/mask.ts`
@@ -634,6 +673,7 @@
 ### web/snippet
 
 - `web/snippet/CROSS-ORIGIN.md`
+- `web/snippet/branding.mjs`
 - `web/snippet/build.mjs`
 - `web/snippet/package.json`
 - `web/snippet/tsconfig.json`
@@ -648,6 +688,7 @@
 
 ### web/snippet/test
 
+- `web/snippet/test/branding.test.ts`
 - `web/snippet/test/turnstile.test.ts`
 
 ## Markdown files — their `##`/`###` headings (anchors; code fences skipped)
@@ -755,6 +796,20 @@
 
 ### `.claude/rules/testing.md`
   - ## A script that makes live calls does nothing on import (ruling D4-7, 2026-10-23)
+
+### `CHAIRSIDE-REDTEAM-REPORT.md`
+  - ## 1. Summary
+  - ## 2. Findings
+  - ### F1 · Handoff locks that page nobody — MEDIUM · criterion: silent failure
+  - ### F2 · Cancel and reschedule always pick the earliest `booked` row, past rows included — MEDIUM · criteria: silent failure, shared state
+  - ### F3 · "Yes" is decided by the model, not by code — MEDIUM · criterion: irreversible action
+  - ### F4 · The turn cap is a lifetime cap, and nothing can lift it — MEDIUM · criterion: silent failure (wrong outcome, no recovery path)
+  - ### F5 · A "yes" has no time bound and can book a slot that has passed — LOW · criteria: irreversible action, shared state
+  - ### F6 · `slots.time` is unvalidated free text that reaches the next prompt and the owner alert — LOW · criterion: injection
+  - ### F7 · The alert throttle map never shrinks and its keys are attacker-chosen — LOW · criterion: shared state
+  - ## 3. Hypotheses that need a live test
+  - ## 4. Tried and held
+  - ## 5. Known limits confirmed (not new)
 
 ### `CLAUDE.md`
   - ## What this is
@@ -1222,14 +1277,17 @@
   - ### docs/codex/7-2-r2b
   - ### docs/codex/close-out
   - ### docs/codex/date-phrasing
+  - ### docs/codex/hardening
   - ### docs/codex/n1
   - ### docs/codex/name-capture
   - ### docs/codex/phase-8
   - ### docs/codex/public-demo
+  - ### docs/hardening
   - ### docs/images
   - ### docs/n1
   - ### n8n
   - ### n8n/screenshots
+  - ### n8n/staged
   - ### ops/systemd
   - ### prompts
   - ### schemas
@@ -1244,6 +1302,7 @@
   - ### tests/fixtures/7-2-tur2
   - ### tests/fixtures/chat-replay
   - ### tests/fixtures/sql-params
+  - ### tests/n8n-runtime/hardening-shapes
   - ### tests/ops
   - ### tests/snippet
   - ### tests/unit
@@ -1296,6 +1355,7 @@
   - ### `.claude/rules/security-secrets.md`
   - ### `.claude/rules/spend-safety.md`
   - ### `.claude/rules/testing.md`
+  - ### `CHAIRSIDE-REDTEAM-REPORT.md`
   - ### `CLAUDE.md`
   - ### `MASTER-BRIEF.md`
   - ### `README.md`
@@ -1434,7 +1494,7 @@
   - ### 2.9 — Hatırlatma (giden mesaj, UI yok)
   - ### 2.10 — Guard-trip'ler (müşterinin gördüğü)
   - ## §3 — Müşteri hata / kenar durum ekranları
-  - ### 3.1 — Converged çıkışlar (12 dal → `Finalize Outbound` → `Channel Switch`)
+  - ### 3.1 — Converged çıkışlar (13 dal → `Finalize Outbound` → `Channel Switch`)
   - ### 3.2 — Converged OLMAYAN çıkışlar (front-gate, doğrudan cevap)
   - ### 3.3 — n8n dışındaki kenar durumlar
   - ### 3.4 — Sistem anahtarlarının müşteri yüzü
@@ -1638,6 +1698,9 @@
 ### `docs/codex/date-phrasing/r6.md`
   - _(no `##` headings — flat file)_
 
+### `docs/codex/hardening/prompt.md`
+  - _(no `##` headings — flat file)_
+
 ### `docs/codex/n1/containment.md`
   - ## Pass 1 — the audit of the R1 head
   - ## Pass 2 — the recheck of the pass-1 fixes (the last pass, by ruling)
@@ -1693,6 +1756,45 @@
 
 ### `docs/codex/public-demo/prompt.md`
   - _(no `##` headings — flat file)_
+
+### `docs/hardening/ITEMS.md`
+  - ## A. Findings (12)
+  - ## B. Engine / product FIX NOW
+  - ## C. Tooling / ops FIX NOW
+  - ## D. New RULE AS LIMIT (reason · cost of fixing)
+  - ## E. v2 (needs a product decision · trigger)
+  - ## F. Critic additions — classified
+
+### `docs/hardening/PLAN.md`
+  - ## ⚠ AS BUILT (B1, 2026-11-18) — read this first; the Phase A text below is kept as approved and is NOT the build
+  - ## 1. Goal
+  - ## 2. Scope + NOT-build
+  - ## 3. Skeleton (nodes)
+  - ## 4. Integrations
+  - ## 5. Mock data
+  - ## 6. CRT (MASTER-BRIEF §9) — back under audit until Codex closes them
+  - ## 7. Acceptance
+  - ## 8. ⚙ Drill matrix
+  - ## 9. Automation-fit
+  - ## 10. Decisions (Yigitcan)
+  - ## 11. Spikes (the first tasks of B1; each has a fallback)
+  - ## 12. Codex audit scope
+  - ## 13. Deploy + live actions (each with its own ⚠ ONAY + reviewer GO; outside :55–:05 and away from 04:00)
+  - ## 14. Public text (ITEMS.md §text; source: text-impact.md, reconciled for K1/K3/K7/K9)
+  - ## 15. Rounds
+  - ## 16. Phase A's own measurements (this session)
+
+### `docs/hardening/register.md`
+  - ## A. Findings (F1-F7, SPEND, H3-H6) (13 rows)
+  - ## B. Engine / product defects from ROADMAP and notes (14 rows)
+  - ## C. Ops / tooling / edge (13 rows)
+  - ## D. Docs-only stale text (75 rows)
+  - ## E. Ruled limits kept (92 rows)
+  - ## F. v2 (deferred, trigger-bound) (14 rows)
+  - ## Counts
+  - ## Reconciliation: count in vs rows out
+  - ## Every change I made to an inventory classification, merge or judgement
+  - ## Appendix: every input ref -> register row
 
 ### `docs/n8n-rollback.md`
   - ## ⚠ Do NOT trust `n8n_workflow_versions` for THIS workflow
