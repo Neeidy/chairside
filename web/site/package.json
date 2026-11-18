@@ -15,7 +15,7 @@
   "dependencies": {
     "@salon/shared": "*",
     "gsap": "^3.12.5",
-    "next": "16.4.1",
+    "next": "16.4.5",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },
