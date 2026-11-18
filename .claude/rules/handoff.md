@@ -10,7 +10,7 @@
   - **Otherwise** → the FIRST uncertain turn gets a clarifying question (`messageTemplates.askIntent`, or — while a
     booking is being collected — the next missing detail, HARDENING RM-2007) and writes no new `stage`, so no lock
     forms; a SECOND uncertain turn in a row hands off.
-- **A CONFIDENT "yes" is not trusted on its own either (HARDENING K1, 2026-11-18 — STAGED; live after the hardening Main put).** At a pending confirm the TEXT
+- **A CONFIDENT "yes" is not trusted on its own either (HARDENING K1, 2026-11-18 — live since the hardening Main put of 2026-11-18, promoted at fa46307).** At a pending confirm the TEXT
   must be a clear agreement (`Read Pending Answer`: one closed list, stage-bound verbs; a question, a digit or a second
   line never consents) — the model's `confirm` only ever counts together with it:
   - **cancel / reschedule confirm:** anything but a clear yes the model also read as `confirm` keeps the booking
@@ -61,7 +61,7 @@ found by the L2 reviewers, not by the build (2026-09-09f):**
    confirm again (`Booking Fresh?` → `Slot Gate`, nothing written), it never drops the request as a stale cancel or
    reschedule confirm answers "your booking stands". So the list still does not need it. **Bound (ruling 2026-11-03,
    Codex CLOSE-OUT pass 1 HIGH):** the stamp counts SAVED turns — a turn that saves no state (an LLM-unavailable reply, a
-   guard trip) does not advance `turn_count`, so it does not stale any confirm; the next "yes" books the slot shown. The
+   guard trip) does not advance `turn_count`, so it does not stale any confirm; the next "yes" books the slot shown — unless that slot has already started (`Booking Fresh?` / `Reschedule Fresh?` refuse it, HARDENING K2) or a session gap reset `confirm_turn` (HARDENING K5); both added 2026-11-18. The
    cancel and reschedule confirms' TTL has the same bound. *Corrected in place: this said
    the booking path had no freshness check, true until M2 (`tests/unit/close-out-main.test.cjs`).*)
 2. **The second one in a row escalates.** `Repeat Extraction Failure?` reads `last_intent='invalid'` carried in

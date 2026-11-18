@@ -60,7 +60,7 @@ nothing to escalate into: the allow-list is the schema enum (`.claude/rules/prom
 - **Spend brakes:** a monthly LLM spend cap checked before any paid call. It fails CLOSED: if the spend meter cannot be
   read, no model is called, the customer gets a handoff reply and the owner a `spend_meter_unavailable` alert (`Eval
   Spend`; ruling (d), `docs/ARCHITECTURE-DECISIONS.md` 2026-10-29). *(Corrected 2026-11-03: this line said the cap
-  fails OPEN. That was true when it was written; going public changed it, §10.)* a per-conversation turn cap (12 in the example config);
+  fails OPEN. That was true when it was written; going public changed it, §10.)* a per-session turn cap (12 saved turns in the example config; it resets after `bot.sessionGapMinutes`, 30, of quiet and on an owner release); the spend meter is raised by one SQL increment, while the check before the call is still read-then-act, so turns already in flight can overshoot the cap;
   an explicit timeout on every external HTTP call (60 s for the LLM, 15 s for the others); a dry-run switch that skips
   the calendar insert and the WhatsApp send while conversation and lead rows are still written (`bot.dryRun`, off in
   the example config; Main's `Dry-run note`); and a kill-switch that turns the bot into handoff-only. Two
@@ -76,7 +76,7 @@ nothing to escalate into: the allow-list is the schema enum (`.claude/rules/prom
 | Is the model sure enough? | a threshold (`bot.confidenceThreshold`, 0.7 in the example config); the first uncertain turn asks once, a second hands off | self-reported confidence is poorly calibrated, so the bot abstains instead of guessing |
 | Which day is "this Friday"? | `Resolve Date`, deterministic, in the shop's timezone, from the customer's own words (`dateExpr`) | the model was once wrong about a date at confidence 0.92, which no threshold catches (MASTER-BRIEF §9, CRT 12) |
 | Price, hours, services, address | config lookups | the answer path contains no model, so it cannot quote a wrong price |
-| Is the slot free? Book it? Cancel it? | IF/Switch, the calendar, write-then-verify, a confirmation turn | irreversible actions need rules, not judgement |
+| Is the slot free? Book it? Cancel it? | IF/Switch, the calendar, write-then-verify, a confirmation turn whose yes is checked in code, not read from the model's label alone | irreversible actions need rules, not judgement |
 
 ## 5 · The migration: Airtable → self-hosted Postgres
 
@@ -126,7 +126,7 @@ outputs are committed verbatim (`docs/codex/7-2-prompts.md`, `docs/codex/7-2/`).
   pre-push secret scan among them.
 - **The dashboard (9):** three MEDIUM and a LOW, closed; the owner's CSV export ships masked, and its live sample was
   shown with synthetic names and phone numbers (7-2 R4).
-- **Error visibility (6):** two HIGH, two MEDIUM, one LOW, **all closed.**
+- **Error visibility (6):** two HIGH, two MEDIUM, one LOW, **all closed.** *(Superseded 2026-11-18: a later internal reproduction found handoff branches that wrote `stage='handoff'` with no owner alert; the hardening phase fixed them and the target was re-attacked, see `docs/hardening/register.md`.)*
 - **The owner write path (11):** one HIGH and three MEDIUM. The HIGH and one MEDIUM closed at the first recheck; the
   rest, and two MEDIUM and a LOW the recheck found, closed at the second, with one recorded bound (OA-2).
 
@@ -347,7 +347,7 @@ older defect, not a regression (NAME-CAPTURE-PLAN "R3"). **Why every test missed
 conversation through the exported workflow: the code nodes run, IF / Switch / Set are evaluated from their parameters,
 and the stores, the calendar and the model's answer are given. It was committed with DATE-PHRASING's first round
 (`68ceb10`). Since then the scripts handed to the owner are replayed through the staged workflow first: NAME-CAPTURE's
-corrected script and N1's two. The owner's second run passed and closed NAME-CAPTURE ("R4").
+corrected script and N1's two. The owner's second run passed and closed NAME-CAPTURE ("R4"). *(Added 2026-11-18: the harness's booking-lookup stubs filtered out past rows that the real SQL did not, so no replay could show a past booking being picked as the target. A stub that is better than the code it replaces hides the defect; the stub now equals the SQL bound.)*
 
 ## 12 · Six audit rounds, and the rule that stopped the tuning (DATE-PHRASING, 2026-11-01 → 11-02)
 
@@ -369,7 +369,7 @@ fourth set of patterns ("R4 recheck").
 - the text-side checks are labelled best-effort;
 - the remaining class is a recorded bound.
 
-Nothing is written without the customer's "yes" to a date they can read. Rounds 5 and 6 then attacked that defence
+Nothing is written without the customer's "yes" to a date they can read. *(Superseded 2026-11-18: this was not fully true until the hardening phase. A model `confirm` label alone could cancel or move a booking, and a "yes" for a slot that had already started could be honoured; since then the yes is verified in code and a slot that has started is refused, `docs/hardening/register.md`.)* Rounds 5 and 6 then attacked that defence
 itself, for example a confirm saved before the change or two concurrent turns of one sender. Round 5's three HIGH
 findings became a read-only deploy precondition and two recorded bounds; round 6's one was closed by the put procedure
 ("R2e", "R3"). Live on 2026-11-02, promoted at `c22da47`.

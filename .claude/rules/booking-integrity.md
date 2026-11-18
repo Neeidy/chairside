@@ -45,7 +45,7 @@ Two DISTINCT problems, two DISTINCT guards (do not conflate them):
      first limit as the only one; Codex 7-2 target 1b showed the second path, R2 found the text still uncorrected.)*
    The race must be **visible and recoverable** — never pretend a lock exists.
 
-**Which booking, and when a yes still counts (HARDENING K2, 2026-11-18 — STAGED; live after the hardening Main put):** a cancel or reschedule targets only a booking
+**Which booking, and when a yes still counts (HARDENING K2, 2026-11-18 — live since the hardening Main put of 2026-11-18, promoted at fa46307):** a cancel or reschedule targets only a booking
 that has not ENDED (`end_utc > now` in the three booking lookups and their JS twins), picked by the day the customer
 names; several upcoming and no day → the customer is asked which one (cancel) or the earliest is moved with the count
 named (reschedule). A "yes" books or moves only while the slot still starts in the FUTURE (`Booking Fresh?` /

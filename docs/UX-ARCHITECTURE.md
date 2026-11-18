@@ -188,7 +188,8 @@ Diğer red sınıfları (hepsi `collecting`, hepsi literal metin):
 | Adım | Node | Metin | Stage |
 |---|---|---|---|
 | Randevu yok | `Build No-Booking Reply` | `cancelNoBooking` | değişmez |
-| Cutoff içinde | `Build Cancel-Cutoff Reply` | `cancelCutoff` | `handoff` |
+| Cutoff içinde | `Build Cancel-Cutoff Reply` | `cancelCutoff` | `handoff` + sahip alert'i (`cancel_cutoff`) |
+| Birden fazla randevu, eşleşen yok | `Cancel Lookup` | "hangisi?" sorusu (tarihleri listeler) | değişmez — kilit yok, yazma yok |
 | Bozuk kayıt | `Build Cancel-NeedsHuman State` | `cancelNeedsHuman` / `cancelTargetGone` | `handoff` |
 | Onay sorusu | `Build Cancel-Confirm State` | **literal**: `Cancel your {service} on {when}? Reply "yes" to cancel, or anything else to keep it.` Birden fazla randevu varsa: `(you have N bookings — this cancels the {when} one)` | `cancel_confirming` |
 | "hayır" | `Build Cancel-Aborted State` | `cancelAborted` | `new` |
@@ -202,15 +203,17 @@ Diğer red sınıfları (hepsi `collecting`, hepsi literal metin):
 
 ### 2.6 — Erteleme (bul → yeni slot → onayla → taşındı)
 
-`Reschedule Lookup` sahibin **en yakın gelecekteki** randevusunu bulur, cancel ile aynı doğrulamayı
+`Reschedule Lookup` sahibin **en yakın** randevusunu bulur — hedef henüz **bitmemiş** olmalı (`end_utc > now`; süren randevu hâlâ hedeftir); birden fazla randevu varsa en erken olanı taşır ve sayıyı onay metninde söyler ("hangisi?" yalnız cancel'dadır). Cancel ise müşterinin söylediği güne (söylediyse saate) göre seçer; birden fazla randevu varsa ve eşleşen yoksa sorar, ilkine düşmez.
+
+`Reschedule Lookup` ayrıca cancel ile aynı doğrulamayı
 uygular (`structOk`: geçerli `start_utc` + gid şekli + `calendar_id`), cutoff'u **eski** randevuya
 uygular, yeni slotu bu turun intent'inden okur.
 
 | Sonuç | Metin | Stage |
 |---|---|---|
 | Randevu yok | `rescheduleNoBooking` | değişmez |
-| Bozuk kayıt / servis eşleşmedi | `rescheduleNeedsHuman` | `handoff` |
-| Cutoff içinde | `rescheduleCutoff` | `handoff` |
+| Bozuk kayıt / servis eşleşmedi | `rescheduleNeedsHuman` | `handoff` + sahip alert'i (`reschedule_needs_human`) |
+| Cutoff içinde | `rescheduleCutoff` | `handoff` + sahip alert'i (`reschedule_cutoff`) |
 | Yeni slot verilmedi | `rescheduleAskSlot` | değişmez |
 | Yeni slot müsait | (literal, `Compute Reschedule Availability`) | `reschedule_confirming` |
 | "hayır" | `rescheduleAborted` | `new` |
@@ -236,7 +239,7 @@ tarafı ayrışır**:
 
 | Sınıf | Sebep | State yazar mı | HTTP | Node |
 |---|---|---|---|---|
-| **guard-trip** | kill-switch · max-turns · spend-cap | ❌ geçici | 200 | `Handoff Reply` · `Build Spend-Cap Reply` (bütçe doldu) |
+| **guard-trip** | kill-switch · max-turns · spend-cap | ❌ geçici (max-turns, `sessionGapMinutes` sessizlikten ve sahip release'inden sonra sıfırlanır) | 200 | `Handoff Reply` · `Build Spend-Cap Reply` (bütçe doldu) |
 | **infra-unavailable** | dış sistem çöktü | ❌ geçici | **`error` bayrağı** — claim'den sonra 200 + reply, yalnız claim'den önce 503 (`handoff.md`) | `LLM/Lead/Calendar/Cancel Delete Unavailable Reply` · `Send Error Response` · `Build Spend-Cap Reply` (spend metresi okunamadı: 200 + `error:"spend_meter_unavailable"`, R2a 2026-10-30) |
 | **intent-handoff** | düşük güven · bilinmeyen · needs-human | ✅ `stage=handoff`, `last_intent` | 200 | `Mark Handoff` + 14 builder |
 
@@ -265,7 +268,7 @@ Ayrı workflow: `Salon Booking Bot — Reminders`, **saatlik** schedule.
 | Guard | Config | Müşteri ne görür | Ayırt edilebilir mi |
 |---|---|---|---|
 | Kill-switch | `bot.killSwitch` | `handoff` template | ❌ max-turns ile aynı (§8 BULGU #7) |
-| Max-turns | `bot.maxTurnsPerConversation` (12) | `handoff` template | ❌ |
+| Max-turns | `bot.maxTurnsPerConversation` (12; oturum başına kayıtlı tur — `bot.sessionGapMinutes` sessizlikten sonra ve release'de sıfırlanır) | `handoff` template | ❌ |
 | Spend-cap | `bot.llmCostCapUsd` ($10/ay) | `handoff` template | ❌ |
 | Dry-run (booking) | `bot.dryRun` | `bookingConfirmed` — **gerçek booking'den ayırt edilemez** | ❌ tasarım kararı |
 | Dry-run (WhatsApp send) | `bot.dryRun` | **hiçbir şey** — mesaj sessizce gitmez | ❌ |
@@ -357,7 +360,7 @@ Kaynak: Airtable `leads` — `name`(PII) · `phone`(PII) · `source` · `message
 
 Bugün alert'lerin tek evi **Telegram**. Dashboard'ın asıl işi bu.
 
-**24 alert sınıfı** (düzeltildi 2026-08-31 — bu satır bir süre "21" diyordu; 21 yalnız ana
+**24 alert sınıfı** *(2026-11-18 HARDENING: bu tablo yeniden sayılmadı; `cancel_cutoff`, `reschedule_cutoff`, `reschedule_closed|past|busy|invalid`, `reschedule_needs_human`, `consent_unclear` sınıfları eklendi, yani aşağıdaki sayılar artık güncel değil)* (düzeltildi 2026-08-31 — bu satır bir süre "21" diyordu; 21 yalnız ana
 workflow'un STATİK kümesiydi, sistem toplamı değil). Dağılım, koddan sayıldı:
 
 | Nerede | Sayı | Ne |
@@ -368,7 +371,7 @@ workflow'un STATİK kümesiydi, sistem toplamı değil). Dağılım, koddan say�
 | `Build Owner Alert (Purge)` | **1** | `purge_error` (kendi composer'ı, throttle `purge_error:<branch>`) |
 | **TOPLAM** | **24** | |
 
-Ana workflow'un composer'ını **28 kaynak node** besliyor.
+Ana workflow'un composer'ını **30 kaynak node** besliyor (2026-11-18'de `n8n/workflow.main.sanitized.json` bağlantılarından yeniden sayıldı).
 Kapı: `ownerAlert.enabled !== true` → hiç alert yok. Throttle: **(sınıf, sender_key) çifti başına
 30 dk** (`ownerAlert.throttleMinutes`), n8n `$getWorkflowStaticData('global')` içinde.
 
@@ -459,15 +462,14 @@ değiştirmek n8n editöründe kod düzenlemek demek; `client.config.example.jso
 | `channels.widget.turnstile.enabled` | `true` | `Turnstile Gate` | bot koruması |
 | `bot.llmCostCapUsd` | `10.00` | `Eval Spend` · `Spend Gate` | aylık sert tavan |
 | `bot.confidenceThreshold` | `0.7` | `Uncertain Turn?` + `Confirm Pending & Uncertain?` | altı = BELİRSİZ tur. Onay penceresindeyse → devir (owner alert); değilse → 1. turda açıklayıcı soru, 2. ardışıkta devir (2026-09-07) |
-| `bot.maxTurnsPerConversation` | `12` | `Check Bot Guards` | tur tavanı |
+| `bot.maxTurnsPerConversation` | `12` | `Check Bot Guards` | oturum başına tur tavanı (`Merge State` sıfırlar) |
 | `bot.reminderHoursBefore` | `24` | `Compute Reminder Window` | hatırlatma penceresi |
-| `bot.sessionGapMinutes` | `30` | `Build Reply Payload` | "Welcome back!" eşiği |
+| `bot.sessionGapMinutes` | `30` | `Build Reply Payload` · `Merge State` | "Welcome back!" eşiği; tur sayacı ve `confirm_turn` sıfırlama eşiği |
 | `bot.cancellationCutoffHours` | `2` | `Cancel Lookup` · `Reschedule Lookup` (+validate) | iptal/erteleme kesim saati |
 
 **Spend metresi:** `bot_metrics` (`period_key` aylık · `cost_usd` · `updated_at`). LLM'den **önce**
 okunur, **sonra** artırılır. Okuma patlarsa **fail-CLOSED** (LLM çalışmaz, deterministik handoff — public demo
-R2a, 2026-10-30); yazma patlarsa o çağrı sayılmaz. İkisinde de `spend_meter_unavailable` alert. Eşzamanlı turlarda TOCTOU kabul edilmiş — yumuşak fren, atomik
-defter değil.
+R2a, 2026-10-30); yazma patlarsa o çağrı sayılmaz. İkisinde de `spend_meter_unavailable` alert. Sayaç tek SQL ifadesiyle artırılır (`cost_usd = salon.bot_metrics.cost_usd + EXCLUDED.cost_usd`), yani eşzamanlı turlar toplanır; kabul edilen sınır yalnız giriş kontrolüdür (`Spend Gate` okuma→harca): uçuştaki turlar tavanı aşabilir — yumuşak fren.
 
 **Ekranda olması gerekenler:** kill-switch/dry-run durumu (ve **kim ne zaman açtı** — bugün kayıtlı
 değil, 🕳) · spend metresi (`cost_usd` / `llmCostCapUsd`, bu ay) · son hatalar (🕳 **kaynak yok** —
@@ -505,7 +507,7 @@ takviminde görmeye devam eder.
 |---|---|---|---|---|
 | 1 | Randevu iptal | ✅ | `Cancel Lookup` → `Validate Cancel Target` → `Build Cancel-Confirm State` → `Verify Confirm Live` → GCal delete → `Update Appointment Cancelled` | ⚠ **var ama erişilemez** — yalnızca `/webhook/barber-inbound` üzerinden, **müşteri kimliğiyle**, iki turlu "yes" onayıyla. Sahip için giriş noktası **YOK** → **yeni yol gerekiyor** |
 | 2 | Randevu ertele | ✅ | `Reschedule Lookup` → … → insert + eski event delete | ⚠ aynı — **yeni yol gerekiyor** |
-| 3 | Devri devralma (`stage=handoff` kilidini açma) | ✅ (müşteriye bot cevabı geri açar) | **hiçbir yol yok** — hiçbir node `handoff` stage'ini temizlemiyor | ⛔ **CANLI KUSUR** → §9 K6: **Phase 6'da yapılacak**, tek yazma istisnası (yalnız `stage`'i `new`'e döndürür; takvime/randevuya dokunmaz, geri alınabilir) |
+| 3 | Devri devralma (`stage=handoff` kilidini açma) | ✅ (müşteriye bot cevabı geri açar) | **hiçbir yol yok** — hiçbir node `handoff` stage'ini temizlemiyor | ⛔ **CANLI KUSUR** → §9 K6: **Phase 6'da yapılacak**, tek yazma istisnası (`stage`'i `new`'e döndürür; 2026-11-18'den beri `turn_count`'u 0'a çeker ve `confirm_turn`'ü temizler; takvime/randevuya dokunmaz, geri alınabilir) |
 | 4 | Alert'i "çözüldü" işaretleme | ❌ | **hiçbir yol yok**, saklanacak alan da yok | ❌ **yeni yol gerekiyor** (§9 karar 1) |
 | 5 | Müşteriye elle mesaj ("Reply" butonu) | ❌ ama **dışa dönük** | `Send WhatsApp (Zernio)` var ama yalnızca outbound zincirinin içinde | ❌ **yeni yol gerekiyor** — ⚠ **güvenlik**: keyfi numaraya mesaj attırabilen bir endpoint, `Reject Unsigned Request`'in converged edilmeme sebebinin (D-b3 "message-trigger primitive") ta kendisidir. Tasarımı bu riski bilerek yapılmalı |
 | 6 | Kill-switch / dry-run çevirme | ✅ (sistem geneli) | config n8n Code node'unda hard-coded | ❌ **yeni yol gerekiyor** |
@@ -816,7 +818,7 @@ hiçbir yol yok" bulgusu **eksik özellik değil, CANLI KUSURDUR**. Devredilen m
 **sonsuza dek susturulmuş** durumda: her mesajına `handoffLocked` cevabı gider, bot bir daha asla
 devreye girmez ve kilidi açacak hiçbir arayüz yoktur.
 
-Bu aynı zamanda **en düşük riskli yazma**: `conversations.stage`'i `new`'e döndürür. Takvime
+Bu aynı zamanda **en düşük riskli yazma**: `conversations.stage`'i `new`'e döndürür (2026-11-18'den beri `turn_count`'u 0'a çeker, `confirm_turn`'ü temizler). Takvime
 dokunmaz, randevuya dokunmaz, dış sisteme dokunmaz, geri alınabilir.
 
 **İptal / erteleme yazmaları Phase 7'ye kalır** — kendi Critical-Review Target'ları ile.

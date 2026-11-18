@@ -2,11 +2,11 @@
 
 **Purpose:** hard brakes so the bot can never run away on cost or loop forever.
 
-- **Budget cap:** a hard LLM spend cap per period (`LLM_COST_CAP_USD`). Over cap → stop calling the LLM,
+- **Budget cap:** a hard LLM spend cap per month (`bot.llmCostCapUsd` in `Load Config`; the `LLM_COST_CAP_USD` name is not read by any workflow — corrected 2026-11-18). Over cap → stop calling the LLM,
   fall back to deterministic replies + handoff.
 - **Max-iteration:** a per-SESSION turn cap (`bot.maxTurnsPerConversation` in `Load Config`; the `LLM_MAX_TURNS` name
   is not read by any workflow). `Merge State` resets the count after `bot.sessionGapMinutes` of silence and an owner
-  release resets it (HARDENING K5, 2026-11-18 — STAGED; live after the hardening Main and Owner Actions puts) — so the cap bounds one session, not a sender's lifetime. *(Corrected
+  release resets it (HARDENING K5, 2026-11-18 — live since the hardening Main and Owner Actions puts of 2026-11-18, promoted at fa46307) — so the cap bounds one session, not a sender's lifetime. *(Corrected
   2026-11-18: this said "per-conversation", and until the K5 edit the count was in fact never reset at all.)*
 - **Timeout:** every external **HTTP** call — the LLM, Zernio, Google Calendar, Turnstile — carries an explicit
   timeout and an error branch on expiry (the HTTP Request nodes in the copy exports: 60 s for the LLM, 15 s for

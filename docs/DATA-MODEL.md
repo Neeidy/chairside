@@ -26,8 +26,9 @@ engine's state (multi-turn · idempotency · spend meter).
   migration changed the store, not the values the nodes produce.
 - `salon.at_ts(timestamptz)` renders a timestamp in Airtable's text form (`YYYY-MM-DDTHH:MM:SS.mmmZ`), so every
   read returns the exact shape the downstream nodes were written against.
-- The workflows reach the tables only through Postgres nodes running parameterised SQL (`$1…$N` via
-  `queryReplacement`, never an expression in the SQL text); `scripts/check-sql-params.py` enforces it over every
+- The workflows reach the tables only through Postgres nodes running parameterised SQL (`$1…$N` values via
+  `queryReplacement`, which n8n's Postgres node quotes into the statement on the client side (pg-promise), not as a
+  server-side bind; safe with `standard_conforming_strings` on, measured 2026-11-18; never an expression in the SQL text); `scripts/check-sql-params.py` enforces it over every
   committed export.
 
 > **`customers` is NOT part of the model (FIX-1, 2026-08-27).** The CP6 decision (2026-08-10) dropped it — the
@@ -78,14 +79,15 @@ Indexes: `(sender_key, status)` and `(status, start_utc)`.
 |---|---|---|
 | id | text | PK, `gen_rec_id()` |
 | period_key | text | `NOT NULL`, **`UNIQUE`** — the UTC month, e.g. `2026-10`. `Read Spend` filters on it; `Record LLM Spend` upserts on it (`ON CONFLICT (period_key) DO UPDATE`) |
-| cost_usd | numeric(12,6) | `NOT NULL DEFAULT 0` — accumulated estimated LLM cost for the period = Σ(tokens × `bot.llmPricePer1kTokensIn/Out`). Read BEFORE the LLM (`Spend Gate`), written AFTER a successful call. Over `bot.llmCostCapUsd` → deterministic handoff, no LLM (CP5b-2) |
+| cost_usd | numeric(12,6) | `NOT NULL DEFAULT 0` — accumulated estimated LLM cost for the period = Σ(tokens × `bot.llmPricePer1kTokensIn/Out`). Read BEFORE the LLM (`Spend Gate`), incremented AFTER a successful call. Over `bot.llmCostCapUsd` → deterministic handoff, no LLM (CP5b-2) |
 | updated_at | timestamptz | nullable — last increment |
 | created_at | timestamptz | `NOT NULL DEFAULT now()` |
 
 Read-fail → fail-CLOSED since the public demo's R2a put (2026-10-30): no LLM, the deterministic handoff reply and a
-`spend_meter_unavailable` owner alert. Write-fail (after a call) → that call is not counted + the same alert. TOCTOU across
-concurrent turns is accepted at this tier (a soft brake, not an atomic ledger): the upsert writes the total the
-turn computed, it does not add to the stored one. The month's row is the real spend meter since the cutover (kept
+`spend_meter_unavailable` owner alert. Write-fail (after a call) → that call is not counted + the same alert. The meter
+update is one atomic increment (`cost_usd = salon.bot_metrics.cost_usd + EXCLUDED.cost_usd`, `$2` = this call's
+delta), so concurrent turns add up and a late writer cannot lower the total. Admission is still read-then-act
+(`Spend Gate`): turns in flight when the cap is reached can overshoot it (accepted at this tier). The month's row is the real spend meter since the cutover (kept
 at Round 3c's cleanup by ruling).
 
 ## `conversations` (multi-turn slot-filling state, one row per sender)
@@ -99,12 +101,12 @@ at Round 3c's cleanup by ruling).
 | slot_time | text | nullable |
 | slot_name | text | nullable (PII) — the name given for the booking in progress, the fourth slot (NAME-CAPTURE, `db/schema/004_slot_name.sql`, live since 2026-11-01). Written as `$14` by both Save States (NULL when there is none), read by `Load State`/`Merge State`; emptied by the 30-day scrub together with `recent_messages` |
 | last_updated | timestamptz | `NOT NULL DEFAULT now()` — UTC; session-gap calculation (`Build Reply Payload`) and the 30-day PII-scrub cutoff. **It does not expire the row** (no job deletes `conversations` rows). |
-| turn_count | integer | `NOT NULL DEFAULT 0` — +1 on every inbound message; compared with config `bot.maxTurnsPerConversation` for the max-turns guard (CP3) |
+| turn_count | integer | `NOT NULL DEFAULT 0` — +1 on every SAVED turn; reset to 0 by `Merge State` after `bot.sessionGapMinutes` of quiet and by the owner release; compared with config `bot.maxTurnsPerConversation` (a per-session cap) for the max-turns guard (CP3) |
 | last_intent | text | last classified intent. ⚠ **NOT a debug field** — two escalation ladders READ it as a carried-in strike (see `stage`). It also carries two non-enum control values (`'invalid'`, `'clarify'`) that are not intents at all. |
-| recent_messages | text | **PII (message content)** — rolling **last-5** inbound customer message texts, newline-joined, each truncated to 80 chars (CP5a Step 7). Written every turn by `Save State`/`Save State (Post-Write)`, read by `Build Owner Alert` for handoff context. **TTL = 30 days** — the Purge workflow's second branch (`Compute PII Cutoff` → `Find Stale Conversations` → `Scrub Recent Messages`) clears it on rows whose `last_updated` is older than 30 days. **Never export/screenshot unsanitized.** |
+| recent_messages | text | **PII (message content)** — rolling **last-5** inbound customer message texts, newline-joined, each truncated to 80 chars, whitespace collapsed so one message is one entry, control characters stripped (CP5a Step 7; hardening 2026-11-18). Written every turn by `Save State`/`Save State (Post-Write)`, read by `Build Owner Alert` for handoff context. **TTL = 30 days** — the Purge workflow's second branch (`Compute PII Cutoff` → `Find Stale Conversations` → `Scrub Recent Messages`) clears it on rows whose `last_updated` is older than 30 days. **Never export/screenshot unsanitized.** |
 | gcal_event_id | text | the booking's calendar event id, carried into state so a post-write failure still leaves a breadcrumb a human can follow |
 | cancel_target_id | text | the `appointments.id` a pending `yes` is bound to — this is what makes cancel/reschedule confirmation IDOR-safe. **Deliberately NO foreign key:** the flow writes it empty and can leave it dangling, and `Validate Cancel Target` re-reads and refuses a bad one; an FK would have turned those writes into errors (001_init.sql) |
-| confirm_turn | text | `turn_count + 1` at the moment the confirm question was asked → the confirm is honoured only on the **immediate next turn** (confirm-TTL). Text, to match how it is written |
+| confirm_turn | text | `turn_count + 1` at the moment the confirm question was asked → the confirm is honoured only on the **immediate next turn** (confirm-TTL), and only while the slot still starts in the future; cleared with the turn count on a new session or an owner release. Text, to match how it is written |
 | computed_reply | text | the single source of this turn's reply (Refactor #5); every reply-producing builder writes it, `Build Reply Payload` reads it, and an empty value raises the `reply_fallback` alert. May contain a customer name/service — treat as borderline PII |
 | last_alert_class | text | the class of the last owner alert **actually delivered** for this conversation. Written by `Record Alert Class` **only after `Send Owner Alert (Telegram)` succeeds** (Codex #5): if delivery fails it stays EMPTY, because empty is the true statement. **Update by id, never upsert** (Codex #4: `UPDATE … WHERE id = $1` on the row `Find Conversation Row` found), so a client-controlled `sessionId` cannot mint a metadata-only junk row |
 | last_alert_at | timestamptz | nullable — when that alert was delivered (same write, same condition) |

@@ -228,7 +228,7 @@ Five tables. **Customers is NOT created.** Every table has
 | `Record Owner Action Processed` (owner replay marker) | **Q17 (a), ruled 2026-10-20:** `INSERT … ON CONFLICT (message_id) DO UPDATE SET message_id = EXCLUDED.message_id RETURNING id`. On a conflict the no-op update returns the EXISTING row's id, so `Marker Written?` (`!$json.error && !!$json.id`) takes the "written" path as on Airtable (the returned id is measured, §3p; the IF's routing follows from its expression and was not run). *Not `DO NOTHING`: that returns `{success: true}` and no id, with or without `alwaysOutputData`, and routes the race to "marker failure".* | duplicate replay markers (one row where Airtable made two) |
 | `Save State` / `Save State (Post-Write)` (upsert) | `INSERT … ON CONFLICT (sender_key) DO UPDATE` | two first-contact rows for one sender: impossible |
 | `Write Appointment` (upsert) | `INSERT … ON CONFLICT (gcal_event_id) DO UPDATE` | duplicate mirror rows for one event |
-| `Record LLM Spend` (upsert) | `INSERT … ON CONFLICT (period_key) DO UPDATE SET cost_usd = EXCLUDED.cost_usd, updated_at = EXCLUDED.updated_at` (1:1, absolute; both mapped columns, D4-4) | duplicate period rows |
+| `Record LLM Spend` (upsert) | `INSERT … ON CONFLICT (period_key) DO UPDATE SET cost_usd = EXCLUDED.cost_usd, updated_at = EXCLUDED.updated_at` (1:1, absolute; both mapped columns, D4-4) | duplicate period rows *(Superseded 2026-11-18: the upsert is now an increment, `cost_usd = salon.bot_metrics.cost_usd + EXCLUDED.cost_usd`; see DATA-MODEL, `bot_metrics`.)* |
 
 **Quoted** (n8n-mcp's bundled node database, node version 2.7; see §3f): the node's batching modes are "Single Query: A single query for all incoming items" ·
 "Independent: Execute one query per incoming item of the run" · "Transaction: Execute all queries in a
@@ -251,6 +251,7 @@ Leads`, `Stamp Reminded`); every other node keeps the default `single`, which wi
 - **The spend meter's read-then-write TOCTOU** across concurrent turns stays (1:1). An atomic increment
   is possible, but it changes the node's input semantics (a delta instead of an absolute value). It is
   listed for Phase 7, not done.
+  *(Superseded 2026-11-18: the increment was built in the hardening phase; admission, `Spend Gate`, is still read-then-act.)*
 - **Concurrent turns of one sender:** `Save State` remains last-write-wins, as on Airtable.
 
 ## 3f · Injection
@@ -263,6 +264,7 @@ therefore accepts both. Inference, on the safe side: only the parameters are san
 text is not.**
 **Quoted (schema, `queryReplacement`):** *"Comma-separated list of the values you want to use as query
 parameters."*
+*(Note 2026-11-18: n8n implements this by client-side quoting of the values into the statement (pg-promise), not a server-side bind; safe with `standard_conforming_strings` on, which was measured.)*
 The docs do not say what happens to a string value that contains a comma; their only array example is
 `{{ [ 'users', $json.email ] }}`. **Whether an array expression keeps a comma-, quote-, `$2`- or
 newline-bearing value as ONE parameter: *not measured → spike S3*. Until S3 answers, no design depends
@@ -2158,6 +2160,7 @@ was written or activated; the only live reads were `salon_ro` reads and n8n GETs
     accept it (no action at the cutover).
   - *Observation:* Main original's throttle keys include WhatsApp sender keys, i.e. phone numbers, in n8n's own
     database; they stay with the inactive original and are not moved. Not a migration difference.
+    *(Superseded 2026-11-18: "expires" here means the throttle reader ignores old keys; nothing deleted them until the hardening prune of expired keys.)*
 
 **Rulings after round 1 (Yigitcan, 2026-10-23):** the history rewrite is approved (as R-1) · **#11 CLOSED:** the two
 Schedule Trigger state keys are n8n's own trigger state, identical on original and copy, so nothing is lost by not moving

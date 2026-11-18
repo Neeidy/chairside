@@ -28,7 +28,9 @@ never in the past; the name is synthetic. Captured headless from the live page o
 
 1. **Book an appointment.** Type *"I'd like a haircut on Wednesday at 11:00"*. The bot asks for a name (a made-up one
    is fine), then shows the booking with its full date and year and asks *yes / no*. A *yes* writes a real event on
-   the demo's own Google Calendar. *"cancel my haircut"*, followed by a *yes*, removes it again.
+   the demo's own Google Calendar. *"cancel my haircut"*, followed by a *yes*, removes it again. A *yes* acts only when the customer's own text is a clear yes and the model
+   also read it as a confirmation; at a cancel or reschedule confirm anything else keeps the booking, and at the booking
+   confirm a model "yes" without a clear yes shows the confirm again.
 2. **Say "no" at the confirm.** Nothing is booked, and the bot asks what you want to change. A second *no* closes the
    request. A *no* never turns into a cancel of some other booking
    ([`docs/N1-CONFIRM-NO-PLAN.md`](docs/N1-CONFIRM-NO-PLAN.md)).
@@ -105,12 +107,15 @@ Telegram (owner alerts) · Zernio (the WhatsApp Business API adapter).
   **not re-verified as of 2026-11-16**: a burst sent from outside that day was not blocked at the edge. Every request was
   still refused by the Turnstile check, and nothing was written or billed (`docs/CLOSE-OUT-PLAN.md`, "Pre-post live
   check", L2).
-- **Spend cap, fail-closed:** a monthly LLM cap is checked before every paid call. If the spend meter cannot be read,
+- **Spend cap, fail-closed:** a monthly LLM cap is checked before every paid call. The meter is raised by one SQL
+  statement (an increment, not an overwrite); the check before the call is still read-then-act, so turns already in
+  flight when the cap is reached can finish and overshoot it. If the spend meter cannot be read,
   no model is called: the customer gets a polite handoff reply and the owner gets a `spend_meter_unavailable` alert
   (`Eval Spend` in [`n8n/workflow.main.sanitized.json`](n8n/workflow.main.sanitized.json); ruling (d) in
   [`docs/ARCHITECTURE-DECISIONS.md`](docs/ARCHITECTURE-DECISIONS.md)).
 - **Kill-switch and max turns:** the kill-switch makes the bot handoff-only, and the turn cap ends a runaway
-  conversation. Both trip before any LLM call, so a tripped guard costs nothing
+  session: it counts saved turns and resets after `bot.sessionGapMinutes` of quiet and when the owner releases a
+  handoff, so it limits a burst, not a day. Both trip before any LLM call, so a tripped guard costs nothing
   ([`.claude/rules/spend-safety.md`](.claude/rules/spend-safety.md)).
 - **Pause:** the site can be paused on Vercel, which then answers 503 with a "paused" marker. This was drilled before
   go-live (`docs/PUBLIC-DEMO-PLAN.md`, R2f).
@@ -175,8 +180,21 @@ Several tools and one person, each with a named job ([`CLAUDE.md`](CLAUDE.md), "
   by the channel's sender, but on the widget that key comes from the browser session.
 - **Dates:** English only, no ranges ("early next week"), and a 30-day booking horizon.
 - **A "yes" counts on the turn right after its confirm — among saved turns.** A turn that saves no state (an outage
-  reply, a guard trip) does not stale the confirm, so the next "yes" books the slot shown; the cancel and reschedule
-  confirms share the bound ([`docs/CLOSE-OUT-PLAN.md`](docs/CLOSE-OUT-PLAN.md), "R2").
+  reply, a guard trip) does not stale the confirm, so the next "yes" books the slot shown, unless that slot has already
+  started (the bot then asks for a new time) or the conversation was quiet past the session gap (the cap and the
+  confirm marker reset, so the bot asks again); the cancel and reschedule confirms share the bound
+  ([`docs/CLOSE-OUT-PLAN.md`](docs/CLOSE-OUT-PLAN.md), "R2").
+- **Hardening (2026-11-18) bounds, ruled rather than fixed** ([`docs/hardening/register.md`](docs/hardening/register.md)):
+  - A present but non-string `sessionId` (or other widget field) still fails after the Turnstile check with an HTTP
+    500 and no alert (H4: the gate nodes `Normalize Inbound` and `Validate Payload` are unchanged); the engine also
+    does not read the siteverify hostname or action (RT5-2).
+  - The owner-alert throttle lives in n8n static data; concurrent runs can each send before either records it, so the
+    failure direction is extra alerts, never a swallowed one (H5). The Reminders claim-first change is v2 (H5b).
+  - At the booking confirm the clear-yes test trims leading and trailing whitespace, so "yes" plus Enter is a clear
+    yes (CX2-1); an interior line break never consents.
+  - A "which one?" question at cancel binds no marker, so the next turn is read fresh.
+  - The F4 (session turn cap) and F5 (slot already started) fixes are proven offline only; the live drill of
+    2026-11-18 covered F1, F2, F3 and the owner release.
 - **A second client is shown offline only.** A config file and its secrets render a second client's workflows with no
   hand edit, but this has not yet run on a real second deployment.
 - **The full v2 list and every recorded bound:** [`docs/ENGINEERING-NOTES.md`](docs/ENGINEERING-NOTES.md) and the live
@@ -197,11 +215,11 @@ Several tools and one person, each with a named job ([`CLAUDE.md`](CLAUDE.md), "
 | **A "no" at the confirm** | nothing booked, the details kept, "what would you like to change?"; a second "no" closes the request ([`docs/N1-CONFIRM-NO-PLAN.md`](docs/N1-CONFIRM-NO-PLAN.md)) |
 | **Deterministic FAQ** | Price / hours / services / address answered from config, never from the model |
 | **Lead capture** | Non-booking interest written to Postgres (`salon.leads`) with channel + message; deleted after 30 days by the scheduled purge, which deletes nothing on a night when it would remove more than a fifth or more than 200 at once, or when fewer than five are stored (fail-closed; the owner is alerted) |
-| **Human handoff, 5 distinct classes** | guard-trip (transient) · infrastructure down (an error flag + owner alert; 503 only before the message is claimed) · genuine handoff (writes state) · clarify (first uncertain turn, no lock) · extraction-transient (our schema broke, owner alerted, no lock) — never merged ([`.claude/rules/handoff.md`](.claude/rules/handoff.md)) |
+| **Human handoff, 5 distinct classes** | guard-trip (transient) · infrastructure down (an error flag + owner alert; 503 only before the message is claimed) · genuine handoff (writes state; the owner is alerted on every branch that writes it) · clarify (first uncertain turn, no lock) · extraction-transient (our schema broke, owner alerted, no lock) — never merged ([`.claude/rules/handoff.md`](.claude/rules/handoff.md)) |
 | **Visible failures** | Distinct machine-side error flags, never dressed as a normal reply — e.g. `invalid_payload` · `state_unavailable` · `llm_unavailable` · `lead_unavailable` · `calendar_unavailable` · `spend_meter_unavailable` |
 | **Booking without double-booking** | Calendar first, then re-read the slot; on a lost race the bot withdraws ITS OWN event and hands off, and only a won slot is mirrored to Postgres. A message delivered twice is answered once: the message id is CLAIMED at the start of the turn on a UNIQUE column, so two deliveries cannot both claim it (claim-first; CRT 1a closed in 7-2). The cost is at-most-once — a run that dies after its claim is not retried. See [booking-integrity](.claude/rules/booking-integrity.md) for that and the booking race it does not close |
 | **Cancel · reschedule · reminders** | Bot-automated, identity-bound to the channel's `sender_key`. Reminders are proven in dry-run; live WhatsApp template delivery needs the client's own WhatsApp Business number |
-| **Owner dashboard** | Read-only panels + the handoff queue + one write (release a handoff lock, through a protected n8n path). Runs on the build server behind Cloudflare Access and reads Postgres as a SELECT-only role. It runs as a systemd user unit (`ops/systemd/salon-dashboard.service`) that restarts it on a crash (measured, 7-F1); its start at boot is shown by configuration, not by a reboot |
+| **Owner dashboard** | Read-only panels + the handoff queue + one write (release a handoff lock: stage, turn count and confirm marker reset, through a protected n8n path). Runs on the build server behind Cloudflare Access and reads Postgres as a SELECT-only role. It runs as a systemd user unit (`ops/systemd/salon-dashboard.service`) that restarts it on a crash (measured, 7-F1); its start at boot is shown by configuration, not by a reboot |
 | **Spend brakes before the LLM** | Kill-switch, max-turns and a monthly LLM spend cap run *before* any paid call — a tripped guard costs nothing. The cap fails CLOSED: if the spend meter cannot be read, no model is called, the customer gets a handoff reply and the owner a `spend_meter_unavailable` alert. A deployment with no cap configured is never blocked by it |
 | **Embeddable widget, one script tag** | A single self-contained IIFE (well under 20 kB; `npm run build -w @salon/snippet --prefix web` prints the current size) that mounts a booking chat inside a Shadow DOM on someone else's site. Isolation measured in both directions against a deliberately hostile host page — see the case study ([docs/CASE-STUDY.md](docs/CASE-STUDY.md) §9), including what it knowingly does not do |
 | **Public demo** | The Next.js site on Vercel, only its custom domain public, with the chat, a `/privacy` page and the Turnstile check ([`docs/PUBLIC-DEMO-PLAN.md`](docs/PUBLIC-DEMO-PLAN.md)) |
@@ -297,8 +315,10 @@ This repository is **public**, so it is built as if it were.
   ([MIGRATION-PLAN §3t, K-6](docs/MIGRATION-PLAN.md)). CRT #9 (dashboard auth) is audited and its findings
   addressed (`[x]`, 7-2) in [MASTER-BRIEF §9](MASTER-BRIEF.md).
 - The store's own boundary: n8n's database role has DML on the five tables plus their sequences and two helper functions (default privileges extend that to tables the owner adds later), the dashboard's role
-  has SELECT only ([`db/schema/002_roles.sql`](db/schema/002_roles.sql)), and every workflow query is parameterised
-  (`scripts/check-sql-params.py`). The database port is not reachable from outside *(operator statement,
+  has SELECT only ([`db/schema/002_roles.sql`](db/schema/002_roles.sql)), and every workflow query passes its values as
+  `queryReplacement` parameters (`scripts/check-sql-params.py`: no expression in any SQL text). n8n's Postgres node
+  quotes those values into the statement on the client side (pg-promise), not as a server-side bind; that is safe with
+  `standard_conforming_strings` on, which was measured, and control characters are stripped at ingress. The database port is not reachable from outside *(operator statement,
   MIGRATION-PLAN §3t, A9)*.
 - **The security pass's open items and the recorded honest limits** (the date guard's history, the extraction-retry path, cancel identity) — moved verbatim to [`docs/ENGINEERING-NOTES.md`](docs/ENGINEERING-NOTES.md).
 

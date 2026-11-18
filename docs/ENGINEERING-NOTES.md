@@ -40,7 +40,7 @@ Phase 7's fix checkpoint instead.
 | **F13** — a capped appointment window can say "Nothing booked ahead" | inherited 1:1 from the Airtable dashboard; it needs more than a hundred cancellations inside the window to show |
 | **Two dead config keys: `instagram`, `business.locale`** (K-2) | they drive nothing — there is no Instagram adapter, and customer-facing dates use the n8n runtime's default locale — so they cause no wrong behaviour. **But the config is not fully config-driven while they exist** |
 | **The `handoffShown` twin** in `web/snippet` | the snippet and the site each record "lock line shown" at their own call site; deleting that line from one caller leaves the parity suite green — a test blind spot, not a runtime defect |
-| **Reschedule reject symmetry (W64/W65)** | a closed-day or busy reschedule offers no working hours and no alternative, while the same rejection in booking does — inconsistent help, not a wrong action |
+| **Reschedule reject symmetry (W64/W65)** | a closed-day or busy reschedule offers no working hours and no alternative, while the same rejection in booking does — inconsistent help, not a wrong action. The reschedule lane also hands off (locks) on a closed, past, busy or invalid slot where booking re-asks; since 2026-11-18 that handoff alerts the owner (`reschedule_closed` / `_past` / `_busy` / `_invalid`), the lock asymmetry remains |
 | **Rebooking a slot you just cancelled** — a customer who cancels and then books the exact same slot and service is handed to a human instead of booked | Google keeps the cancelled event's deterministic id reserved, and the reconcile step correctly refuses a cancelled event. The fix changes the event-id scheme or the reconcile branch, and needs a real calendar write to prove; the customer is never double-booked, only passed to the owner (ruled v2, 2026-10-25) |
 | **A reminder for an appointment cancelled while the database mirror was failing** | if the cancel reached Google Calendar but the database row could not be updated, the hourly reminder job can still remind that customer. Closing it means Reminders checks the calendar before sending, which needs a new Google credential in that workflow, so it is not the small change it first looked like (ruled v2, 2026-10-25) |
 | **The reschedule orphan alert does not say which old slot to clean** — when moving an appointment cannot remove the old calendar event, the customer is told "moved" (true: the new booking exists) and the owner gets an alert, but the alert does not name the old date, time and service | the fix is written and tested offline; it changes the Main workflow, and Main is not edited before this release (ruled v2, 2026-10-25) |
@@ -135,6 +135,25 @@ proven live once in Phase 4, before the store moved. "Regression green" does not
   `sessionId`** — session-token strength, not a verified identity. Endpoint rate-limiting (a Cloudflare edge rule — 30 requests per 10 s per IP and data
   centre — whose blocking was shown on 2026-10-30) and Turnstile (Phase 5) raise the cost of abusing it; they do not make the session an identity. Recorded in
   `docs/ARCHITECTURE-DECISIONS.md` §5.
+- **Hardening phase bounds (2026-11-18; the register is [`docs/hardening/register.md`](hardening/register.md)):**
+  - The turn cap is a session cap: it counts saved turns, resets after `bot.sessionGapMinutes` of quiet and on an
+    owner release, so it limits a burst, not a day; the monthly spend cap is the backstop. A "yes" that arrives after
+    a session gap is asked again.
+  - A reschedule with several upcoming bookings moves the earliest and names the count; only cancel asks "which one?",
+    and that question binds no marker.
+  - The spend meter is an atomic increment, but admission (`Spend Gate`) is read-then-act: turns in flight can
+    overshoot the cap.
+  - The owner-alert throttle is a read-modify-write in n8n static data: concurrent runs can each send before either
+    records it (extra alerts, never fewer, H5). Expired throttle keys are pruned on the next alert run; the keys
+    still hold the full sender key.
+  - H4 (a non-string field reaching `Validate Payload` gives HTTP 500, no alert) and RT5-2 (the siteverify hostname
+    and action are not read) are ruled limits: those are gate nodes and were not edited. The WhatsApp lane has the
+    same shape (traced, not run).
+  - Control characters are stripped at ingress; how the model provider treats a NUL byte was not measured. Alert
+    values are one line each and links are defanged.
+  - Whether Google Calendar accepts an event whose start is already past was never measured; the code refuses a
+    confirm whose slot has started before it asks.
+  - The Postgres and Telegram nodes still have no timeout of their own (`.claude/rules/spend-safety.md`).
 
 ## Config / code / secret — the full statement
 

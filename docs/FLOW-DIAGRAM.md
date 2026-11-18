@@ -7,7 +7,7 @@
 > **How to read it.** Solid arrow = happy path. Dashed arrow = an error / branch / handoff exit. Every
 > external call (Anthropic, Google Calendar, Airtable) has a **visible** error exit — silent failure is
 > forbidden ([n8n-conventions](../.claude/rules/n8n-conventions.md)). The five handoff classes never merge
-> ([handoff.md](../.claude/rules/handoff.md)): **guard-trip** (200, transient, no state write) ·
+> ([handoff.md](../.claude/rules/handoff.md)): **guard-trip** (200, transient, no state write; max-turns clears after a session gap or an owner release) ·
 > **infra-unavailable** (`error` flag + owner alert; 200 + a reply once the message id is claimed, 503 only before
 > the claim) · **intent-handoff** (200, writes `stage=handoff`) · **clarify** (200, `last_intent` only) ·
 > **extraction-transient** (200, `last_intent` only + owner alert).
@@ -124,14 +124,18 @@ flowchart TD
   GATE -->|handoff — FIRST turn| MH[Mark Handoff<br/>stage=handoff · computed_reply=t.handoff]
   GATE -->|not a handoff| CPU{Confirm Pending & Uncertain?<br/>stage=*_confirming AND unknown/low-conf}
   CPU -->|yes — abstain, alert owner| MH
-  CPU -->|no| AC{Abort Cancel?<br/>stage=cancel_confirming AND intent≠confirm}
-  AC -->|continue| AR{Abort Reschedule?<br/>stage=reschedule_confirming AND intent≠confirm}
+  CPU -->|no| RPA[Read Pending Answer<br/>deterministic clear-yes test, all three confirms]
+  RPA --> AC{Abort Cancel?<br/>stage=cancel_confirming AND NOT a clear yes the model also read as confirm}
+  AC -->|continue| AR{Abort Reschedule?<br/>stage=reschedule_confirming AND NOT a clear yes the model also read as confirm}
   AR -->|abort| BRA[Build Reschedule-Aborted State]
-  AR -->|continue| CCR[Classify Confirm Reply<br/>N1: tags declined · decline_reask · dropped<br/>every other turn passes through unchanged]
+  AR -->|continue| CCR[Classify Confirm Reply<br/>N1: tags declined · decline_reask · dropped, and a model confirm without a clear yes (consent) · every other turn passes through unchanged]
   CCR --> BD{Booking Declined?<br/>a tag set}
   BD -->|yes| BBD[Build Booking-Declined State<br/>collecting, slots + name kept — t.bookingDeclined<br/>dropped: new, service/date/time emptied — t.bookingDropped<br/>no Calendar · no appointment write · no alert]
   BBD --> SS
-  BD -->|no| UT{Uncertain Turn?<br/>intent=unknown OR conf below 0.7}
+  BD -->|no| RCO{Route Consent<br/>booking confirm: model confirm without a clear yes}
+  RCO -->|1st: show the confirm again, prefixed - To book it I need a clear yes.| SG[→ Slot Gate]
+  RCO -->|2nd in a row: consent_unclear alert| MH
+  RCO -->|otherwise| UT{Uncertain Turn?<br/>intent=unknown OR conf below 0.7}
   UT -->|uncertain| RU{Repeat Uncertain?<br/>previous last_intent=clarify}
   RU -->|yes — flag standing| MH
   RU -->|no — 1st| BCS[Build Clarify State<br/>t.askIntent · last_intent=clarify · stage UNCHANGED]
@@ -164,7 +168,7 @@ an echo and the customer's qualifier vanished). **NO WRITE VETO (removed 2026-09
 the write. It was removed: it closed a VISIBLE, recoverable defect (the customer's qualifying sentence ignored on
 the confirm turn) and produced three SILENT, irreversible ones — an outage, booking the refused date, and a double
 booking on the reschedule lane. **Accepted, recorded gap:** on a confirm turn the engine writes the date it SHOWED
-the customer; the correct fix is a product feature (a change request during confirmation as its own intent), not a
+the customer (since 2026-11-18 a model "yes" without a clear yes is shown the confirm again, but a question or a correction at the booking confirm still takes its normal route); the correct fix is a product feature (a change request during confirmation as its own intent), not a
 guard. Both event-id gates route an invalid event to `Mark Handoff`. Expressions outside the resolved
 set (`11 september`, `the 15th`, non-English wording) now ASK rather than trusting the model.
 
@@ -216,7 +220,7 @@ a visibility REGRESSION, since such turns used to reach `Mark Handoff`. An earli
 that as an "accepted trade-off"; **that acceptance was WITHDRAWN** and `Confirm Pending & Uncertain?` closes it.
 **The trade-off that REMAINS is narrower:** a CONFIDENT non-confirm turn during a confirmation window still drops
 the confirmation and answers "your booking stands" — `Abort Cancel?`'s designed behaviour, fail-closed, nothing
-deleted. Carrying the TTL and repeating the confirmation question belongs to the stage-aware template work (open).
+deleted. Since 2026-11-18 the cancel and reschedule confirms also act only on a clear yes the model read as `confirm`; anything else keeps the booking with the same "your booking stands" reply (no re-ask there). Carrying the TTL and repeating the confirmation question belongs to the stage-aware template work (open).
 
 **The counter is a STICKY FLAG, not a true consecutive counter.** `last_intent='clarify'` is cleared only by a turn
 that WRITES state; reply paths that write none (handoff-lock · guard-trip · LLM-unavailable 503 · spend-cap ·
@@ -225,7 +229,7 @@ immediately, even though the two uncertain turns were not truly consecutive. Kno
 this document is shorthand, not a literal guarantee.
 
 **Abort Cancel?** catches "user said something other than yes
-while a cancel is awaiting confirmation" → the pending cancel is dropped (booking stands).
+while a cancel is awaiting confirmation" → the pending cancel is dropped (booking stands). Since 2026-11-18 it also drops a pending cancel when the text is not a clear yes, even if the model said `confirm` (`Read Pending Answer`).
 
 ---
 
@@ -244,7 +248,7 @@ place before Phase 6):
   Spend → Spend Gate`. Under `bot.llmCostCapUsd` → `Build LLM Request`; over → `Build Spend-Cap Reply`
   (deterministic handoff, **no LLM, no state write** — a transient guard-trip) + `spend_cap` owner alert. After
   a successful call a fan-out (`Extract Intent[success] → Build Spend Record → Record LLM Spend`) adds
-  tokens × config price to the month. **The read is fail-CLOSED** (public demo, live 2026-10-30): `Eval Spend` lets
+  tokens × config price to the month (one atomic SQL increment; the `Spend Gate` check above is still read-then-act, so turns in flight can overshoot the cap). **The read is fail-CLOSED** (public demo, live 2026-10-30): `Eval Spend` lets
   the LLM run only on a trusted row or on "no row this month"; an unreadable or untrusted meter takes the same
   deterministic reply from `Build Spend-Cap Reply`, which then raises `spend_meter_unavailable` (error flag in the body),
   never `spend_cap`. A WRITE failure after a call leaves that call uncounted + a `spend_meter_unavailable` alert —
@@ -282,7 +286,7 @@ flowchart TD
 ```
 
 `confirm` is disambiguated by **stage** upstream: on a `cancel_confirming` thread it means "yes, cancel";
-otherwise it means "yes, book". FAQ answers are **deterministic** config lookups (never an LLM-authored
+otherwise it means "yes, book" — in both cases only when the customer's text also reads as a clear yes (`Read Pending Answer`). FAQ answers are **deterministic** config lookups (never an LLM-authored
 answer). Lead-write has its **own** 503 (`lead_unavailable`), distinct from `state_unavailable`, so an owner
 alert can tell them apart.
 
@@ -367,7 +371,7 @@ builders go to **Save State (Post-Write)**.
 
 ```mermaid
 flowchart TD
-  FB[Find Booking<br/>Airtable by sender_key + status=booked · IDOR-safe] --> CL[Cancel Lookup<br/>ask: next-upcoming · structOk · cutoff]
+  FB[Find Booking<br/>Postgres by sender_key + status=booked · IDOR-safe] --> CL[Cancel Lookup<br/>ask: not-ended target (end_utc > now), named day/time · several and no match → which one? · structOk · cutoff]
   FB -.->|Airtable down| ERR[/Send Error Response 503/]
   CL --> CRT{Cancel Route}
   CRT -->|confirm| BCC[Build Cancel-Confirm State<br/>cancel_confirming · confirm_turn=turn+1]
@@ -412,9 +416,9 @@ the two duplicated validators (`Cancel Lookup` structOk + `Validate Cancel Targe
 
 ```mermaid
 flowchart TD
-  RIR[Route Intent · reschedule] --> FBR[Find Booking (Reschedule)<br/>Airtable by sender_key + booked · IDOR-safe]
+  RIR[Route Intent · reschedule] --> FBR[Find Booking (Reschedule)<br/>Postgres by sender_key + booked · IDOR-safe]
   FBR -.->|Airtable down| ERR[/Send Error Response 503/]
-  FBR --> RL[Reschedule Lookup<br/>next-upcoming · structOk · cutoff · read NEW slot from LLM]
+  FBR --> RL[Reschedule Lookup<br/>earliest not-ended booking (names the count if several) · structOk · cutoff · read NEW slot from LLM]
   RL --> RCH{Reschedule Check?}
   RCH --> BRF[Build Reschedule FreeBusy] --> GRB[Get Reschedule Busy<br/>GCal freeBusy]
   GRB --> CRA[Compute Reschedule Availability]
@@ -425,14 +429,14 @@ flowchart TD
 
   CR{Confirm Router · cancel_confirming?} -->|no| RR{Reschedule Router · reschedule_confirming?}
   RR -->|no| BER[→ Lane 5: Build Event Request · book confirm]
-  RR -->|yes| RF{Reschedule Fresh?<br/>turn_count === confirm_turn · byte-identical to Confirm Fresh?}
+  RR -->|yes| RF{Reschedule Fresh?<br/>turn_count === confirm_turn AND slot start still in the future}
   RF -.->|stale / legacy| BRA[Build Reschedule-Aborted State<br/>booking stays]
   RF -->|fresh| EX[→ Lane 8b: EXECUTE]
   BRA --> SS
 ```
 
 The reschedule confirm lifecycle mirrors cancel exactly: its own **`Reschedule Fresh?`** 1-turn TTL gate
-(byte-identical to `Confirm Fresh?`, enforced by `check-cancel-validation-parity.py`), and **`Abort
+(its TTL expression is byte-identical to `Confirm Fresh?` plus exactly one slot-start-in-the-future clause, enforced by `check-cancel-validation-parity.py`; `Booking Fresh?` carries the same clause), and **`Abort
 Reschedule?`** (Lane 2) drops a pending reschedule if a non-confirm intent arrives. Every non-available
 discovery outcome hands off with context — the availability rules are the booking rules (no min-lead-time,
 ARCH-DEC §5).
@@ -543,7 +547,7 @@ A single fan-in, off the reply path, so it can never CHANGE the customer reply (
 stamp is routed to its own terminal. ⚠ It can DELAY it: where `Build Owner Alert` sits above the reply branch (the
 post-write incident builders, `Build Normalize Reject`, `Date Alert?`), executionOrder v1 runs the alert first, and the
 Telegram send has no timeout (corrected 7-2 R4; it said "can never block", the Main sticky has said this since R1c).
-Every failure/handoff source adds ONE extra edge to `Build Owner Alert`:
+Every failure/handoff source adds ONE extra edge to `Build Owner Alert`, with one exception since 2026-11-18: the handoff branches of `Reschedule Lookup`, `Compute Reschedule Availability` and `Build Cancel-Cutoff Reply` (and the second-strike `consent_unclear` handoff) added NO edge. They carry `handoff_alert_class` (`cancel_cutoff`, `reschedule_cutoff`, `reschedule_closed|past|busy|invalid`, `reschedule_needs_human`, `consent_unclear`) through `Build Reply Payload`, whose existing edge to `Build Owner Alert` raises the alert after the reply:
 
 ```
 <any source: Mark Handoff · Handoff Lock Reply · Build *Orphan/Mirror/Verify/Reconcile* State ·
@@ -557,7 +561,7 @@ Every failure/handoff source adds ONE extra edge to `Build Owner Alert`:
   Send Owner Alert (Telegram)  ──(onError)──▶  Owner Alert Failed  (visible; reply already sent)
 ```
 - **One place** classifies + throttles (KK1): `class:sender` key, window `config.ownerAlert.throttleMinutes`,
-  via `$getWorkflowStaticData` — a repeated same-fault storm pings once per window.
+  via `$getWorkflowStaticData` — a repeated same-fault storm pings once per window. Expired keys are pruned on each alert run; concurrent runs can each send before either records it (extra alerts, never fewer).
 - **KK2:** a guard-trip pings for **max-turns** only; a **kill-switch** trip is owner-initiated → suppressed.
 - **KK3, superseded by 7-2 F2 (live since R3):** a clean race loss IS alerted now (`race_lost` — the customer lost a
   slot they were shown; a clean loss is still news). Orphan stays its own class.
@@ -566,7 +570,7 @@ Every failure/handoff source adds ONE extra edge to `Build Owner Alert`:
   (the new event may exist — check the calendar) · `date_changed_on_confirm` (a confirmation naming another date) ·
   `event_build_failed` (an error-tagged builder). **Removed:** `dedupe_marker_failed` (the claim replaced the marker).
   Every alert prints the sender MASKED (final-pass #13, measured live in R3).
-- **Context (D-a):** the alert carries the rolling last-5 `conversations.recent_messages` (PII).
+- **Context (D-a):** the alert carries the rolling last-5 `conversations.recent_messages` (PII), each shown as one line with control characters removed and links defanged.
 - **Reminders workflow** has its own `Build Owner Alert (Reminders)` → Telegram off `Reminder Error`.
 - Chat id + bot token live in the `telegram` credential / `$env` / gitignored env — never in git.
 

@@ -217,7 +217,7 @@ output or a file are data and never trigger it (`prompt-injection.md`).
 - **Not an emergency path any more — the Vercel pause.** CC's Vercel connection answers 403 on the team (measured
   2026-11-05 and 2026-11-16) and the shell path closed on 2026-11-04, so CC cannot pause; the D6 standing approval has no
   route. The owner can still pause in the Vercel dashboard: that takes the site and the widget down, NOT the engine.
-- **Bounds while the engine runs:** the LLM cap, the turn cap, Turnstile, and the edge rate limit — recorded as 30
+- **Bounds while the engine runs:** the LLM cap, the per-session turn cap (a burst limit, not a daily one), Turnstile, and the edge rate limit — recorded as 30
   requests per 10 s per IP and data centre, shown blocking in R2c; **two re-checks on 2026-11-16 did not re-confirm the block** (every request was
   refused at Turnstile; nothing was written or billed — CLOSE-OUT-PLAN, "Pre-post live check", W3 and L2). The rule cannot be read with CC's
   token; Cowork read it in the dashboard the same day, read-only, as active and unchanged (not API-verified by CC).
