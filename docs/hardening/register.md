@@ -1,6 +1,6 @@
 # Hardening register (Phase A, merged)
 
-Generated 2026-11-18 by `plan-inputs/build_register.py` from `inv-roadmap.json`, `inv-notes-closeout.json`, `inv-report.json`, the 12 finding results and their verification files. Repo HEAD bb3f64b, read-only; no live call.
+Generated 2026-11-18 by `plan-inputs/build_register.py` from `inv-roadmap.json`, `inv-notes-closeout.json`, `inv-report.json`, the 12 finding results and their verification files. Inventory taken at bb3f64b, read-only, no live call; ROADMAP line refs are mapped to the current file at each regeneration.
 
 **Classes.** FIX NOW = build in the hardening phase (a `(conditional)` tag names its trigger; counted as FIX NOW). RULE AS LIMIT = no standing ruling yet, propose to record it as a limit. RULED ALREADY = a standing ruling exists and still holds, nothing to decide. v2 = deferred feature or fix that WILL be built when its trigger fires. STALE TEXT = the item is closed or wrong in the docs; a docs edit (or no edit, closed record) is all that is left.
 
@@ -36,15 +36,15 @@ Generated 2026-11-18 by `plan-inputs/build_register.py` from `inv-roadmap.json`,
 | EN-722-28 | Main: node names still say "Airtable" | docs/ENGINEERING-NOTES.md:82 [EN-722-28]; docs/CLOSE-OUT-PLAN.md:69 [EN-CD-38]; docs/CLOSE-OUT-PLAN.md:69 [CO-38] | LIVE (deployed 2026-11-18, promoted fa46307; offline-proven, not live-drilled) | FIX NOW | the row is stale as written (names are clean), but the Airtable-era COMMENTS in live Main code mislead (code-style: comments explain why) — comment-only, rides the hardening Main edit · recorded reason: "a node rename is a Main … **RULED 2026-11-18: B1: hardening-main (EN-722-28)** | none |
 | EN-CD-3 | The infra owner alerts take `sender` / `channel` / `stage` from the … | docs/ENGINEERING-NOTES.md:98 [EN-74B-6]; docs/CLOSE-OUT-PLAN.md:35 [EN-CD-3]; docs/CLOSE-OUT-PLAN.md:35 [CO-3] | LIVE (deployed 2026-11-18, promoted fa46307; offline-proven, not live-drilled) | FIX NOW | the only blocker DC-1 names is "edits Main twice / breaks short" — if hardening edits Main anyway, that reason lapses (flag: contradicts DC-1, needs his ruling). Fix: Build Owner Alert falls back to $('Normalize Inbound') / … **RULED 2026-11-18: K6 — FIX (fallback values from the inbound item).** **RULED 2026-11-18: B1: hardening-main (EN-CD-3)** | none |
 | EN-CD-7 | D-c: an alert can run ahead of the reply on a few … | docs/ENGINEERING-NOTES.md:83 [EN-722-29]; docs/CLOSE-OUT-PLAN.md:39 [EN-CD-7]; docs/CLOSE-OUT-PLAN.md:39 [CO-7] | still true | FIX NOW | flag: contradicts DC-1, whose only stated reason is the Main edit; a hung Telegram send delays the customer reply on the post-write paths **RULED 2026-11-18: K6 — reply-first on the NEW alert edges; the existing post-write paths stay a DC-1 limit.** | none |
-| RM-1145 | OWNED OPEN ITEMS carried out of CP 6c-1 (mixed sub-items) | docs/ROADMAP.md:1145 | COMMITTED (the running dashboard was NOT rebuilt in this phase; not live) | FIX NOW | FIX NOW only the unruled small residue (e), (f), (h), (i). (g) is RULED v2: ENGINEERING-NOTES.md 7-2 CONVERGE table "masking: … a 7–8 digit number shows four digits / data minimisation for the owner's own screen, not a security … **RULED 2026-11-18: B1: web/dashboard/lib/hardening-panels.test.ts (e, h, i) + web/dashboard/.env.example (f)** | none |
-| RM-1622 | conversations.gcal_event_id is write-only and blanked by every non-booking turn | docs/ROADMAP.md:1622 | LIVE (deployed 2026-11-18, promoted fa46307; offline-proven, not live-drilled) | FIX NOW | Shown to lose the only pointer after a mirror failure; small and replay-testable: carry the loaded value through Merge State into Save State. Main edit → ⚠ ONAY live write. **RULED 2026-11-18: B1: hardening-main (RM-1622)** | none |
-| RM-1921 | dateExpr has no maxLength in the committed schema | docs/ROADMAP.md:1921 | LIVE (deployed 2026-11-18, promoted fa46307; offline-proven, not live-drilled) | FIX NOW | One schema keyword + regenerated validator + validate-intent test case; pairs naturally with the red-team F6 time pattern. **RULED 2026-11-18: K3 principle — dateExpr length enforced in code in Resolve Date (its only consumer; date_resolution.expr reaches the alert from there), not in the schema.** **RULED 2026-11-18: dateExpr limit = 60 characters (accepted).** **RULED 2026-11-18: B1: hardening-main (RM-1921)** | none |
-| RM-1971 | Resolve Date's error output is classified as state_unavailable | docs/ROADMAP.md:1971 | LIVE (deployed 2026-11-18, promoted fa46307; offline-proven, not live-drilled) | FIX NOW | One tagging Code node between Resolve Date[1] and the outbound (class e.g. date_resolver_failed); replay-testable via an error item. **RULED 2026-11-18: B1: hardening-main (RM-1971)** | none |
-| RM-1979 | Two-turn reschedule creates a SECOND booking (ROADMAP F2, not report F2) | docs/ROADMAP.md:1979; CHAIRSIDE-REDTEAM-REPORT.md:323 | LIVE (deployed 2026-11-18, promoted fa46307; offline-proven, not live-drilled) | FIX NOW | Reproduced (engine side), irreversible shared-state write, unruled since 2026-09-07 (not in CLOSE-OUT §0; its F2/F3 row 15 are DATE-PHRASING's, a different F2); the Airtable-schema premise is stale. Proposed fix without DDL (to … **RULED 2026-11-18: BOUND accepted, documented in Reschedule Lookup: when the reschedule ask is also a D-4 date re-ask, the date_reask marker holds the one last_intent slot and a next answer labelled book is not read as the new slot.** **RULED 2026-11-18: B1: hardening-main (RM-1979)** | none |
-| RM-2007 | askIntent is stage-agnostic (collecting / ready) | docs/ROADMAP.md:2007 | still true | FIX NOW | Wording only, small: in collecting/ready reuse existing templates (askDateTime / the confirm question) — no new config key needed. | none |
-| RM-2101 | Bulgu 7 — double-insert guard edge cases (host already uses the id; … | docs/ROADMAP.md:2101 | COMMITTED (the site deploys from main; the live bundle not re-measured) | FIX NOW | Token-free, so headless-drillable by Claude (remote-operator.md); small guard change (data-attribute marker + visible console warning). **RULED 2026-11-18: B1: tests/snippet/double-insert.drill.sh (old bundle: 3 red)** | none |
-| RM-2123 | config.generated.json FRESHNESS is not measured | docs/ROADMAP.md:2122; docs/ROADMAP.md:2123; docs/ROADMAP.md:2124; docs/ROADMAP.md:2126 | COMMITTED (build tooling; runs at the next site build) | FIX NOW | Small: build-config.mjs writes a hash of (resolved config + schema); build.mjs recomputes and refuses on mismatch; testable offline. **RULED 2026-11-18: B1: tests/unit/config-generated-fresh.test.sh** | tooling change |
-| RM-2143 | styles.ts --ink/--oxide hardcoded, equal to config.branding | docs/ROADMAP.md:2143 | COMMITTED (the site deploys from main; the live bundle not re-measured) | FIX NOW | A second truth (contract-integrity.md) in a resellable template: a client with other branding gets the demo colours. Small: bake branding via build define + parity test. **RULED 2026-11-18: B1: web/snippet/test/branding.test.ts** | none |
+| RM-1145 | OWNED OPEN ITEMS carried out of CP 6c-1 (mixed sub-items) | docs/ROADMAP.md:1146 | COMMITTED, NOT LIVE (the dashboard rebuild of 2026-11-18 was stopped: next build refuses with SecurityFatalError on the pinned Next.js; the running build is of 2026-11-03) | FIX NOW | FIX NOW only the unruled small residue (e), (f), (h), (i). (g) is RULED v2: ENGINEERING-NOTES.md 7-2 CONVERGE table "masking: … a 7–8 digit number shows four digits / data minimisation for the owner's own screen, not a security … **RULED 2026-11-18: B1: web/dashboard/lib/hardening-panels.test.ts (e, h, i) + web/dashboard/.env.example (f)** | none |
+| RM-1622 | conversations.gcal_event_id is write-only and blanked by every non-booking turn | docs/ROADMAP.md:1623 | LIVE (deployed 2026-11-18, promoted fa46307; offline-proven, not live-drilled) | FIX NOW | Shown to lose the only pointer after a mirror failure; small and replay-testable: carry the loaded value through Merge State into Save State. Main edit → ⚠ ONAY live write. **RULED 2026-11-18: B1: hardening-main (RM-1622)** | none |
+| RM-1921 | dateExpr has no maxLength in the committed schema | docs/ROADMAP.md:1922 | LIVE (deployed 2026-11-18, promoted fa46307; offline-proven, not live-drilled) | FIX NOW | One schema keyword + regenerated validator + validate-intent test case; pairs naturally with the red-team F6 time pattern. **RULED 2026-11-18: K3 principle — dateExpr length enforced in code in Resolve Date (its only consumer; date_resolution.expr reaches the alert from there), not in the schema.** **RULED 2026-11-18: dateExpr limit = 60 characters (accepted).** **RULED 2026-11-18: B1: hardening-main (RM-1921)** | none |
+| RM-1971 | Resolve Date's error output is classified as state_unavailable | docs/ROADMAP.md:1972 | LIVE (deployed 2026-11-18, promoted fa46307; offline-proven, not live-drilled) | FIX NOW | One tagging Code node between Resolve Date[1] and the outbound (class e.g. date_resolver_failed); replay-testable via an error item. **RULED 2026-11-18: B1: hardening-main (RM-1971)** | none |
+| RM-1979 | Two-turn reschedule creates a SECOND booking (ROADMAP F2, not report F2) | docs/ROADMAP.md:1980; CHAIRSIDE-REDTEAM-REPORT.md:323 | LIVE (deployed 2026-11-18, promoted fa46307; offline-proven, not live-drilled) | FIX NOW | Reproduced (engine side), irreversible shared-state write, unruled since 2026-09-07 (not in CLOSE-OUT §0; its F2/F3 row 15 are DATE-PHRASING's, a different F2); the Airtable-schema premise is stale. Proposed fix without DDL (to … **RULED 2026-11-18: BOUND accepted, documented in Reschedule Lookup: when the reschedule ask is also a D-4 date re-ask, the date_reask marker holds the one last_intent slot and a next answer labelled book is not read as the new slot.** **RULED 2026-11-18: B1: hardening-main (RM-1979)** | none |
+| RM-2007 | askIntent is stage-agnostic (collecting / ready) | docs/ROADMAP.md:2008 | still true | FIX NOW | Wording only, small: in collecting/ready reuse existing templates (askDateTime / the confirm question) — no new config key needed. | none |
+| RM-2101 | Bulgu 7 — double-insert guard edge cases (host already uses the id; … | docs/ROADMAP.md:2102 | LIVE (the served widget is byte-identical to the local build, measured 2026-11-18) | FIX NOW | Token-free, so headless-drillable by Claude (remote-operator.md); small guard change (data-attribute marker + visible console warning). **RULED 2026-11-18: B1: tests/snippet/double-insert.drill.sh (old bundle: 3 red)** | none |
+| RM-2123 | config.generated.json FRESHNESS is not measured | docs/ROADMAP.md:2123; docs/ROADMAP.md:2124; docs/ROADMAP.md:2125; docs/ROADMAP.md:2127 | COMMITTED (build tooling; runs at the next site build) | FIX NOW | Small: build-config.mjs writes a hash of (resolved config + schema); build.mjs recomputes and refuses on mismatch; testable offline. **RULED 2026-11-18: B1: tests/unit/config-generated-fresh.test.sh** | tooling change |
+| RM-2143 | styles.ts --ink/--oxide hardcoded, equal to config.branding | docs/ROADMAP.md:2144 | LIVE (the served widget is byte-identical to the local build, measured 2026-11-18) | FIX NOW | A second truth (contract-integrity.md) in a resellable template: a client with other branding gets the demo colours. Small: bake branding via build define + parity test. **RULED 2026-11-18: B1: web/snippet/test/branding.test.ts** | none |
 | RT4-b | Shared message_id namespace, held by entropy only | CHAIRSIDE-REDTEAM-REPORT.md:301 | LIVE (deployed 2026-11-18, promoted fa46307; offline-proven, not live-drilled) | FIX NOW | Small, and it makes the property structural. `Check Processed` claims `${channel}:${message_id}`. The owner regex contains no ':', so a Main key can never equal an owner marker, and WhatsApp and widget ids become disjoint too. … **RULED 2026-11-18: B1: hardening-main (RT4-b) + tests/db/claim-race.test.sh** | none |
 
 ## C. Ops / tooling / edge (15 rows)
@@ -56,13 +56,13 @@ Generated 2026-11-18 by `plan-inputs/build_register.py` from `inv-roadmap.json`,
 | CX2-2 | Codex p2 §2 MEDIUM: RM-1979 rewrite on an unrelated same-session booking |  | Codex p2 | FIX NOW | FIXED: an answer naming ANOTHER service than the bound booking's own (read from that booking's row in Reschedule Lookup; the first attempt compared the state's last-collected service and flow-reviewer reproduced it booking a second appointment) is asked about, never moved (tests + mutant). BOUND: after that question, a plain reschedule answer takes the earliest booking (the bound one in the common case), not the bound target. | none |
 | CX2-3 | Codex p2 §3 MEDIUM: named time not matching the only same-day booking |  | Codex p2 | FIX NOW | FIXED: a named time always filters; no match → "which one?" (test + mutant). BOUND (as L4): the "which one?" ask binds no marker; the next answer needs the model to read it as cancel. | none |
 | CX2-4 | Codex p2 §4 LOW: Alert Context sender.includes on a non-string |  | Codex p2 | FIX NOW | FIXED: typeof guard. Reachability not shown (Postgres sender keys are text). | none |
-| EDGE-RL | Edge-rule item — withheld until resolved (K12) | — | open | FIX NOW | Withheld (K12). | — |
-| RM-1413 | Eight selftest cases no longer discriminate anything (lexer-era) | docs/ROADMAP.md:1413 | COMMITTED (repo guard / test; nothing to deploy) | FIX NOW | Small, offline, testable: label the eight as sentinels and exclude them from the printed fail-proof count. **RULED 2026-11-18: B1: check-client-imports --selftest (sentinel count asserted)** | tooling change |
-| RM-185 | CP5 Reminders: "R5 timezone/DST = ◐ inherited, NOT independently DST-drilled" | docs/ROADMAP.md:185 | COMMITTED (repo guard / test; nothing to deploy) | FIX NOW | The behaviour is correct (measured offline on the committed export) but the evidence lives only in the scratchpad; FIX NOW = commit reminder-dst as a unit test so the ◐ can close on repo evidence. Extra: the node comment still … **RULED 2026-11-18: B1: tests/unit/reminder-dst.test.cjs** | none |
-| RM-1899 | secret-scan.sh does not recognise calendar id / Telegram chatId / Airtable id … | docs/ROADMAP.md:1899 | COMMITTED (repo guard / test; nothing to deploy) | FIX NOW | Two value-shape rules + fixtures, RED-proven, are small; this is the leak class that actually happened twice. **RULED 2026-11-18: B1: tests/unit/guards-tur2.test.py (hd_*)** | tooling change |
-| RM-1907 | No byte-compare between Event ID Valid? and Reschedule Event ID Valid? | docs/ROADMAP.md:1907 | COMMITTED (repo guard / test; nothing to deploy) | FIX NOW | Small (~8 lines, same shape as the Fresh? block), with a mutant (typeValidation→loose) to prove RED. **RULED 2026-11-18: B1: tests/unit/cancel-validation-parity-hardening.test.py** | tooling change |
-| RM-1938 | Parity guards still ignore alwaysOutputData / retryOnFail / executeOnce | docs/ROADMAP.md:1938 | COMMITTED (repo guard / test; nothing to deploy) | FIX NOW | Small: add three normalised flags to the canon + one mutant each. **RULED 2026-11-18: B1: tests/unit/content-parity-flags.test.py** | tooling change |
-| RM-2299 | secret-scan.sh — capability gaps (payload-less 0, origin/main only, encryption key, sk-proj, no … | docs/ROADMAP.md:2299 | COMMITTED (repo guard / test; nothing to deploy) | FIX NOW | Residual only: one E.164-shaped rule with a fingerprint exception for the documented sandbox bot number; RED-proven fixture. **RULED 2026-11-18: B1: guards-tur2 (hd_phone) + 13 fingerprints** | tooling change |
+| EDGE-RL | Edge-rule item — RESOLVED 2026-11-18: re-verified (case-insensitive path match) | — | FIXED (live, re-verified 2026-11-18) | FIX NOW | Detail withheld (K12). | — |
+| RM-1413 | Eight selftest cases no longer discriminate anything (lexer-era) | docs/ROADMAP.md:1414 | COMMITTED (repo guard / test; nothing to deploy) | FIX NOW | Small, offline, testable: label the eight as sentinels and exclude them from the printed fail-proof count. **RULED 2026-11-18: B1: check-client-imports --selftest (sentinel count asserted)** | tooling change |
+| RM-185 | CP5 Reminders: "R5 timezone/DST = ◐ inherited, NOT independently DST-drilled" | docs/ROADMAP.md:186 | COMMITTED (repo guard / test; nothing to deploy) | FIX NOW | The behaviour is correct (measured offline on the committed export) but the evidence lives only in the scratchpad; FIX NOW = commit reminder-dst as a unit test so the ◐ can close on repo evidence. Extra: the node comment still … **RULED 2026-11-18: B1: tests/unit/reminder-dst.test.cjs** | none |
+| RM-1899 | secret-scan.sh does not recognise calendar id / Telegram chatId / Airtable id … | docs/ROADMAP.md:1900 | COMMITTED (repo guard / test; nothing to deploy) | FIX NOW | Two value-shape rules + fixtures, RED-proven, are small; this is the leak class that actually happened twice. **RULED 2026-11-18: B1: tests/unit/guards-tur2.test.py (hd_*)** | tooling change |
+| RM-1907 | No byte-compare between Event ID Valid? and Reschedule Event ID Valid? | docs/ROADMAP.md:1908 | COMMITTED (repo guard / test; nothing to deploy) | FIX NOW | Small (~8 lines, same shape as the Fresh? block), with a mutant (typeValidation→loose) to prove RED. **RULED 2026-11-18: B1: tests/unit/cancel-validation-parity-hardening.test.py** | tooling change |
+| RM-1938 | Parity guards still ignore alwaysOutputData / retryOnFail / executeOnce | docs/ROADMAP.md:1939 | COMMITTED (repo guard / test; nothing to deploy) | FIX NOW | Small: add three normalised flags to the canon + one mutant each. **RULED 2026-11-18: B1: tests/unit/content-parity-flags.test.py** | tooling change |
+| RM-2299 | secret-scan.sh — capability gaps (payload-less 0, origin/main only, encryption key, sk-proj, no … | docs/ROADMAP.md:2300 | COMMITTED (repo guard / test; nothing to deploy) | FIX NOW | Residual only: one E.164-shaped rule with a fingerprint exception for the documented sandbox bot number; RED-proven fixture. **RULED 2026-11-18: B1: guards-tur2 (hd_phone) + 13 fingerprints** | tooling change |
 | X2 | tests/db/*.sh cleanup removes containers without their anonymous volumes | rerun-all.log; tests/db/*.sh | COMMITTED (repo guard / test; nothing to deploy) | FIX NOW | Found in Phase A (same class as 2f961fd): `docker rm -f` without `-v`. Fix: `-v` + a 0-dangling-volume assertion after each run. **RULED 2026-11-18: B1: tests/db/*.sh trap docker rm -f -v; 0 dangling after runs** | none |
 | RT4-c | Edge-rule item — withheld until resolved (K12) | — | open | FIX NOW | Withheld (K12). | — |
 | CR-A2 | Archived Main still holds attacker-keyed static data incl. WhatsApp numbers | plan-inputs/critic.md A2; results/verify-F7.json | stale (already done in Phase 7) | STALE TEXT | Critic A2 / verify-F7. K11: clear the archived Main's static data only, read back that it is empty. Live write, own ONAY. **RULED 2026-11-18: K11 measured 2026-11-18 before any write: the archived Main original no longer exists — it was DELETED in Phase 7 (PHASE-7-PLAN #7: GET 404, 10 → 9 workflows); the API lists 9 workflows today and none is an archived Main. The premise came from verify-F7, which read MIGRATION-PLAN #11 (the 253 keys) and §7a (archived) but not PHASE-7-PLAN #7. Nothing was written; the approved clear had no target.** | none |
@@ -110,34 +110,34 @@ Generated 2026-11-18 by `plan-inputs/build_register.py` from `inv-roadmap.json`,
 | PP-O2 | Open #2: CC has no emergency stop it can use alone | docs/CLOSE-OUT-PLAN.md (Pre-post live check / FINAL, from line 963) [PP-O2] | stale text | STALE TEXT | W7 + L1 | none |
 | PP-O3 | Open #3: stale texts (BOT_KILL_SWITCH, RUNBOOK §8 pause, ROADMAP:1924 length cap) | docs/CLOSE-OUT-PLAN.md (Pre-post live check / FINAL, from line 963) [PP-O3] | stale text | STALE TEXT | W7; but README's "Pause" bullet was not in W7's list — see RM-X1 | none |
 | PP-O4 | Open #4: three backup dumps with no recorded trigger; no restore tested | docs/CLOSE-OUT-PLAN.md (Pre-post live check / FINAL, from line 963) [PP-O4] | stale text | STALE TEXT | W4/W5 | none |
-| RM-1122 | L2 fix round 2026-09-12 (◐): K1–K6/S3/S4 closed in one pass | docs/ROADMAP.md:1122 | stale text | STALE TEXT | Round record; residuals tracked at ROADMAP:1145. | none |
-| RM-1284 | EMPTY APPOINTMENT ROWS (Airtable UI artefacts) | docs/ROADMAP.md:1284 | stale text | STALE TEXT | Airtable-era; cannot recur on Postgres. | none |
-| RM-1348 | Airtable quota cannot be measured from the API | docs/ROADMAP.md:1348 | stale text | STALE TEXT | Airtable-era. | none |
-| RM-1379 | AIRTABLE_BASE_ID in web/dashboard/.env.local is wrong | docs/ROADMAP.md:1379 | stale text | STALE TEXT | Airtable-era. Extra: root .env.example still lists AIRTABLE_API_KEY / AIRTABLE_BASE_ID (fold into ROADMAP:2322 fix). | none |
-| RM-168 | CP2 note: "This line read ▶ IN PROGRESS until 2026-09-13" | docs/ROADMAP.md:168 | stale text | STALE TEXT | Quoted history. | none |
+| RM-1122 | L2 fix round 2026-09-12 (◐): K1–K6/S3/S4 closed in one pass | docs/ROADMAP.md:1123 | stale text | STALE TEXT | Round record; residuals tracked at ROADMAP:1145. | none |
+| RM-1284 | EMPTY APPOINTMENT ROWS (Airtable UI artefacts) | docs/ROADMAP.md:1285 | stale text | STALE TEXT | Airtable-era; cannot recur on Postgres. | none |
+| RM-1348 | Airtable quota cannot be measured from the API | docs/ROADMAP.md:1349 | stale text | STALE TEXT | Airtable-era. | none |
+| RM-1379 | AIRTABLE_BASE_ID in web/dashboard/.env.local is wrong | docs/ROADMAP.md:1380 | stale text | STALE TEXT | Airtable-era. Extra: root .env.example still lists AIRTABLE_API_KEY / AIRTABLE_BASE_ID (fold into ROADMAP:2322 fix). | none |
+| RM-168 | CP2 note: "This line read ▶ IN PROGRESS until 2026-09-13" | docs/ROADMAP.md:169 | stale text | STALE TEXT | Quoted history. | none |
 | RM-17 | Top table: 6→7 Migration Airtable→Postgres row marked ◐ | docs/ROADMAP.md:17 | stale text | STALE TEXT | Stale marker: every D-step closed; the two residuals are ruled elsewhere (C-6 done, DC-8 B). | none |
 | RM-18 | Top table Phase 7 row (✅) carries historical ◐/▶/⏸ markers | docs/ROADMAP.md:18 | stale text | STALE TEXT | Not an open item; residuals already ruled. | none |
-| RM-180 | CP4 sub-step 3 (a) reschedule execute new-event core — ◐ though "(DONE … | docs/ROADMAP.md:180 | stale text | STALE TEXT | Stale sub-phase marker; (c) finished, Phase 3 ✅. | none |
-| RM-181 | CP4 sub-step 3 (b) verify/race on the NEW slot — ◐ though … | docs/ROADMAP.md:181 | stale text | STALE TEXT | Stale marker. | none |
-| RM-1924 | LLM input length is uncapped (☑, "was ☐") | docs/ROADMAP.md:1924 | stale text | STALE TEXT | Already closed; ☐ only in the history text. | none |
-| RM-195 | CP4b note: "it had read ▶ while every child was ✅" | docs/ROADMAP.md:195 | stale text | STALE TEXT | Quoted history. | none |
+| RM-180 | CP4 sub-step 3 (a) reschedule execute new-event core — ◐ though "(DONE … | docs/ROADMAP.md:181 | stale text | STALE TEXT | Stale sub-phase marker; (c) finished, Phase 3 ✅. | none |
+| RM-181 | CP4 sub-step 3 (b) verify/race on the NEW slot — ◐ though … | docs/ROADMAP.md:182 | stale text | STALE TEXT | Stale marker. | none |
+| RM-1924 | LLM input length is uncapped (☑, "was ☐") | docs/ROADMAP.md:1925 | stale text | STALE TEXT | Already closed; ☐ only in the history text. | none |
+| RM-195 | CP4b note: "it had read ▶ while every child was ✅" | docs/ROADMAP.md:196 | stale text | STALE TEXT | Quoted history. | none |
 | RM-20 | Top table Public-demo row (✅) carries ⏸ STOPPED markers | docs/ROADMAP.md:20 | stale text | STALE TEXT | History, not open work. | none |
-| RM-2025 | Restore Find Conversation Row.limit = 1 on the LIVE workflow | docs/ROADMAP.md:2025 | stale text | STALE TEXT | Airtable-era; impossible on Postgres. | none |
+| RM-2025 | Restore Find Conversation Row.limit = 1 on the LIVE workflow | docs/ROADMAP.md:2026 | stale text | STALE TEXT | Airtable-era; impossible on Postgres. | none |
 | RM-21 | Top table CLOSE-OUT row mentions "the row was ▶ until the close" | docs/ROADMAP.md:21 | stale text | STALE TEXT | Marker is quoted history. | none |
-| RM-2146 | esc() does not escape the single quote | docs/ROADMAP.md:2146 | stale text | STALE TEXT | Closed. | none |
-| RM-23 | Legend line | docs/ROADMAP.md:23 | stale text | STALE TEXT | Not an item. | none |
-| RM-2322 | .env.example has no TURNSTILE_SECRET entry | docs/ROADMAP.md:2322 | still true | STALE TEXT | Trivial doc fix; fold in the stale Airtable/BOT_KILL_SWITCH lines and the dashboard-only names (CLIENT_CONFIG_JSON, DASHBOARD_EXPORT_ENABLED). | none |
-| RM-2327 | 6d — D11 release-handoff-lock (◐) | docs/ROADMAP.md:2327 | stale text | STALE TEXT | Stale marker. | none |
-| RM-2329 | CP 6d-1 write path built and drilled (◐) | docs/ROADMAP.md:2329 | stale text | STALE TEXT | Stale marker. | none |
-| RM-2543 | CRT 1a idempotency — Codex audit not separately run (☐) | docs/ROADMAP.md:2543 | stale text | STALE TEXT | Stale: §9 is the single source of CRT status (K-6). | none |
-| RM-2544 | CRT 8 booking mutation — Codex re-audit pending (◐) | docs/ROADMAP.md:2544 | stale text | STALE TEXT | Stale marker; but F2 is CRT-8-class and should be fed to the CRT 8 surface when fixed. | none |
-| RM-267 | 6a closure note quoting "6a ▶ kalır, 7 bitince kapanır" | docs/ROADMAP.md:267 | stale text | STALE TEXT | Quoted history. | none |
-| RM-315 | 6a-2 slice 1 note: "Marker flipped ▶ → ✅ on 2026-09-13" | docs/ROADMAP.md:315; docs/ROADMAP.md:317 | stale text | STALE TEXT | Quoted history. | none |
-| RM-362 | 6a-2 slice 2 — the widget is LIVE (▶) | docs/ROADMAP.md:362 | stale text | STALE TEXT | Stale marker. | none |
-| RM-384 | 6b note: "Marker flipped ▶ → ✅ … The single ◐ (Privacy … | docs/ROADMAP.md:384 | stale text | STALE TEXT | Quoted history. | none |
-| RM-675 | Privacy Addendum moved to the public-deploy gate (mentions ◐) | docs/ROADMAP.md:675 | stale text | STALE TEXT | Quoted history. | none |
-| RM-676 | Privacy Addendum obligation — HALF closed (demo site privacy text lacks it) | docs/ROADMAP.md:676; docs/ROADMAP.md:678 | stale text | STALE TEXT | Closed by the public-demo /privacy page. | none |
-| RM-681 | 6c — dashboard read-only + handoff queue (☐) | docs/ROADMAP.md:681 | stale text | STALE TEXT | Stale parent marker. | none |
+| RM-2146 | esc() does not escape the single quote | docs/ROADMAP.md:2147 | stale text | STALE TEXT | Closed. | none |
+| RM-23 | Legend line | docs/ROADMAP.md:24 | stale text | STALE TEXT | Not an item. | none |
+| RM-2322 | .env.example has no TURNSTILE_SECRET entry | docs/ROADMAP.md:2323 | still true | STALE TEXT | Trivial doc fix; fold in the stale Airtable/BOT_KILL_SWITCH lines and the dashboard-only names (CLIENT_CONFIG_JSON, DASHBOARD_EXPORT_ENABLED). | none |
+| RM-2327 | 6d — D11 release-handoff-lock (◐) | docs/ROADMAP.md:2328 | stale text | STALE TEXT | Stale marker. | none |
+| RM-2329 | CP 6d-1 write path built and drilled (◐) | docs/ROADMAP.md:2330 | stale text | STALE TEXT | Stale marker. | none |
+| RM-2543 | CRT 1a idempotency — Codex audit not separately run (☐) | docs/ROADMAP.md:2544 | stale text | STALE TEXT | Stale: §9 is the single source of CRT status (K-6). | none |
+| RM-2544 | CRT 8 booking mutation — Codex re-audit pending (◐) | docs/ROADMAP.md:2545 | stale text | STALE TEXT | Stale marker; but F2 is CRT-8-class and should be fed to the CRT 8 surface when fixed. | none |
+| RM-267 | 6a closure note quoting "6a ▶ kalır, 7 bitince kapanır" | docs/ROADMAP.md:268 | stale text | STALE TEXT | Quoted history. | none |
+| RM-315 | 6a-2 slice 1 note: "Marker flipped ▶ → ✅ on 2026-09-13" | docs/ROADMAP.md:316; docs/ROADMAP.md:318 | stale text | STALE TEXT | Quoted history. | none |
+| RM-362 | 6a-2 slice 2 — the widget is LIVE (▶) | docs/ROADMAP.md:363 | stale text | STALE TEXT | Stale marker. | none |
+| RM-384 | 6b note: "Marker flipped ▶ → ✅ … The single ◐ (Privacy … | docs/ROADMAP.md:385 | stale text | STALE TEXT | Quoted history. | none |
+| RM-675 | Privacy Addendum moved to the public-deploy gate (mentions ◐) | docs/ROADMAP.md:676 | stale text | STALE TEXT | Quoted history. | none |
+| RM-676 | Privacy Addendum obligation — HALF closed (demo site privacy text lacks it) | docs/ROADMAP.md:677; docs/ROADMAP.md:679 | stale text | STALE TEXT | Closed by the public-demo /privacy page. | none |
+| RM-681 | 6c — dashboard read-only + handoff queue (☐) | docs/ROADMAP.md:682 | stale text | STALE TEXT | Stale parent marker. | none |
 | RM-X1 | (found outside the named sections) README "Pause: the site can be paused … | README.md (Honest limits / Not built yet, from line 165) [RM-X1] | stale text | STALE TEXT | doc-only: say who can pause (the owner, in Vercel) and name the engine stop | none |
 | SG-12 | Ship gate #12: ✅ closed | docs/ROADMAP.md:2198 [SG-12] | stale text | STALE TEXT | doc-only: the status cell must carry "not re-verified 2026-11-16 (L2)"; the underlying measurement is CO-L2 | none |
 | SG-13 | Ship gate #13: ✅ closed | docs/ROADMAP.md:2199 [SG-13] | stale text | STALE TEXT | closed | none |
@@ -158,18 +158,18 @@ Generated 2026-11-18 by `plan-inputs/build_register.py` from `inv-roadmap.json`,
 | CX2-10 | Codex p2 §10 LOW: a host page can set the mount marker itself |  | Codex p2 | RULE AS LIMIT | Proposed: the host controls its own page; stated in index.ts. **RULED 2026-11-18: ruled limit (Yigitcan, 2026-11-18).** | none |
 | CX2-5 | Codex p2 §5 MEDIUM: the D3 test is structural, not proof of exactly-once delivery |  | Codex p2 | RULE AS LIMIT | Proposed: D3 is a structural guard (every handoff writer has an alert route); behaviour is driven end to end for 4 of the 7 F1 branches + the consent handoff; "exactly once" is bounded by the 30-min throttle and ownerAlert.enabled by design. The live B4 run reads one real alert. **RULED 2026-11-18: ruled limit (Yigitcan, 2026-11-18).** | none |
 | CX2-9 | Codex p2 §9 MEDIUM: lockfile integrity/resolved values stripped whole |  | Codex p2 | RULE AS LIMIT | Pre-existing exclusion (written by npm, not by hand); secret-scan.sh carries only a pointer to this row. **RULED 2026-11-18: ruled limit (Yigitcan, 2026-11-18).** **RULED 2026-11-18: the public code comment no longer describes the gap; the detail lives here only.** | none |
-| RM-1048 | L2 round on 6c-3 (◐): M1/M2/M3 closed; E4 CRT #10b prop path … | docs/ROADMAP.md:1048 | still true | RULE AS LIMIT | Prop-path is rule-covered only; a real gate needs an RSC render harness. | none |
-| RM-1613 | date_expr_forged alert RATE unmeasured (20% split threshold declared) | docs/ROADMAP.md:1613 | still true | RULE AS LIMIT | Needs representative traffic; the demo has none, and adversarial drill sets are not a rate. Threshold already declared in advance. | none |
-| RM-1886 | STILL UNDRILLED after the round-3 window (five behaviours, live) | docs/ROADMAP.md:1886 | still true | RULE AS LIMIT | Live LLM spend in a window; the deterministic halves are covered by the replay. (0) the collecting echo rate depends on the model and has no offline answer. | none |
-| RM-1925 | webhookId UUID committed on Receive Inbound Message | docs/ROADMAP.md:1925 | still true | RULE AS LIMIT | Already in every public revision (masking is forward-only); useless without the host, which is a redaction target. Masking forward buys little; rotating it is a live edit. | none |
-| RM-1934 | MEASURE THE RE-ASK RATE ON A REPRESENTATIVE SET | docs/ROADMAP.md:1934 | still true | RULE AS LIMIT | Needs representative traffic (none on a demo). | none |
-| RM-1976 | 09/11-style dates are a LOCALE ambiguity | docs/ROADMAP.md:1976 | still true | RULE AS LIMIT | Tied to the business.locale bound; a DD/MM default is right for the Vienna demo; the full-date confirm is the safety net. | none |
-| RM-1983 | tests/run-regression.sh runnable for drills only (◐), no real-token path | docs/ROADMAP.md:1983 | still true | RULE AS LIMIT | Measured capability limit; drill windows follow the Turnstile window protocol. | none |
-| RM-2097 | Bulgu 5 — drills are not a regression harness | docs/ROADMAP.md:2097 | still true | RULE AS LIMIT | Converting all token-free DRILLS.md rows into runnable headless drills is mid-size infra, not a defect fix. | none |
-| RM-2109 | Font guard upstream-blob comparison | docs/ROADMAP.md:2109 | still true | RULE AS LIMIT | Comparing against the authors' repository needs a network fetch, so it cannot be an offline check-all gate; provenance was pinned at fetch time. | none |
-| RM-719 | NAMED DEBT: two TypeScript versions (web 7.0.2, scripts 5.9.3) | docs/ROADMAP.md:719 | still true | RULE AS LIMIT | Already a named debt with its removal trigger ("the day web/ moves to a TypeScript whose public API returns, this pin should go"); contained by the workspace boundary. | none |
-| RM-734 | Import walk stops at third-party packages (named limit) | docs/ROADMAP.md:734 | still true | RULE AS LIMIT | Walking node_modules is out of scope by design; count is printed every run. | none |
-| RM-767 | Bundle byte counts constrain the production host length — stop recording them | docs/ROADMAP.md:767 | still true | RULE AS LIMIT | A standing writing discipline, not a buildable fix; the historic leak cannot be undone (forward-only). | none |
+| RM-1048 | L2 round on 6c-3 (◐): M1/M2/M3 closed; E4 CRT #10b prop path … | docs/ROADMAP.md:1049 | still true | RULE AS LIMIT | Prop-path is rule-covered only; a real gate needs an RSC render harness. | none |
+| RM-1613 | date_expr_forged alert RATE unmeasured (20% split threshold declared) | docs/ROADMAP.md:1614 | still true | RULE AS LIMIT | Needs representative traffic; the demo has none, and adversarial drill sets are not a rate. Threshold already declared in advance. | none |
+| RM-1886 | STILL UNDRILLED after the round-3 window (five behaviours, live) | docs/ROADMAP.md:1887 | still true | RULE AS LIMIT | Live LLM spend in a window; the deterministic halves are covered by the replay. (0) the collecting echo rate depends on the model and has no offline answer. | none |
+| RM-1925 | webhookId UUID committed on Receive Inbound Message | docs/ROADMAP.md:1926 | still true | RULE AS LIMIT | Already in every public revision (masking is forward-only); useless without the host, which is a redaction target. Masking forward buys little; rotating it is a live edit. | none |
+| RM-1934 | MEASURE THE RE-ASK RATE ON A REPRESENTATIVE SET | docs/ROADMAP.md:1935 | still true | RULE AS LIMIT | Needs representative traffic (none on a demo). | none |
+| RM-1976 | 09/11-style dates are a LOCALE ambiguity | docs/ROADMAP.md:1977 | still true | RULE AS LIMIT | Tied to the business.locale bound; a DD/MM default is right for the Vienna demo; the full-date confirm is the safety net. | none |
+| RM-1983 | tests/run-regression.sh runnable for drills only (◐), no real-token path | docs/ROADMAP.md:1984 | still true | RULE AS LIMIT | Measured capability limit; drill windows follow the Turnstile window protocol. | none |
+| RM-2097 | Bulgu 5 — drills are not a regression harness | docs/ROADMAP.md:2098 | still true | RULE AS LIMIT | Converting all token-free DRILLS.md rows into runnable headless drills is mid-size infra, not a defect fix. | none |
+| RM-2109 | Font guard upstream-blob comparison | docs/ROADMAP.md:2110 | still true | RULE AS LIMIT | Comparing against the authors' repository needs a network fetch, so it cannot be an offline check-all gate; provenance was pinned at fetch time. | none |
+| RM-719 | NAMED DEBT: two TypeScript versions (web 7.0.2, scripts 5.9.3) | docs/ROADMAP.md:720 | still true | RULE AS LIMIT | Already a named debt with its removal trigger ("the day web/ moves to a TypeScript whose public API returns, this pin should go"); contained by the workspace boundary. | none |
+| RM-734 | Import walk stops at third-party packages (named limit) | docs/ROADMAP.md:735 | still true | RULE AS LIMIT | Walking node_modules is out of scope by design; count is printed every run. | none |
+| RM-767 | Bundle byte counts constrain the production host length — stop recording them | docs/ROADMAP.md:768 | still true | RULE AS LIMIT | A standing writing discipline, not a buildable fix; the historic leak cannot be undone (forward-only). | none |
 | RT4-a | Turnstile token reuse rests on Cloudflare's single-use rule | CHAIRSIDE-REDTEAM-REPORT.md:300 | still true | RULE AS LIMIT | A repo-side replay store would add a table (DDL) and a write per turn to guarantee what siteverify already enforces. That Cloudflare enforces single use is product behaviour, not verified in this phase (no request to Cloudflare … | DDL |
 | RT5-2 | Engine does not read siteverify hostname / action | docs/CLOSE-OUT-PLAN.md:38 [EN-CD-6]; docs/CLOSE-OUT-PLAN.md:38 [CO-6]; docs/ROADMAP.md:2197 [SG-11]; CHAIRSIDE-REDTEAM-REPORT.md:314 | still true | RULE AS LIMIT | The ruling names its own trigger: the next GATE-touching Main edit. If this phase edits `Normalize Inbound` or `Validate Payload` (H4/H6), the trigger fires and the hostname check rides along. If no gate node is edited, the bound … **RULED 2026-11-18: K7 — gate node (Verify Turnstile / Turnstile Valid?); same tooling-class reason as H4.** | none |
 | SPEND-b | LLM timeout/error records no spend; meter can undercount without concurrency | results/SPEND.json (extra) | still true (unmeasured) | RULE AS LIMIT | New from SPEND: Extract Intent error output writes no spend although a 60 s-timed-out call may still be billed. Not measured; record next to the SPEND limit. | none |
@@ -177,7 +177,7 @@ Generated 2026-11-18 by `plan-inputs/build_register.py` from `inv-roadmap.json`,
 | CO-RL-2 | Ruled limit: no Anthropic-side spend limit; the engine cap is the brake | docs/CLOSE-OUT-PLAN.md:992 [PP-1c]; docs/CLOSE-OUT-PLAN.md (Pre-post live check / FINAL, from line 963) [PP-O5]; docs/CLOSE-OUT-PLAN.md (Pre-post live check / FINAL, from line 963) [CO-RL-2] | needs live read | RULED ALREADY | already ruled; note the engine meter itself undercounts under concurrency (SPEND) | none |
 | CO-RL-3 | Ruled limit: whether .vercelignore applies to Git deploys is not measured | docs/CLOSE-OUT-PLAN.md (Pre-post live check / FINAL, from line 963) [CO-RL-3] | needs live read | RULED ALREADY | already ruled | none |
 | CX2-11 | Codex p2 §11: D3 instrument assertion tests literals |  | Codex p2 | RULED ALREADY | By design: it proves the regex can tell a SET from a WHERE; the workflow side is tested by the D3 tests beside it. | none |
-| CX2-6 | Codex p2 §6/§7/§8: idempotency, spend, dates — no finding; Codex incomplete |  | Codex p2 | RULED ALREADY | Codex found nothing in what it read and said it did not finish; L2 flow-reviewer traced the readers (M1) and the docker tests ran (claim-race, spend-meter, booking-lookup). **RULED 2026-11-18: No third Codex round (ruling 2026-11-18): the independent checks for what Codex did not cover are the post-deploy B4 run on live executions and the Mythos re-attack on the promoted commit.** **RULED 2026-11-18: B4 ran 2026-11-18: 21/21 green (docs/hardening/B4-LIVE-DRILL.md); the Mythos re-attack is the other independent check (docs/hardening/MYTHOS-HANDOVER.md).** | none |
+| CX2-6 | Codex p2 §6/§7/§8: idempotency, spend, dates — no finding; Codex incomplete |  | Codex p2 | RULED ALREADY | Codex found nothing in what it read and said it did not finish; L2 flow-reviewer traced the readers (M1) and the docker tests ran (claim-race, spend-meter, booking-lookup). **RULED 2026-11-18: No third Codex round (ruling 2026-11-18): the independent checks for what Codex did not cover are the post-deploy B4 run on live executions and the Mythos re-attack on the promoted commit.** **RULED 2026-11-18: B4 ran 2026-11-18: 21/21 green, partial coverage (docs/hardening/B4-LIVE-DRILL.md). The Mythos re-attack was NOT run — deferred by the owner (2026-11-18); the handover is kept (docs/hardening/MYTHOS-HANDOVER.md). The phase is therefore NOT independently re-attacked.** | none |
 | EN-722-1 | deploy tool: a snapshot's age is not checked | docs/ENGINEERING-NOTES.md:55 [EN-722-1]; docs/CLOSE-OUT-PLAN.md:69 [EN-CD-38]; docs/CLOSE-OUT-PLAN.md:69 [CO-38] | still true (not re-measured) | RULED ALREADY | ruled 7-2 R4 / DC-1; premise not contradicted · recorded reason: "snapshots are deleted once an edit closes (`remote-operator.md`), and any snapshot must still pass the webhook invariants before a rollback" | none |
 | EN-722-10 | deploy tool: `settings` does not enforce running after the probes | docs/ENGINEERING-NOTES.md:64 [EN-722-10]; docs/CLOSE-OUT-PLAN.md:69 [EN-CD-38]; docs/CLOSE-OUT-PLAN.md:69 [CO-38] | still true (not re-measured) | RULED ALREADY | ruled 7-2 R4 / DC-1; premise not contradicted · recorded reason: "the runbook orders it last, and the check after it is a body probe that counts no executions" | none |
 | EN-722-11 | deploy tool: pre-snapshot parity cannot see an IF/Switch condition's option fields | docs/ENGINEERING-NOTES.md:65 [EN-722-11]; docs/CLOSE-OUT-PLAN.md:69 [EN-CD-38]; docs/CLOSE-OUT-PLAN.md:69 [CO-38] | still true (not re-measured) | RULED ALREADY | ruled 7-2 R4 / DC-1; premise not contradicted · recorded reason: "no gate decision depends on them today (R2b)" | none |
@@ -209,7 +209,7 @@ Generated 2026-11-18 by `plan-inputs/build_register.py` from `inv-roadmap.json`,
 | EN-CD-15 | DATE-PHRASING's and N1's recorded bounds: the r4 text class (R2d), F2 and … | docs/ENGINEERING-NOTES.md (section from line 106) [EN-SEC-2]; docs/CLOSE-OUT-PLAN.md:47 [EN-CD-15]; docs/CLOSE-OUT-PLAN.md:47 [CO-15] | still true (not re-measured) | RULED ALREADY | standing bounds, no trigger named · reopens when: "no trigger named — standing bounds. If M2 (the booking-confirm freshness check) is built, F1's prem…" | none |
 | EN-CD-16 | EUR only, English customer text, two dead config keys (`instagram`, `business.locale`) | docs/ENGINEERING-NOTES.md:41 [EN-v2-7]; docs/CLOSE-OUT-PLAN.md:48 [EN-CD-16]; docs/CLOSE-OUT-PLAN.md:63 [EN-CD-32]; docs/CLOSE-OUT-PLAN.md:48 [CO-16]; docs/CLOSE-OUT-PLAN.md:63 [CO-32] | still true | RULED ALREADY | recorded bounds · reopens when: "a client in another currency or language" | none |
 | EN-CD-19 | A reminder for an appointment cancelled while the database mirror was failing | docs/ENGINEERING-NOTES.md:45 [EN-v2-11]; docs/CLOSE-OUT-PLAN.md:51 [EN-CD-19]; docs/CLOSE-OUT-PLAN.md:51 [CO-19] | still true | RULED ALREADY | keep K4 | credential |
-| EN-CD-20 | Real WhatsApp reminder-template delivery (CP4d-2) | docs/ROADMAP.md:200; docs/ROADMAP.md:202; docs/CLOSE-OUT-PLAN.md:52 [EN-CD-20]; docs/CLOSE-OUT-PLAN.md:52 [CO-20] | needs live read | RULED ALREADY | trigger: a client's own number · reopens when: "a client's own WhatsApp Business number" | none |
+| EN-CD-20 | Real WhatsApp reminder-template delivery (CP4d-2) | docs/ROADMAP.md:201; docs/ROADMAP.md:203; docs/CLOSE-OUT-PLAN.md:52 [EN-CD-20]; docs/CLOSE-OUT-PLAN.md:52 [CO-20] | needs live read | RULED ALREADY | trigger: a client's own number · reopens when: "a client's own WhatsApp Business number" | none |
 | EN-CD-21 | Release's one-second resend window (Owner Actions) | docs/CLOSE-OUT-PLAN.md:53 [EN-CD-21]; docs/CLOSE-OUT-PLAN.md:53 [CO-21] | still true (not re-measured) | RULED ALREADY | written bound · reopens when: "no trigger named; the bound assumes the dashboard's and n8n's clocks agree to about a second (same …" | none |
 | EN-CD-24 | Ship gate #15, the hidden-container check in Managed mode | docs/CLOSE-OUT-PLAN.md:56 [EN-CD-24]; docs/CLOSE-OUT-PLAN.md:56 [CO-24] | needs live read | RULED ALREADY | DC-6; but ROADMAP #15's bound text ("rate limit … and the pause") is stale — see SG-15 · reopens when: "no trigger named by DC-6; the earlier ruling (RENAME (3)) names what a run needs: a hidden-containe…" | none |
 | EN-CD-25 | The watchdog's five unswept axes (ROADMAP 6b hand-over #9) | docs/CLOSE-OUT-PLAN.md:57 [EN-CD-25]; docs/CLOSE-OUT-PLAN.md:57 [CO-25] | needs live read | RULED ALREADY | not a defect · reopens when: "a client reports a stuck widget" | none |
@@ -227,7 +227,7 @@ Generated 2026-11-18 by `plan-inputs/build_register.py` from `inv-roadmap.json`,
 | EN-CD-47 | A second owner-alert channel | docs/ENGINEERING-NOTES.md:47 [EN-v2-13]; docs/CLOSE-OUT-PLAN.md:78 [EN-CD-47]; docs/CLOSE-OUT-PLAN.md:78 [CO-47] | still true | RULED ALREADY | trigger: a real client · reopens when: "a real client — an alert that cannot reach the owner is a business risk then" | none |
 | EN-CD-5 | The few-shot's fixed "no hair colouring" example | docs/CLOSE-OUT-PLAN.md:37 [EN-CD-5]; docs/CLOSE-OUT-PLAN.md:37 [CO-5] | still true | RULED ALREADY | trigger not fired (no client offers colouring) · reopens when: "a client that offers colouring" | none |
 | EN-CD-9 | A verify read with no `items` key counts as an empty list | docs/ENGINEERING-NOTES.md:77 [EN-722-23]; docs/CLOSE-OUT-PLAN.md:41 [EN-CD-9]; docs/CLOSE-OUT-PLAN.md:41 [CO-9] | still true | RULED ALREADY | ruled carve-out (7-2 R2); trigger not seen · reopens when: "Calendar is seen omitting the key" | none |
-| EN-SEC-3 | The extraction-retry path has never been TRIGGERED in production | docs/ROADMAP.md:1643; docs/ENGINEERING-NOTES.md:122 [EN-SEC-3] | needs live read | RULED ALREADY | the trigger (a model omitting a required key) cannot be induced on demand | none |
+| EN-SEC-3 | The extraction-retry path has never been TRIGGERED in production | docs/ROADMAP.md:1644; docs/ENGINEERING-NOTES.md:122 [EN-SEC-3] | needs live read | RULED ALREADY | the trigger (a model omitting a required key) cannot be induced on demand | none |
 | EN-v2-1 | F5 — the deploy-separation guard checks import *spelling*, not reachability | docs/ENGINEERING-NOTES.md:35 [EN-v2-1]; docs/CLOSE-OUT-PLAN.md:63 [EN-CD-32]; docs/CLOSE-OUT-PLAN.md:63 [CO-32] | still true (not re-measured) | RULED ALREADY | premise "Codex found no dashboard-reaching import" not contradicted; a guard gap, not a leak · recorded reason: "a guard that can miss, not a present leak: Codex found no dashboard-reaching import in the public packages" | none |
 | EN-v2-2 | F6 — the hardlink identity check is a substring match | docs/ENGINEERING-NOTES.md:36 [EN-v2-2]; docs/CLOSE-OUT-PLAN.md:63 [EN-CD-32]; docs/CLOSE-OUT-PLAN.md:63 [CO-32] | still true (not re-measured) | RULED ALREADY | fails toward a false positive, never a miss · recorded reason: "it can over-report (a false positive), never miss a leak" | none |
 | EN-v2-3 | F9 — the client-import gate does not enumerate `.mts` / `.cts` | docs/ENGINEERING-NOTES.md:37 [EN-v2-3]; docs/CLOSE-OUT-PLAN.md:63 [EN-CD-32]; docs/CLOSE-OUT-PLAN.md:63 [CO-32] | still true | RULED ALREADY | the premise (no such file exists) still holds; DC-1 re-affirmed it · recorded reason: "no such files exist today; a coverage gap for a future refactor" | none |
@@ -239,10 +239,10 @@ Generated 2026-11-18 by `plan-inputs/build_register.py` from `inv-roadmap.json`,
 | PP-3b | Owner Actions' two alerts bypass the ownerAlert switch | docs/CLOSE-OUT-PLAN.md:980 [PP-3b] | still true | RULED ALREADY | the owner's own release action reporting its failure is wanted even with alerts off; low volume (owner-triggered) | none |
 | PP-4 | Kill switch is a literal; no measured duration / Postgres-era proof | docs/CLOSE-OUT-PLAN.md:1006 [PP-4] | still true | RULED ALREADY | standing ruling 2026-11-16: "botu durdur" → CC deactivates Main | none |
 | PP-6 | Origin default-deny firewall is an operator statement | docs/CLOSE-OUT-PLAN.md:983 [PP-6] | needs live read | RULED ALREADY | root-only; needs an operator run | none |
-| RM-1822 | OPEN AFTER CODEX ROUND 4: (1) day-vocabulary residue inherits the stored date; … | docs/ROADMAP.md:1822 | still true | RULED ALREADY | Respect the declined-scope ruling; the confirm shows weekday + full date + year (R2d structural guarantee). | none |
-| RM-1940 | tests execute committed workflow code unsandboxed (new Function) | docs/ROADMAP.md:1940 | still true | RULED ALREADY | Trigger (CI) has not fired; respect the recorded acceptance. | none |
-| RM-2018 | conversations.last_alert_class is lost on a conversation's FIRST turn | docs/ROADMAP.md:2018 | still true | RULED ALREADY | RULED: PHASE-7-PLAN.md:726 PHASE-7 bucket item (4) (Yigitcan 2026-10-23) "on a session's FIRST turn an owner alert's Find Conversation Row runs before Save State … Record Alert Class does not run" with the 7-F1 correction "What … | none |
-| RM-2289 | Turnstile secret lives in a NODE PARAMETER, not an n8n Credential | docs/ROADMAP.md:2289; docs/CLOSE-OUT-PLAN.md:38 [EN-CD-6]; docs/CLOSE-OUT-PLAN.md:38 [CO-6]; docs/ROADMAP.md:2197 [SG-11] | still true | RULED ALREADY | Respect the recorded bound (with per-client provisioning). | credential |
+| RM-1822 | OPEN AFTER CODEX ROUND 4: (1) day-vocabulary residue inherits the stored date; … | docs/ROADMAP.md:1823 | still true | RULED ALREADY | Respect the declined-scope ruling; the confirm shows weekday + full date + year (R2d structural guarantee). | none |
+| RM-1940 | tests execute committed workflow code unsandboxed (new Function) | docs/ROADMAP.md:1941 | still true | RULED ALREADY | Trigger (CI) has not fired; respect the recorded acceptance. | none |
+| RM-2018 | conversations.last_alert_class is lost on a conversation's FIRST turn | docs/ROADMAP.md:2019 | still true | RULED ALREADY | RULED: PHASE-7-PLAN.md:726 PHASE-7 bucket item (4) (Yigitcan 2026-10-23) "on a session's FIRST turn an owner alert's Find Conversation Row runs before Save State … Record Alert Class does not run" with the 7-F1 correction "What … | none |
+| RM-2289 | Turnstile secret lives in a NODE PARAMETER, not an n8n Credential | docs/ROADMAP.md:2290; docs/CLOSE-OUT-PLAN.md:38 [EN-CD-6]; docs/CLOSE-OUT-PLAN.md:38 [CO-6]; docs/ROADMAP.md:2197 [SG-11] | still true | RULED ALREADY | Respect the recorded bound (with per-client provisioning). | credential |
 | RM-HL-1 | No real customers, no paying client | README.md:173 [RM-HL-1] | still true | RULED ALREADY | a fact of the demo | none |
 | RM-HL-5 | Dates: English only, no ranges, 30-day horizon | README.md:182 [RM-HL-5] | still true (not re-measured) | RULED ALREADY | recorded bound (B #16 for language) | none |
 | RT5-1 | Widget identity is session-strength (sessionId is a bearer) | README.md:180 [RM-HL-4]; CHAIRSIDE-REDTEAM-REPORT.md:313 | still true | RULED ALREADY | A verified identity needs a login or OTP channel. That is a product decision outside tier T1. The client mints `w-<randomUUID>`, so guessing a session is infeasible. | none |
@@ -255,20 +255,20 @@ Generated 2026-11-18 by `plan-inputs/build_register.py` from `inv-roadmap.json`,
 
 | id | title | source refs | status today | final class | reason | needs |
 |---|---|---|---|---|---|---|
-| EN-CD-10 | A change request during a confirm (the "change" intent) | docs/ROADMAP.md:1912; docs/CLOSE-OUT-PLAN.md:42 [EN-CD-10]; docs/CLOSE-OUT-PLAN.md:42 [CO-10] | still true | v2 | a product feature with its own phase (ARCH-DEC 2026-09-09e) | none |
+| EN-CD-10 | A change request during a confirm (the "change" intent) | docs/ROADMAP.md:1913; docs/CLOSE-OUT-PLAN.md:42 [EN-CD-10]; docs/CLOSE-OUT-PLAN.md:42 [CO-10] | still true | v2 | a product feature with its own phase (ARCH-DEC 2026-09-09e) | none |
 | EN-CD-26 | A phone / e-mail field in the widget, per client | docs/CLOSE-OUT-PLAN.md:58 [EN-CD-26]; docs/CLOSE-OUT-PLAN.md:58 [CO-26] | still true | v2 | a per-client product decision (call-backs) · reopens when: "a client that wants call-backs from the widget" | none |
 | EN-CD-31 | The older v2 / LATER bucket (the idempotent replay's stored reply, required … | docs/ENGINEERING-NOTES.md:48 [EN-v2-14]; docs/CLOSE-OUT-PLAN.md:62 [EN-CD-31]; docs/CLOSE-OUT-PLAN.md:62 [CO-31] | still true | v2 | product improvements (a Customers table, transcript retention) need product decisions | none |
 | EN-CD-37 | Instagram DMs (config-gated; no adapter built) | docs/CLOSE-OUT-PLAN.md:68 [EN-CD-37]; docs/CLOSE-OUT-PLAN.md:68 [CO-37] | still true | v2 | a product decision: build a channel adapter · reopens when: "a client asks for Instagram" | none |
 | EN-CD-45 | The Loom (#20) and the "CC builds" exception review it carries | docs/CLOSE-OUT-PLAN.md:76 [EN-CD-45]; docs/CLOSE-OUT-PLAN.md:76 [CO-45]; docs/ROADMAP.md:2206 [SG-20] | needs live read | v2 | deferred by the owner: his decision on the approach | none |
 | EN-CD-8 | Rebooking a slot you just cancelled is handed off | docs/ENGINEERING-NOTES.md:44 [EN-v2-10]; docs/CLOSE-OUT-PLAN.md:40 [EN-CD-8]; docs/CLOSE-OUT-PLAN.md:40 [CO-8]; CHAIRSIDE-REDTEAM-REPORT.md:321 | still true | v2 | keep K3/DC-1: proof needs a real calendar write (forbidden offline) | none |
-| EN-v2-8 | The `handoffShown` twin in `web/snippet` | docs/ROADMAP.md:1085; docs/ENGINEERING-NOTES.md:42 [EN-v2-8]; docs/CLOSE-OUT-PLAN.md:63 [EN-CD-32]; docs/CLOSE-OUT-PLAN.md:63 [CO-32] | still true | v2 | a test blind spot, not a runtime defect; DC-1 re-affirmed v2 · recorded reason: "the snippet and the site each record "lock line shown" at their own call site; deleting that line from one caller leaves the parity suite green — a … | none |
-| RM-1392 | BULGU-4: tsconfig paths alias in a walked-but-unscanned package is invisible | docs/ROADMAP.md:1392 | still true | v2 | Respect v2 ruling. | none |
-| RM-1397 | R2: isClientEntry reads only statements[0] | docs/ROADMAP.md:1397 | still true | v2 | Respect v2 ruling (fix is ~5 lines + 1 selftest case if reopened). | none |
-| RM-1991 | Handoff lock TTL + D11 automation | docs/ROADMAP.md:1991 | still true | v2 | Auto-expiry vs owner-only release is a product decision the later design answered "owner-only"; TTL needs a ruling, not a fix. EXTRA (not in ROADMAP): Validate Release Target refuses a lock whose last_updated is older than … | none |
-| RM-2013 | Dropped-date re-ask wording (date_ambiguous "next tuesday") | docs/ROADMAP.md:2013 | still true | v2 | Needs a new template + config key and a UX decision on what "next" offers; item says "deliberately not fixed … does not close any error class". | none |
-| RM-2255 | Visitor-visible transcript lost on same-tab navigation; engine conversation continues | docs/ROADMAP.md:2255; docs/ROADMAP.md:2324 | still true | v2 | Respect v2 ruling. | none |
-| RM-2263 | SCREEN-INVENTORY §2.10.1 decided texts ≠ FRONTEND_TEXT (W57/W58/W60) | docs/ROADMAP.md:2263 | still true | v2 | Respect v2 ruling; which side wins is Yigitcan's call. | none |
-| RT5-6 | Claim-first dedupe is at-most-once; a duplicate gets no stored reply | docs/ROADMAP.md:2278; CHAIRSIDE-REDTEAM-REPORT.md:318 | still true | v2 | What a duplicate delivery should receive (the first reply re-sent, or a neutral ack) is a product decision. Storing the reply needs a column (DDL) and a write after the reply. At-most-once is the deliberate price of an atomic … | DDL |
+| EN-v2-8 | The `handoffShown` twin in `web/snippet` | docs/ROADMAP.md:1086; docs/ENGINEERING-NOTES.md:42 [EN-v2-8]; docs/CLOSE-OUT-PLAN.md:63 [EN-CD-32]; docs/CLOSE-OUT-PLAN.md:63 [CO-32] | still true | v2 | a test blind spot, not a runtime defect; DC-1 re-affirmed v2 · recorded reason: "the snippet and the site each record "lock line shown" at their own call site; deleting that line from one caller leaves the parity suite green — a … | none |
+| RM-1392 | BULGU-4: tsconfig paths alias in a walked-but-unscanned package is invisible | docs/ROADMAP.md:1393 | still true | v2 | Respect v2 ruling. | none |
+| RM-1397 | R2: isClientEntry reads only statements[0] | docs/ROADMAP.md:1398 | still true | v2 | Respect v2 ruling (fix is ~5 lines + 1 selftest case if reopened). | none |
+| RM-1991 | Handoff lock TTL + D11 automation | docs/ROADMAP.md:1992 | still true | v2 | Auto-expiry vs owner-only release is a product decision the later design answered "owner-only"; TTL needs a ruling, not a fix. EXTRA (not in ROADMAP): Validate Release Target refuses a lock whose last_updated is older than … | none |
+| RM-2013 | Dropped-date re-ask wording (date_ambiguous "next tuesday") | docs/ROADMAP.md:2014 | still true | v2 | Needs a new template + config key and a UX decision on what "next" offers; item says "deliberately not fixed … does not close any error class". | none |
+| RM-2255 | Visitor-visible transcript lost on same-tab navigation; engine conversation continues | docs/ROADMAP.md:2256; docs/ROADMAP.md:2325 | still true | v2 | Respect v2 ruling. | none |
+| RM-2263 | SCREEN-INVENTORY §2.10.1 decided texts ≠ FRONTEND_TEXT (W57/W58/W60) | docs/ROADMAP.md:2264 | still true | v2 | Respect v2 ruling; which side wins is Yigitcan's call. | none |
+| RT5-6 | Claim-first dedupe is at-most-once; a duplicate gets no stored reply | docs/ROADMAP.md:2279; CHAIRSIDE-REDTEAM-REPORT.md:318 | still true | v2 | What a duplicate delivery should receive (the first reply re-sent, or a neutral ack) is a product decision. Storing the reply needs a column (DDL) and a write after the reply. At-most-once is the deliberate price of an atomic … | DDL |
 
 ## Counts
 
@@ -361,79 +361,79 @@ Rules applied globally (not repeated per row):
 | R | ROADMAP:18 | docs/ROADMAP.md:18 | own row RM-18 |
 | R | ROADMAP:20 | docs/ROADMAP.md:20 | own row RM-20 |
 | R | ROADMAP:21 | docs/ROADMAP.md:21 | own row RM-21 |
-| R | ROADMAP:23 | docs/ROADMAP.md:23 | own row RM-23 |
-| R | ROADMAP:168 | docs/ROADMAP.md:168 | own row RM-168 |
-| R | ROADMAP:180 | docs/ROADMAP.md:180 | own row RM-180 |
-| R | ROADMAP:181 | docs/ROADMAP.md:181 | own row RM-181 |
-| R | ROADMAP:185 | docs/ROADMAP.md:185 | own row RM-185 |
-| R | ROADMAP:195 | docs/ROADMAP.md:195 | own row RM-195 |
-| R | ROADMAP:200 | docs/ROADMAP.md:200 | -> EN-CD-20 |
-| R | ROADMAP:202 | docs/ROADMAP.md:202 | -> EN-CD-20 |
-| R | ROADMAP:267 | docs/ROADMAP.md:267 | own row RM-267 |
-| R | ROADMAP:315 | docs/ROADMAP.md:315 | own row RM-315 |
-| R | ROADMAP:317 | docs/ROADMAP.md:317 | -> RM-315 |
-| R | ROADMAP:362 | docs/ROADMAP.md:362 | own row RM-362 |
-| R | ROADMAP:384 | docs/ROADMAP.md:384 | own row RM-384 |
-| R | ROADMAP:675 | docs/ROADMAP.md:675 | own row RM-675 |
-| R | ROADMAP:676 | docs/ROADMAP.md:676 | own row RM-676 |
-| R | ROADMAP:678 | docs/ROADMAP.md:678 | -> RM-676 |
-| R | ROADMAP:681 | docs/ROADMAP.md:681 | own row RM-681 |
-| R | ROADMAP:719 | docs/ROADMAP.md:719 | own row RM-719 |
-| R | ROADMAP:734 | docs/ROADMAP.md:734 | own row RM-734 |
-| R | ROADMAP:767 | docs/ROADMAP.md:767 | own row RM-767 |
-| R | ROADMAP:1048 | docs/ROADMAP.md:1048 | own row RM-1048 |
-| R | ROADMAP:1085 | docs/ROADMAP.md:1085 | -> EN-v2-8 |
-| R | ROADMAP:1122 | docs/ROADMAP.md:1122 | own row RM-1122 |
-| R | ROADMAP:1145 | docs/ROADMAP.md:1145 | own row RM-1145 |
-| R | ROADMAP:1284 | docs/ROADMAP.md:1284 | own row RM-1284 |
-| R | ROADMAP:1348 | docs/ROADMAP.md:1348 | own row RM-1348 |
-| R | ROADMAP:1379 | docs/ROADMAP.md:1379 | own row RM-1379 |
-| R | ROADMAP:1392 | docs/ROADMAP.md:1392 | own row RM-1392 |
-| R | ROADMAP:1397 | docs/ROADMAP.md:1397 | own row RM-1397 |
-| R | ROADMAP:1413 | docs/ROADMAP.md:1413 | own row RM-1413 |
-| R | ROADMAP:1613 | docs/ROADMAP.md:1613 | own row RM-1613 |
-| R | ROADMAP:1622 | docs/ROADMAP.md:1622 | own row RM-1622 |
-| R | ROADMAP:1643 | docs/ROADMAP.md:1643 | -> EN-SEC-3 |
-| R | ROADMAP:1822 | docs/ROADMAP.md:1822 | own row RM-1822 |
-| R | ROADMAP:1886 | docs/ROADMAP.md:1886 | own row RM-1886 |
-| R | ROADMAP:1899 | docs/ROADMAP.md:1899 | own row RM-1899 |
-| R | ROADMAP:1907 | docs/ROADMAP.md:1907 | own row RM-1907 |
-| R | ROADMAP:1912 | docs/ROADMAP.md:1912 | -> EN-CD-10 |
-| R | ROADMAP:1921 | docs/ROADMAP.md:1921 | own row RM-1921 |
-| R | ROADMAP:1924 | docs/ROADMAP.md:1924 | own row RM-1924 |
-| R | ROADMAP:1925 | docs/ROADMAP.md:1925 | own row RM-1925 |
-| R | ROADMAP:1934 | docs/ROADMAP.md:1934 | own row RM-1934 |
-| R | ROADMAP:1938 | docs/ROADMAP.md:1938 | own row RM-1938 |
-| R | ROADMAP:1940 | docs/ROADMAP.md:1940 | own row RM-1940 |
-| R | ROADMAP:1971 | docs/ROADMAP.md:1971 | own row RM-1971 |
-| R | ROADMAP:1976 | docs/ROADMAP.md:1976 | own row RM-1976 |
-| R | ROADMAP:1979 | docs/ROADMAP.md:1979 | -> RM-1979 |
-| R | ROADMAP:1983 | docs/ROADMAP.md:1983 | own row RM-1983 |
-| R | ROADMAP:1991 | docs/ROADMAP.md:1991 | own row RM-1991 |
-| R | ROADMAP:2007 | docs/ROADMAP.md:2007 | own row RM-2007 |
-| R | ROADMAP:2013 | docs/ROADMAP.md:2013 | own row RM-2013 |
-| R | ROADMAP:2018 | docs/ROADMAP.md:2018 | own row RM-2018 |
-| R | ROADMAP:2025 | docs/ROADMAP.md:2025 | own row RM-2025 |
-| R | ROADMAP:2097 | docs/ROADMAP.md:2097 | own row RM-2097 |
-| R | ROADMAP:2101 | docs/ROADMAP.md:2101 | own row RM-2101 |
-| R | ROADMAP:2109 | docs/ROADMAP.md:2109 | own row RM-2109 |
-| R | ROADMAP:2122 | docs/ROADMAP.md:2122 | -> RM-2123 |
-| R | ROADMAP:2123 | docs/ROADMAP.md:2123 | own row RM-2123 |
-| R | ROADMAP:2124 | docs/ROADMAP.md:2124 | -> RM-2123 |
-| R | ROADMAP:2126 | docs/ROADMAP.md:2126 | -> RM-2123 |
-| R | ROADMAP:2143 | docs/ROADMAP.md:2143 | own row RM-2143 |
-| R | ROADMAP:2146 | docs/ROADMAP.md:2146 | own row RM-2146 |
-| R | ROADMAP:2255 | docs/ROADMAP.md:2255 | own row RM-2255 |
-| R | ROADMAP:2263 | docs/ROADMAP.md:2263 | own row RM-2263 |
-| R | ROADMAP:2278 | docs/ROADMAP.md:2278 | -> RT5-6 |
-| R | ROADMAP:2289 | docs/ROADMAP.md:2289 | own row RM-2289 |
-| R | ROADMAP:2299 | docs/ROADMAP.md:2299 | own row RM-2299 |
-| R | ROADMAP:2322 | docs/ROADMAP.md:2322 | own row RM-2322 |
-| R | ROADMAP:2324 | docs/ROADMAP.md:2324 | -> RM-2255 |
-| R | ROADMAP:2327 | docs/ROADMAP.md:2327 | own row RM-2327 |
-| R | ROADMAP:2329 | docs/ROADMAP.md:2329 | own row RM-2329 |
-| R | ROADMAP:2543 | docs/ROADMAP.md:2543 | own row RM-2543 |
-| R | ROADMAP:2544 | docs/ROADMAP.md:2544 | own row RM-2544 |
+| R | ROADMAP:23 | docs/ROADMAP.md:24 | own row RM-23 |
+| R | ROADMAP:168 | docs/ROADMAP.md:169 | own row RM-168 |
+| R | ROADMAP:180 | docs/ROADMAP.md:181 | own row RM-180 |
+| R | ROADMAP:181 | docs/ROADMAP.md:182 | own row RM-181 |
+| R | ROADMAP:185 | docs/ROADMAP.md:186 | own row RM-185 |
+| R | ROADMAP:195 | docs/ROADMAP.md:196 | own row RM-195 |
+| R | ROADMAP:200 | docs/ROADMAP.md:201 | -> EN-CD-20 |
+| R | ROADMAP:202 | docs/ROADMAP.md:203 | -> EN-CD-20 |
+| R | ROADMAP:267 | docs/ROADMAP.md:268 | own row RM-267 |
+| R | ROADMAP:315 | docs/ROADMAP.md:316 | own row RM-315 |
+| R | ROADMAP:317 | docs/ROADMAP.md:318 | -> RM-315 |
+| R | ROADMAP:362 | docs/ROADMAP.md:363 | own row RM-362 |
+| R | ROADMAP:384 | docs/ROADMAP.md:385 | own row RM-384 |
+| R | ROADMAP:675 | docs/ROADMAP.md:676 | own row RM-675 |
+| R | ROADMAP:676 | docs/ROADMAP.md:677 | own row RM-676 |
+| R | ROADMAP:678 | docs/ROADMAP.md:679 | -> RM-676 |
+| R | ROADMAP:681 | docs/ROADMAP.md:682 | own row RM-681 |
+| R | ROADMAP:719 | docs/ROADMAP.md:720 | own row RM-719 |
+| R | ROADMAP:734 | docs/ROADMAP.md:735 | own row RM-734 |
+| R | ROADMAP:767 | docs/ROADMAP.md:768 | own row RM-767 |
+| R | ROADMAP:1048 | docs/ROADMAP.md:1049 | own row RM-1048 |
+| R | ROADMAP:1085 | docs/ROADMAP.md:1086 | -> EN-v2-8 |
+| R | ROADMAP:1122 | docs/ROADMAP.md:1123 | own row RM-1122 |
+| R | ROADMAP:1145 | docs/ROADMAP.md:1146 | own row RM-1145 |
+| R | ROADMAP:1284 | docs/ROADMAP.md:1285 | own row RM-1284 |
+| R | ROADMAP:1348 | docs/ROADMAP.md:1349 | own row RM-1348 |
+| R | ROADMAP:1379 | docs/ROADMAP.md:1380 | own row RM-1379 |
+| R | ROADMAP:1392 | docs/ROADMAP.md:1393 | own row RM-1392 |
+| R | ROADMAP:1397 | docs/ROADMAP.md:1398 | own row RM-1397 |
+| R | ROADMAP:1413 | docs/ROADMAP.md:1414 | own row RM-1413 |
+| R | ROADMAP:1613 | docs/ROADMAP.md:1614 | own row RM-1613 |
+| R | ROADMAP:1622 | docs/ROADMAP.md:1623 | own row RM-1622 |
+| R | ROADMAP:1643 | docs/ROADMAP.md:1644 | -> EN-SEC-3 |
+| R | ROADMAP:1822 | docs/ROADMAP.md:1823 | own row RM-1822 |
+| R | ROADMAP:1886 | docs/ROADMAP.md:1887 | own row RM-1886 |
+| R | ROADMAP:1899 | docs/ROADMAP.md:1900 | own row RM-1899 |
+| R | ROADMAP:1907 | docs/ROADMAP.md:1908 | own row RM-1907 |
+| R | ROADMAP:1912 | docs/ROADMAP.md:1913 | -> EN-CD-10 |
+| R | ROADMAP:1921 | docs/ROADMAP.md:1922 | own row RM-1921 |
+| R | ROADMAP:1924 | docs/ROADMAP.md:1925 | own row RM-1924 |
+| R | ROADMAP:1925 | docs/ROADMAP.md:1926 | own row RM-1925 |
+| R | ROADMAP:1934 | docs/ROADMAP.md:1935 | own row RM-1934 |
+| R | ROADMAP:1938 | docs/ROADMAP.md:1939 | own row RM-1938 |
+| R | ROADMAP:1940 | docs/ROADMAP.md:1941 | own row RM-1940 |
+| R | ROADMAP:1971 | docs/ROADMAP.md:1972 | own row RM-1971 |
+| R | ROADMAP:1976 | docs/ROADMAP.md:1977 | own row RM-1976 |
+| R | ROADMAP:1979 | docs/ROADMAP.md:1980 | -> RM-1979 |
+| R | ROADMAP:1983 | docs/ROADMAP.md:1984 | own row RM-1983 |
+| R | ROADMAP:1991 | docs/ROADMAP.md:1992 | own row RM-1991 |
+| R | ROADMAP:2007 | docs/ROADMAP.md:2008 | own row RM-2007 |
+| R | ROADMAP:2013 | docs/ROADMAP.md:2014 | own row RM-2013 |
+| R | ROADMAP:2018 | docs/ROADMAP.md:2019 | own row RM-2018 |
+| R | ROADMAP:2025 | docs/ROADMAP.md:2026 | own row RM-2025 |
+| R | ROADMAP:2097 | docs/ROADMAP.md:2098 | own row RM-2097 |
+| R | ROADMAP:2101 | docs/ROADMAP.md:2102 | own row RM-2101 |
+| R | ROADMAP:2109 | docs/ROADMAP.md:2110 | own row RM-2109 |
+| R | ROADMAP:2122 | docs/ROADMAP.md:2123 | -> RM-2123 |
+| R | ROADMAP:2123 | docs/ROADMAP.md:2124 | own row RM-2123 |
+| R | ROADMAP:2124 | docs/ROADMAP.md:2125 | -> RM-2123 |
+| R | ROADMAP:2126 | docs/ROADMAP.md:2127 | -> RM-2123 |
+| R | ROADMAP:2143 | docs/ROADMAP.md:2144 | own row RM-2143 |
+| R | ROADMAP:2146 | docs/ROADMAP.md:2147 | own row RM-2146 |
+| R | ROADMAP:2255 | docs/ROADMAP.md:2256 | own row RM-2255 |
+| R | ROADMAP:2263 | docs/ROADMAP.md:2264 | own row RM-2263 |
+| R | ROADMAP:2278 | docs/ROADMAP.md:2279 | -> RT5-6 |
+| R | ROADMAP:2289 | docs/ROADMAP.md:2290 | own row RM-2289 |
+| R | ROADMAP:2299 | docs/ROADMAP.md:2300 | own row RM-2299 |
+| R | ROADMAP:2322 | docs/ROADMAP.md:2323 | own row RM-2322 |
+| R | ROADMAP:2324 | docs/ROADMAP.md:2325 | -> RM-2255 |
+| R | ROADMAP:2327 | docs/ROADMAP.md:2328 | own row RM-2327 |
+| R | ROADMAP:2329 | docs/ROADMAP.md:2330 | own row RM-2329 |
+| R | ROADMAP:2543 | docs/ROADMAP.md:2544 | own row RM-2543 |
+| R | ROADMAP:2544 | docs/ROADMAP.md:2545 | own row RM-2544 |
 | N | EN-v2-1 | docs/ENGINEERING-NOTES.md:35 | own row EN-v2-1 |
 | N | EN-v2-2 | docs/ENGINEERING-NOTES.md:36 | own row EN-v2-2 |
 | N | EN-v2-3 | docs/ENGINEERING-NOTES.md:37 | own row EN-v2-3 |

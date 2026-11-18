@@ -283,6 +283,7 @@
 ### docs/hardening
 
 - `docs/hardening/B4-LIVE-DRILL.md`
+- `docs/hardening/CLOSE-OUT.md`
 - `docs/hardening/ITEMS.md`
 - `docs/hardening/MYTHOS-HANDOVER.md`
 - `docs/hardening/PLAN.md`
@@ -1779,6 +1780,9 @@
   - _(no `##` headings — flat file)_
 
 ### `docs/hardening/B4-LIVE-DRILL.md`
+  - _(no `##` headings — flat file)_
+
+### `docs/hardening/CLOSE-OUT.md`
   - _(no `##` headings — flat file)_
 
 ### `docs/hardening/ITEMS.md`

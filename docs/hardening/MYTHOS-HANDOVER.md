@@ -1,5 +1,8 @@
 # Handover — the post-deploy re-attack (Mythos)
 
+> **Status (2026-11-18): NOT RUN — deferred by the owner.** This handover is kept for a later round; until then the
+> hardening phase has NOT been independently re-attacked.
+
 **Target commit:** `fa46307` on `main` (the promotion commit: the committed exports `n8n/workflow.main.sanitized.json`
 and `n8n/workflow.owner-actions.sanitized.json` ARE what runs; parity proven at 14:4x Vienna, 2026-11-18).
 The range of the hardening work: `git log --oneline bb3f64b..fa46307`.
