@@ -33,13 +33,14 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 TABLE_GUARD = {   # table → the guard its every write must carry, as a regex over the DML's own text
     'conversations': r"sender_key'?\)?\s+LIKE\s+'widget:w-mig-p7-%'",
     'appointments': r"sender_key'?\)?\s+LIKE\s+'widget:w-mig-p7-%'",
-    'processed_messages': r"message_id\s+LIKE\s+'mig-p7-%'",
+    # HARDENING RT4-b: Main claims `widget:<id>`; the insert writes that form, the clean-up takes both forms.
+    'processed_messages': r"message_id\s+LIKE\s+'(?:widget:)?mig-p7-%'",
     'leads': r"message\s+LIKE\s+'mig-p7%'",
 }
 P74_GUARD = {     # clean-p74 only: the rows the 7-4 A window left, under that run's own prefixes
     'conversations': r"sender_key\s+LIKE\s+'widget:w-p74-%'",
     'appointments': r"sender_key\s+LIKE\s+'widget:w-p74-%'",
-    'processed_messages': r"message_id\s+LIKE\s+'p74-%'\s+AND\s+sender_key\s+LIKE\s+'widget:w-p74-%'",
+    'processed_messages': r"\(message_id\s+LIKE\s+'p74-%'\s+OR\s+message_id\s+LIKE\s+'widget:p74-%'\)\s+AND\s+sender_key\s+LIKE\s+'widget:w-p74-%'",
     'leads': r"message\s+=\s+'My name is Alex, please call me back'\s+AND\s+source\s+=\s+'widget'\s+AND\s+"
              r"created_at\s+>=\s+'2026-10-27T20:06:00Z'\s+AND\s+created_at\s+<=\s+'2026-10-27T20:10:00Z'",
 }

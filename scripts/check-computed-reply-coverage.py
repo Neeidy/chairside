@@ -13,9 +13,11 @@
 # jsCode must contain `computed_reply`. Missing one = FAIL. Static (reads the committed Main COPY export only:
 # since the D6b cutover the live Main is the Postgres copy; the parked original is the rollback path until D6c).
 # Exit 0 = OK, 1 = a builder is missing computed_reply. Run at every close gate / pre-push.
-import json, sys, collections
+import os, json, sys, collections
 
-PATH = sys.argv[1] if len(sys.argv) > 1 else 'n8n/workflow.main.sanitized.json'
+# The staged Main while one exists (HARDENING), else the committed one.
+_STAGED = 'n8n/staged/workflow.main.sanitized.json'
+PATH = sys.argv[1] if len(sys.argv) > 1 else (_STAGED if os.path.exists(_STAGED) else 'n8n/workflow.main.sanitized.json')
 SAVE_NODES = ('Save State', 'Save State (Post-Write)')
 
 w = json.load(open(PATH, encoding='utf-8'))

@@ -114,7 +114,8 @@ APPROVED_DELTAS = {
     # whose committed side no longer has those nodes), the NAME-CAPTURE R1 edit (docs/NAME-CAPTURE-PLAN.md §11; promoted
     # 2026-11-01, kept for the same reason), the DATE-PHRASING R1 edit (parameters only + Load Config's gate edits;
     # promoted 2026-11-02), the N1 R1 edit (three nodes, a sticky, the edge swap, two gate edits; promoted 2026-11-03) and
-    # the CLOSE-OUT R1 edit (one IF, a sticky, the edge swap; M1 and M2 inside the allowlisted nodes).
+    # the CLOSE-OUT R1 edit (one IF, a sticky, the edge swap; M1 and M2 inside the allowlisted nodes) and the HARDENING R1
+    # edit (docs/hardening/PLAN.md; the consent gate, the empty-message exit, the Resolve Date failure tag).
     'main': [{
         'add_nodes': {'Tag Turnstile Unavailable', 'Sticky — Tag Turnstile Unavailable'},
         'remove_nodes': {'Record Processed', 'Build Dedupe-Marker Alert'},
@@ -151,6 +152,15 @@ APPROVED_DELTAS = {
         'remove_nodes': set(),
         'add_edges': {'Reschedule Router|1|Booking Fresh?|0', 'Booking Fresh?|0|Build Event Request|0', 'Booking Fresh?|1|Slot Gate|0'},
         'remove_edges': {'Reschedule Router|1|Build Event Request|0'},
+        'settings': {},
+    }, {
+        # HARDENING R1 (docs/hardening/PLAN.md §3; rulings 2026-11-18): the consent gate (Read Pending Answer before Abort
+        # Cancel?, Route Consent after Booking Declined?), the empty-message exit after Check Bot Guards, the Resolve Date
+        # failure tag. Every other change is a node edit (allowlist). Load Config is untouched (no gate edit).
+        'add_nodes': {'Build Empty-Message Reply', 'Empty Message?', 'Read Pending Answer', 'Route Consent', 'Sticky — Consent gate', 'Sticky — Date resolver failed', 'Sticky — Empty message', 'Tag Date Resolver Failed'},
+        'remove_nodes': set(),
+        'add_edges': {'Booking Declined?|1|Route Consent|0', 'Build Empty-Message Reply|0|Finalize Outbound|0', 'Check Bot Guards|0|Empty Message?|0', 'Confirm Pending & Uncertain?|1|Read Pending Answer|0', 'Empty Message?|0|Build Empty-Message Reply|0', 'Empty Message?|1|Read Spend|0', 'Read Pending Answer|0|Abort Cancel?|0', 'Resolve Date|1|Tag Date Resolver Failed|0', 'Route Consent|0|Slot Gate|0', 'Route Consent|1|Mark Handoff|0', 'Route Consent|2|Uncertain Turn?|0', 'Tag Date Resolver Failed|0|Send Error Response|0'},
+        'remove_edges': {'Booking Declined?|1|Uncertain Turn?|0', 'Check Bot Guards|0|Read Spend|0', 'Confirm Pending & Uncertain?|1|Abort Cancel?|0', 'Resolve Date|1|Send Error Response|0'},
         'settings': {},
     }],
     'owner-actions': {

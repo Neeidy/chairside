@@ -7,8 +7,17 @@
   - **A confirmation is pending** (`cancel_confirming` / `reschedule_confirming`) → **handoff immediately**
     (`Confirm Pending & Uncertain?` → `Mark Handoff`, owner alert). Never act on a classification we distrust
     while a booking hangs on it.
-  - **Otherwise** → the FIRST uncertain turn gets a clarifying question (`messageTemplates.askIntent`) and
-    writes no new `stage`, so no lock forms; a SECOND uncertain turn in a row hands off.
+  - **Otherwise** → the FIRST uncertain turn gets a clarifying question (`messageTemplates.askIntent`, or — while a
+    booking is being collected — the next missing detail, HARDENING RM-2007) and writes no new `stage`, so no lock
+    forms; a SECOND uncertain turn in a row hands off.
+- **A CONFIDENT "yes" is not trusted on its own either (HARDENING K1, 2026-11-18 — STAGED; live after the hardening Main put).** At a pending confirm the TEXT
+  must be a clear agreement (`Read Pending Answer`: one closed list, stage-bound verbs; a question, a digit or a second
+  line never consents) — the model's `confirm` only ever counts together with it:
+  - **cancel / reschedule confirm:** anything but a clear yes the model also read as `confirm` keeps the booking
+    ("your booking stands", nothing written) — the text the customer was shown says "anything else to keep it";
+  - **booking confirm:** a model `confirm` without a clear yes shows the confirm again (`To book it I need a clear
+    yes.`, stamp renewed); a SECOND one in a row hands off with an owner alert (`consent_unclear`). A question or a
+    correction at the booking confirm takes its normal route.
   - `intent = 'handoff'` (explicit request, jailbreak) and invalid intent JSON still hand off on the FIRST turn.
 - **Below-threshold behavior = abstain, never guess.** The bot does not act on an intent it distrusts. Asking one
   clarifying question is abstaining; booking, cancelling or dropping a pending confirmation is guessing.
@@ -34,7 +43,7 @@ Five classes — never merged (the header said "three" while listing four; corre
 |---|---|---|---|
 | guard-trip | kill-switch / max-turns | no (transient) | 200 |
 | infra-unavailable | external system down | no (transient) | `error` flag + owner alert; **200 + a reply once the message id is claimed, 503 only before the claim** (CLAIM-RETRY, 7-2; corrected 2026-10-27 — this cell said "5xx") |
-| intent-handoff | explicit handoff · **model did not answer at all** (bad `stop_reason`, unparseable JSON, non-object) · uncertain turn **while a confirmation is pending** · SECOND consecutive uncertain turn | yes (`stage=handoff`, `last_intent`) | 200 |
+| intent-handoff | explicit handoff · **model did not answer at all** (bad `stop_reason`, unparseable JSON, non-object) · uncertain turn **while a confirmation is pending** · SECOND consecutive uncertain turn · SECOND consecutive model-`confirm` at a booking confirm without a clear yes (`consent_unclear`, HARDENING K1) | yes (`stage=handoff`, `last_intent`) | 200 |
 | clarify | FIRST uncertain turn (no confirmation pending) | `last_intent='clarify'` only — **no `stage` change, so no lock** | 200 |
 | **extraction-transient** | the model ANSWERED but the JSON failed the committed schema (e.g. the required `dateExpr` key absent) — AND the intent is not `handoff` — AND **no cancel/reschedule confirmation is pending** — AND it is the FIRST one in a row | `last_intent='invalid'` only — **no `stage` change, so no lock**; `extraction_invalid` flag → owner alert | 200 |
 

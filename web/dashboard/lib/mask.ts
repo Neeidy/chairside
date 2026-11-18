@@ -350,6 +350,16 @@ export function maskFreeText(raw: string | undefined | null, max = 160): string 
  * (its digits are split by letters), and everything listed under RECORDED BOUNDS on `maskDigitRuns`.
  * It is not proof of masking; that is `lib/mask.golden.ts`, an input → exact-output table asserted row by row.
  */
+/**
+ * HARDENING RM-1145 (i): `assertMasked` for ONE value on a row — a throw blanks that value, never the board. The
+ * handoff queue already caught per row; the leads and appointments panels called `assertMasked` bare, so a value
+ * that failed the check took the whole page to the error boundary. Same rule everywhere now.
+ */
+export function maskedOrWithheld(value: string, what: string): string {
+  try { return assertMasked(value, what); }
+  catch { return `— (${what} withheld: it did not pass the masking check)`; }
+}
+
 export function assertMasked(value: string, what: string): string {
   // It asks the masking mechanism itself, never a regex of its own: a second definition of "a number" is the
   // copy that drifts (`contract-integrity.md`), and it is how the old tripwire shared the maskers' blind spots.

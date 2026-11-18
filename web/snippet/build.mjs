@@ -9,9 +9,11 @@
  * this script CONSUMES that gate's output instead: `npm run build` runs it via `prebuild`, and this file
  * refuses to continue if `config.generated.json` is absent.
  * ⚠ SCOPE, stated honestly: that makes `npm run build` unable to SKIP the gate. It does not make the file
- * trustworthy in general — there is no provenance stamp on it and no freshness check, so a hand-written or
- * stale `config.generated.json` would build fine. The earlier wording here said "cannot be built along a
- * path where the gate did not run", which claimed more than the code checks (code-reviewer, 2026-09-10).
+ * trustworthy in general. Its FRESHNESS is checked by the gate itself — `build-config.mjs --check` re-resolves and
+ * compares, and refuses a hand-written or stale file (HARDENING RM-2123; this package's `npm run check` and check-all
+ * run it). This file does not repeat that check: calling `node build.mjs` directly on an old config.generated.json
+ * still builds. The earlier wording here said "cannot be built along a path where the gate did not run", which
+ * claimed more than the code checks (code-reviewer, 2026-09-10).
  *
  * WHAT IS BAKED, AND WHY SO LITTLE: the bundle is served to strangers on a client's website. It carries
  * only what the widget actually renders — the shop name, the shop's time zone (its message times and the zone line,
@@ -30,6 +32,7 @@ import { dirname, join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
+import { resolveBranding } from './branding.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SITE = resolve(HERE, '../site');
@@ -111,6 +114,10 @@ if (parsed.pathname !== EXPECTED_PATH) {
 //     t.notUnderstood
 //   $ grep -rn 'messageTemplates' web/snippet/src web/shared/src → no other consumer reads a key
 // `welcomeLine()` is a hardcoded string in the transport, not a template, so nothing else is lost.
+// HARDENING RM-2143: the brand colours, validated in branding.mjs (one place, unit-tested).
+let branding;
+try { const r = resolveBranding(config); branding = r.branding; for (const w of r.warnings) console.warn('⚠  ' + w); }
+catch (e) { fail(e.message); }
 const baked = {
   business: { name: config.business.name, timezone: config.business.timezone },
   messageTemplates: Object.fromEntries(NEEDED_TEMPLATES.map((k) => [k, config.messageTemplates[k]])),
@@ -160,6 +167,7 @@ function buildOptions(outfile) {
     logLevel: 'silent',
     define: {
       __BAKED_CONFIG__: JSON.stringify(baked),
+      __BRANDING__: JSON.stringify(branding),
       __WEBHOOK_URL__: JSON.stringify(webhookUrl),
       __TURNSTILE_SITE_KEY__: JSON.stringify(siteKey),
     },

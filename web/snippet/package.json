@@ -7,7 +7,7 @@
   "scripts": {
     "prebuild": "node ../site/scripts/build-config.mjs",
     "build": "node build.mjs",
-    "check": "tsc -p tsconfig.json && node build.mjs --check && node --test test/turnstile.test.ts",
+    "check": "node ../site/scripts/build-config.mjs --check && tsc -p tsconfig.json && node build.mjs --check && node --test test/turnstile.test.ts test/branding.test.ts",
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {

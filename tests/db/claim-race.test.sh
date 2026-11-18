@@ -27,7 +27,8 @@ bad() { FAIL=$((FAIL+1)); echo "✗ $1"; }
 
 CID="$(docker run -d --rm --label c72=pgtest --network none -e POSTGRES_HOST_AUTH_METHOD=trust -e POSTGRES_DB=salon \
   -v "$ROOT/db/schema:/schema:ro" "$IMAGE")"
-trap 'docker rm -f "$CID" >/dev/null 2>&1 || true' EXIT
+# X2 (HARDENING): -v removes the image's anonymous data volume with the container (2f961fd's class).
+trap 'docker rm -f -v "$CID" >/dev/null 2>&1 || true' EXIT
 for _ in $(seq 1 60); do docker exec "$CID" pg_isready -U postgres -d salon >/dev/null 2>&1 && break; sleep 0.5; done
 sleep 1   # the image restarts the server once after its init scripts
 for _ in $(seq 1 60); do docker exec "$CID" pg_isready -U postgres -d salon >/dev/null 2>&1 && break; sleep 0.5; done
@@ -48,8 +49,10 @@ w = json.load(open(sys.argv[1], encoding='utf-8'))
 print(next(n for n in w['nodes'] if n['name'] == sys.argv[2])['parameters']['query'])
 EOF
 }
-CLAIM_Q="$(q "$ROOT/n8n/workflow.main.sanitized.json" 'Check Processed')"
-REL_Q="$(q "$ROOT/n8n/workflow.owner-actions.sanitized.json" 'Release Handoff Lock')"
+# The staged export while one exists (HARDENING: the release also resets turn_count / confirm_turn), else the committed.
+pickx() { [ -f "$ROOT/n8n/staged/workflow.$1.sanitized.json" ] && echo "$ROOT/n8n/staged/workflow.$1.sanitized.json" || echo "$ROOT/n8n/workflow.$1.sanitized.json"; }
+CLAIM_Q="$(q "$(pickx main)" 'Check Processed')"
+REL_Q="$(q "$(pickx owner-actions)" 'Release Handoff Lock')"
 OLD_CHECK_Q="SELECT id FROM salon.processed_messages WHERE message_id = \$1"            # the pre-Tur-2 read
 REL_NO_TOKEN_Q="${REL_Q//AND salon.at_ts(last_updated) = \$2 /}"                         # O1 mutant: no version token
 TS_BOUND='AND last_updated <= to_timestamp($4::double precision) + interval '"'"'1 second'"'"' '

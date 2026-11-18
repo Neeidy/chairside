@@ -164,7 +164,8 @@ test('Build Clarify State: at the name ask the clarifying question IS the name q
 
 // ── keep across turns: Merge State · Merge Slots · Slot Gate (3.1, 3.2) ────────────────────────────────────────
 test('Merge State reads the kept name (conversations.slot_name) into state.slots.customerName; a new customer has none', () => {
-  const ms = (rec) => run('Merge State', { 'Normalize Inbound': { channel: 'widget', sender_key: 'widget:w-fake', text: 'hi' } }, rec);
+  // HARDENING K5: Merge State reads bot.sessionGapMinutes from Load Config (the session reset), so the stub carries it.
+  const ms = (rec) => run('Merge State', { 'Load Config': { config: CFG }, 'Normalize Inbound': { channel: 'widget', sender_key: 'widget:w-fake', text: 'hi' } }, rec);
   assert.equal(ms({ id: 'recX', fields: { stage: 'collecting', slot_name: 'Kept' } }).state.slots.customerName, 'Kept');
   assert.equal(ms({}).state.slots.customerName, null);
 });
@@ -293,10 +294,12 @@ test('Load State projects slot_name; both Save States write it as $14 (NULL when
     assert.match(p.query, /recent_messages, slot_name\) VALUES \([^)]*\$13, \$14\) ON CONFLICT/, n);
     assert.match(p.query, /slot_name = EXCLUDED\.slot_name RETURNING/, n);
     const j = { sender_key: 's', state: { stage: 'collecting', turn_count: 1, slots: { serviceId: 'haircut', date: DATE, time: '10:00', customerName: 'Kept' } } };
-    const vals = evalExpr(p.options.queryReplacement, {}, j);
+    // HARDENING RM-1622: Save State reads the loaded gcal_event_id from Merge State when this turn has none.
+    const refs = { 'Merge State': { state: {} } };
+    const vals = evalExpr(p.options.queryReplacement, refs, j);
     assert.equal(vals.length, 14, n); assert.equal(vals[13], 'Kept', n);
     j.state.slots.customerName = null;
-    assert.equal(evalExpr(p.options.queryReplacement, {}, j)[13], null, n);
+    assert.equal(evalExpr(p.options.queryReplacement, refs, j)[13], null, n);
   }
 });
 test('Purge (D-2): the 30-day scrub empties slot_name with recent_messages, takes a row whose name is set, never projects the name', () => {

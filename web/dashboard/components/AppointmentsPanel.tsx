@@ -11,7 +11,7 @@
  */
 import type { Page } from '../lib/store.ts';
 import type { Appointment } from '../lib/types.ts';
-import { maskName, assertMasked } from '../lib/mask.ts';
+import { maskName, maskedOrWithheld } from '../lib/mask.ts';
 import { shopConfig } from '../lib/shopConfig.ts';
 // K5 (code-reviewer, 2026-09-12): the timezone was `const TZ = 'Europe/Vienna'` — a literal, in a
 // config-driven product that already ships a second example client on Europe/Berlin. It did not look
@@ -39,7 +39,7 @@ export function AppointmentsPanel({ page }: { page: Page<Appointment> }) {
     return (
       <li className="row">
         <strong>{w ? `${w.day} ${w.time}` : '—'}</strong>
-        <span>{assertMasked(maskName(r.customer_name), 'customer name')}</span>
+        <span>{maskedOrWithheld(maskName(r.customer_name), 'customer name')}</span>
         <span className="sw">{r.service ?? '—'}</span>
         <span className="tech">{r.channel ?? '—'}{r.reminded ? ' · reminded' : ''}</span>
       </li>

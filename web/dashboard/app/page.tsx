@@ -27,6 +27,7 @@ import { HandoffQueue } from '../components/HandoffQueue.tsx';
 import { SystemHealth } from '../components/SystemHealth.tsx';
 import { Unavailable } from '../components/States.tsx';
 import { exportLinks } from '../lib/exportCsv.ts';
+import { shopConfig } from '../lib/shopConfig.ts';
 
 // No caching and no revalidation: this page is a live board, and a cached PII surface behind an
 // authenticated gate is a copy of that surface with weaker access rules.
@@ -37,6 +38,10 @@ export default async function DashboardPage() {
   resetBudget();
   let data;
   try {
+    // HARDENING RM-1145 (h): the shop config is checked HERE, inside this try. The panels read it, and a missing or
+    // broken CLIENT_CONFIG_JSON thrown from inside a panel reached the error boundary as an opaque digest instead of
+    // the `misconfigured` state below, which exists for exactly that. (Cached: the panels' own calls do not re-parse.)
+    try { shopConfig(); } catch (e) { throw new ConfigError(e instanceof Error ? e.message : 'shop config unreadable'); }
     // In parallel — four independent reads, one round trip's worth of latency, still four requests.
     const [appointments, leads, queue, spend] = await Promise.all([
       readAppointments(), readLeads(), readHandoffQueue(), readSpend(),

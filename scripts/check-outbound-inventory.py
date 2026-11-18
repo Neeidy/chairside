@@ -43,12 +43,15 @@ live Main is the Postgres copy, and the parked original is only the rollback pat
 """
 import json, re, sys, os
 
-PATH = sys.argv[1] if len(sys.argv) > 1 else os.environ.get('SANITIZED_PATH', 'n8n/workflow.main.sanitized.json')
+# The staged Main while one exists (the export the next put carries — HARDENING: this guard read only the committed one,
+# so a new exit in a staged edit passed check-all), else the committed one.
+_STAGED = 'n8n/staged/workflow.main.sanitized.json'
+PATH = sys.argv[1] if len(sys.argv) > 1 else os.environ.get('SANITIZED_PATH', _STAGED if os.path.exists(_STAGED) else 'n8n/workflow.main.sanitized.json')
 
 CONVERGE = ['Send Reply To Origin','Handoff Reply','Handoff Lock Reply','Idempotent Replay',
  'Booking State-Unsaved Reply','Send Reject Response','Send Error Response','LLM Unavailable Reply',
  'Lead Unavailable Reply','Calendar Unavailable Reply','Cancel Delete Unavailable Reply',
- 'Build Spend-Cap Reply']
+ 'Build Spend-Cap Reply','Build Empty-Message Reply']   # HARDENING H6: 200, askIntent, sends (docs/UX-ARCHITECTURE.md §3.1 #13)
 NO_SEND = {'Handoff Lock Reply','Idempotent Replay'}   # customer already knows
 
 def fail(msg):

@@ -1086,10 +1086,21 @@ function selftest() {
 
   fs.rmSync(tmp, { recursive: true, force: true });
 
+  // HARDENING RM-1413 (ROADMAP 6c-1): eight cases were LEXER bugs; under the parser they all descend to one code path and,
+  // as ROADMAP 6c-1 recorded (not re-measured here), no mutant kills any of them alone. They stay as anti-revert SENTINELS and are printed and counted as such — never
+  // as fail-proofs. Matched by name prefix; the count is asserted, so a renamed case cannot drop out silently.
+  const SENTINEL_PREFIXES = ['K3 ', 'K4 ', 'K5 ', '#1/#10 ', '#2 ', '#4 ', 'division operators', 'multi-line import'];
+  const isSentinel = (c) => SENTINEL_PREFIXES.some((pfx) => c.name.startsWith(pfx));
+  const sentinels = cases.filter(isSentinel);
+  const perPrefix = SENTINEL_PREFIXES.map((pfx) => [pfx, cases.filter((c) => c.name.startsWith(pfx)).length]);
+  if (perPrefix.some(([, n]) => n !== 1)) {
+    console.error(`FAIL: every sentinel prefix must match exactly one case: ${perPrefix.map(([p, n]) => `${p.trim()}=${n}`).join(', ')}`);
+    process.exit(1);
+  }
   const width = Math.max(...cases.map((c) => c.name.length));
   console.log('SELFTEST — fail-ability of this gate, proven both directions\n');
   for (const c of cases) {
-    console.log(`  ${c.pass ? 'ok  ' : 'FAIL'} ${c.name.padEnd(width)}  expect ${c.expect.padEnd(5)} got ${c.got.padEnd(5)} [${c.rules}]`);
+    console.log(`  ${c.pass ? 'ok  ' : 'FAIL'} ${c.name.padEnd(width)}  expect ${c.expect.padEnd(5)} got ${c.got.padEnd(5)} [${c.rules}]${isSentinel(c) ? '  (sentinel, not a fail-proof)' : ''}`);
   }
   // ⚠ WHAT THIS TABLE DOES NOT COVER, measured rather than implied: every case calls `analyse()` and
   // reads the lists it returns, so it proves the ANALYSIS and not the REPORTING. A mutant that disables
@@ -1114,10 +1125,13 @@ function selftest() {
   // time this one line has misdescribed its own numbers. Both are coverage failures by the code's own
   // words ("silent zero coverage", "unfollowable blind spot").
   const COVERAGE_RULES = new Set(['unresolved', 'vacuous', 'missing-entry', 'undeclared-app', 'nonliteral']);
-  const redCases = cases.filter((c) => c.expect === 'RED');
+  const proofs = cases.filter((c) => !isSentinel(c));
+  const redCases = proofs.filter((c) => c.expect === 'RED');
   const coverage = redCases.filter((c) => c.rules.split(',').every((r) => COVERAGE_RULES.has(r))).length;
-  console.log(`  RED in ${redCases.length} cases = ${redCases.length - coverage} leak shapes `
-    + `+ ${coverage} coverage failures; GREEN in ${cases.length - redCases.length} legitimate ones.`);
+  console.log(`  fail-proofs: RED in ${redCases.length} cases = ${redCases.length - coverage} leak shapes `
+    + `+ ${coverage} coverage failures; GREEN in ${proofs.length - redCases.length} legitimate ones.`);
+  console.log(`  + ${sentinels.length} anti-revert sentinels (${sentinels.filter((c) => c.expect === 'RED').length} RED, `
+    + `${sentinels.filter((c) => c.expect !== 'RED').length} GREEN) — not counted as fail-proofs.`);
 }
 
 // ---------------------------------------------------------------------------------------------

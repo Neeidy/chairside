@@ -14,6 +14,10 @@
  * re-declared below; nothing may be assumed.
  */
 import { FONT_DISPLAY, FONT_UI } from './fonts';
+// HARDENING RM-2143: the two brand colours are baked from config.branding by build.mjs (validated #RRGGBB there).
+// Still literals, stated: --oxide-soft, --frame and --edge are the Cream & Ink design's derived tones; a client
+// whose brand differs gets its primary and accent, and these three stay the demo's.
+declare const __BRANDING__: { primaryColor: string; accentColor: string };
 
 export const STYLES = `
 :host{all:initial}
@@ -25,7 +29,7 @@ export const STYLES = `
    it and the timestamp jumps to the wrong end of its own bubble. Repeated on .msg because that is where
    engine and customer text actually lands (Codex CRT #13, finding 6). */
 :host{direction:ltr;unicode-bidi:isolate}
-:host{--cream:#F1EEE6;--ink:#16150F;--oxide:#B4472E;--oxide-soft:#D98B66;--muted:#5C594E;--stamp:#C9C4B4;
+:host{--cream:#F1EEE6;--ink:${__BRANDING__.primaryColor};--oxide:${__BRANDING__.accentColor};--oxide-soft:#D98B66;--muted:#5C594E;--stamp:#C9C4B4;
 --frame:rgba(22,21,15,.35);--edge:rgba(22,21,15,.25);--ease:cubic-bezier(.22,.61,.36,1);
 --font-display:${FONT_DISPLAY};--font-ui:${FONT_UI}}
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}

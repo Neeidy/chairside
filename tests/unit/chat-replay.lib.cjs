@@ -87,7 +87,18 @@ function makeReplay(exportJson, { nowISO, sender = 'widget:w-replay', configPatc
     db.conv = { ...(db.conv || {}), ...Object.fromEntries(keys.map((k, i) => [k, p[i]])) };
     return [convRow()];
   }
-  const bookings = () => { const rows = db.appts.filter((a) => a.status === 'booked' && a.start_utc > now().toUTC().toISO()).map(apptRow); return rows.length ? rows : [{}]; };
+  // The three booking lookups (HARDENING F2): status 'booked' and ORDER BY created_at, id always (what the hardening SQL
+  // does; the committed export's SQL has the same filter and order), and the `end_utc > $2` bound only when this export's
+  // query carries it — the one part that follows the SQL text. The stub used to filter start_utc > now on its own — a
+  // stub more correct than the SQL, which hid F2 (a past booking taking the cancel) from every replay test.
+  const bookings = (name) => {
+    const q = String(((N[name] || {}).parameters || {}).query || '');
+    const bound = /AND end_utc > \$2::timestamptz/.test(q), t = now().toUTC().toISO();
+    const rows = db.appts.filter((a) => a.status === 'booked' && (!bound || String(a.end_utc) > t))
+      .slice().sort((x, y) => (String(x.created_at) < String(y.created_at) ? -1 : String(x.created_at) > String(y.created_at) ? 1 : (x.id < y.id ? -1 : 1)))
+      .map(apptRow);
+    return rows.length ? rows : [{}];
+  };
 
   const STUB = {
     'Load State': () => [db.conv ? convRow() : {}],
@@ -120,9 +131,9 @@ function makeReplay(exportJson, { nowISO, sender = 'widget:w-replay', configPatc
         customer_name: (p[6] === null || p[6] === '') ? (a.customer_name ?? p[6]) : p[6], status: 'booked', calendar_id: p[8] });
       return [apptRow(a)];
     },
-    'Find Booking': () => bookings(),
-    'Find Booking (Reschedule)': () => bookings(),
-    'Find Old Booking (Reschedule)': () => bookings(),
+    'Find Booking': () => bookings('Find Booking'),
+    'Find Booking (Reschedule)': () => bookings('Find Booking (Reschedule)'),
+    'Find Old Booking (Reschedule)': () => bookings('Find Old Booking (Reschedule)'),
     'Delete Booking Event': (j) => { db.calendar = db.calendar.filter((e) => e.id !== (j._cancel_target || {}).eventId); return [{ statusCode: 204, statusMessage: 'No Content', headers: {} }]; },
     'Delete Old Event (Reschedule)': () => [{ statusCode: 204, statusMessage: 'No Content', headers: {} }],
     'Update Appointment Cancelled': (j) => { const a = db.appts.find((x) => x.id === params('Update Appointment Cancelled', j)[0]); a.status = 'cancelled'; return [apptRow(a)]; },

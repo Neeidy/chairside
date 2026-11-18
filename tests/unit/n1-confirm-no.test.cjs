@@ -148,7 +148,10 @@ test('graph: Abort Reschedule? false → Classify → Booking Declined? (true �
   assert.deepEqual(to('Abort Reschedule?', 1), ['Classify Confirm Reply']);
   assert.deepEqual(to('Classify Confirm Reply', 0), ['Booking Declined?']);
   assert.deepEqual(to('Booking Declined?', 0), ['Build Booking-Declined State']);
-  assert.deepEqual(to('Booking Declined?', 1), ['Uncertain Turn?']);
+  // HARDENING K1: Booking Declined?'s false output now reaches Uncertain Turn? through Route Consent, whose fallback output
+  // is the old edge (its two rules carry only the new consent tags; tests/unit/hardening-main.test.cjs).
+  assert.deepEqual(to('Booking Declined?', 1), ['Route Consent']);
+  assert.deepEqual(to('Route Consent', 2), ['Uncertain Turn?']);
   assert.deepEqual(to('Build Booking-Declined State', 0), ['Save State']);
   for (const n of NEW_PATH) assert.equal(node(n).type, n === 'Booking Declined?' ? 'n8n-nodes-base.if' : 'n8n-nodes-base.code', n);
   const refs = new Set(NEW_PATH.flatMap((n) => [...JSON.stringify(node(n).parameters).matchAll(/\$\('([^']+)'\)/g)].map((m) => m[1])));

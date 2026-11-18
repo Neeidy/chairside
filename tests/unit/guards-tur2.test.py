@@ -459,6 +459,38 @@ def t_h5_openai_project_key():
     return rc != 0 and syn_openai_proj() not in out, 'project-scoped OpenAI key: exit %d' % rc
 
 
+def syn_calendar_id():   # HARDENING RM-1899 — assembled at run time
+    return 'c0ffee' * 5 + '@group.' + 'calendar.google.com'
+
+
+def syn_phone():   # HARDENING K14 — a synthetic Austrian-shaped mobile number, assembled at run time
+    return '+' + '43' + '664' + '1234567'
+
+
+def t_hd_calendar_id_blocked():
+    rc, out = _blocked_line('guards-hd-cal-', '"googleCalendarId": "%s",\n' % syn_calendar_id())
+    return rc != 0 and syn_calendar_id() not in out, 'a real-shaped Google Calendar id: exit %d' % rc
+
+
+def t_hd_telegram_chat_id_blocked():
+    rc, out = _blocked_line('guards-hd-chat-', '"chatId": "-100%s",\n' % ('98765' * 2))
+    return rc != 0, 'a numeric Telegram chat id: exit %d' % rc
+
+
+def t_hd_phone_blocked():
+    rc, out = _blocked_line('guards-hd-tel-', 'sender: whatsapp:%s\n' % syn_phone())
+    return rc != 0 and syn_phone() not in out, 'an E.164 phone number: exit %d' % rc
+
+
+def t_hd_new_rules_pass_placeholders_and_lookalikes():
+    lines = ['"googleCalendarId": "REPLACE_WITH_GOOGLE_CALENDAR_ID@group.calendar.google.com",',
+             '"chatId": "REPLACE_WITH_OWNER_TELEGRAM_CHAT_ID",', 'chatId: $json.chatId', 'tz offset +01:00, +1 hour',
+             'version v+' + '1234' + '5678',   # assembled so the SOURCE line is no phone hit (code-reviewer HIGH-1)
+             '1700000000', '20261118 build', '"appendAttribution": false', 'AppointmentsPanel.tsx']
+    rc, out = _blocked_line('guards-hd-ok-', '\n'.join(lines) + '\n')
+    return rc == 0, 'placeholders and look-alikes pass: exit %d %s' % (rc, out[-200:])
+
+
 def t_h5_bearer_hex_header():
     rc, out = _blocked_line('guards-h5b-', 'curl -H "Authorization: Bearer %s" https://api.invalid\n' % syn_hex(40))
     return rc != 0, 'hexadecimal Bearer header value: exit %d' % rc
@@ -1311,13 +1343,20 @@ def t_r1d_mb_real_history_needs_exactly_the_listed_fingerprints():
     committed exception file, and is blocked by the same scanner WITHOUT it — so no listed entry is dead weight."""
     rc1, o1 = run(['bash', SCAN, '--revs', 'HEAD'], REPO)
     with tempfile.TemporaryDirectory(prefix='guards-mb5-') as tmp:
-        rc2, o2 = run(['bash', _fp_scanner(tmp), '--revs', 'HEAD'], REPO)
-    listed = sum(1 for l in open(IGNORE, encoding='utf-8') if l.strip() and not l.lstrip().startswith('#')) \
-        if os.path.exists(IGNORE) else 0
-    remaining = o2.count('      fingerprint ')
-    ok = rc1 == 0 and 'excepted by fingerprint' in o1 and rc2 == 2 and remaining == listed
-    return ok, ('HEAD from the root: with the committed exceptions exit %d · without them exit %d, %d fingerprint(s) '
-                'printed for %d listed' % (rc1, rc2, remaining, listed))
+        scan = _fp_scanner(tmp)
+        # HARDENING K14: the scanner shows the first three hits per rule; this copy shows ALL of them, so the set of
+        # fingerprints the history needs can be compared with the set listed (one entry per commit:path:rule).
+        body = open(scan, encoding='utf-8').read()
+        assert body.count('for where, fp in items[:3]:') == 1, 'the per-rule display cut moved'
+        open(scan, 'w', encoding='utf-8').write(body.replace('for where, fp in items[:3]:', 'for where, fp in items:'))
+        rc2, o2 = run(['bash', scan, '--revs', 'HEAD'], REPO)
+    listed = {l.strip() for l in open(IGNORE, encoding='utf-8') if l.strip() and not l.lstrip().startswith('#')} \
+        if os.path.exists(IGNORE) else set()
+    needed = {l.strip()[len('fingerprint '):] for l in o2.splitlines() if l.strip().startswith('fingerprint ')}
+    ok = rc1 == 0 and 'excepted by fingerprint' in o1 and rc2 == 2 and needed == listed
+    return ok, ('HEAD from the root: with the committed exceptions exit %d · without them exit %d, %d distinct '
+                'fingerprint(s) needed for %d listed (unlisted %d, dead %d)'
+                % (rc1, rc2, len(needed), len(listed), len(needed - listed), len(listed - needed)))
 
 
 # ---- R1d · --diff-merges=separate: a log.diffMerges setting cannot hide a merge ----------------------------------------

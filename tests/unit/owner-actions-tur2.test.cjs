@@ -13,7 +13,9 @@ const assert = require('node:assert/strict');
 const { readFileSync } = require('node:fs');
 const { join } = require('node:path');
 
-const EXPORT = process.argv[2] || join(__dirname, '..', '..', 'n8n', 'workflow.owner-actions.sanitized.json');
+// HARDENING: the staged export while one exists (the hardening release resets the turn count and the pending confirm).
+const STAGED = join(__dirname, '..', '..', 'n8n', 'staged', 'workflow.owner-actions.sanitized.json');
+const EXPORT = process.argv[2] || (require('node:fs').existsSync(STAGED) ? STAGED : join(__dirname, '..', '..', 'n8n', 'workflow.owner-actions.sanitized.json'));
 const wf = JSON.parse(readFileSync(EXPORT, 'utf8'));
 const node = (name) => wf.nodes.find((n) => n.name === name);
 const stub = (refs) => (name) => {
@@ -26,7 +28,7 @@ const CTX = { action: 'release_handoff', record_id: 'recAAAAAAAAAAAAAA', message
 
 test('O1 (R2b OA-1): one statement — release only if unmarked, still the same handoff and not newer than the request; the marker ONLY on a release', () => {
   const p = node('Release Handoff Lock').parameters;
-  assert.match(p.query, /^WITH upd AS \(UPDATE salon\.conversations SET stage = 'new', last_intent = '' WHERE id = \$1 AND stage = 'handoff' AND salon\.at_ts\(last_updated\) = \$2 AND last_updated <= to_timestamp\(\$4::double precision\) \+ interval '1 second' AND NOT EXISTS \(SELECT 1 FROM salon\.processed_messages WHERE message_id = \$3\) RETURNING id,/);
+  assert.match(p.query, /^WITH upd AS \(UPDATE salon\.conversations SET stage = 'new', last_intent = '', turn_count = 0, confirm_turn = '' WHERE id = \$1 AND stage = 'handoff' AND salon\.at_ts\(last_updated\) = \$2 AND last_updated <= to_timestamp\(\$4::double precision\) \+ interval '1 second' AND NOT EXISTS \(SELECT 1 FROM salon\.processed_messages WHERE message_id = \$3\) RETURNING id,/);
   assert.match(p.query, /mark AS \(INSERT INTO salon\.processed_messages \(message_id, sender_key, channel\) SELECT \$3, 'owner:dashboard', 'owner' FROM upd ON CONFLICT \(message_id\) DO NOTHING RETURNING 1\)/,
     'the marker is inserted FROM upd: no released row, no marker');
   assert.doesNotMatch(p.query, /VALUES \(\$3/, 'no unconditional claim insert anywhere in the statement');

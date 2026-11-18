@@ -25,7 +25,12 @@ import { loadConfigDetailed, validateConfigObject, isDemoMode } from '@salon/sha
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SITE_ROOT = resolve(HERE, '..');
-const OUT = join(SITE_ROOT, 'config.generated.json');
+// --out <path>: the tests write and check a throwaway copy, never the real file. --check (HARDENING RM-2123): resolve and
+// validate exactly as a build does, then COMPARE with the file on disk and write nothing — a hand-written or stale
+// config.generated.json (one produced before the config or the schema changed) fails here instead of shipping.
+const outArg = process.argv.indexOf('--out');
+const OUT = outArg > 0 && process.argv[outArg + 1] ? resolve(process.argv[outArg + 1]) : join(SITE_ROOT, 'config.generated.json');
+const CHECK_ONLY = process.argv.includes('--check');
 
 function fail(msg) {
   console.error('\n✗ BUILD STOPPED — client config: ' + msg + '\n');
@@ -138,5 +143,15 @@ try {
     + 'Europe/Vienna). The widget formats every message time in it.');
 }
 
-writeFileSync(OUT, JSON.stringify(config, null, 2) + '\n');
+const body = JSON.stringify(config, null, 2) + '\n';
+if (CHECK_ONLY) {
+  let onDisk = null;
+  try { onDisk = readFileSync(OUT, 'utf8'); } catch { /* missing is a failure below */ }
+  if (onDisk === null) fail(`--check: ${OUT} does not exist — run this script without --check to produce it.`);
+  if (onDisk !== body) fail(`--check: ${OUT} is STALE or hand-edited — it is not what the current config and schema produce. `
+    + 'Re-run this script without --check.');
+  console.log(`config: --check OK — config.generated.json equals what ${source} produces now`);
+  process.exit(0);
+}
+writeFileSync(OUT, body);
 console.log(`config: ${source} → config.generated.json  (business="${config.business.name}", demoMode=${isDemoMode(config)}, services=${config.services.length})`);

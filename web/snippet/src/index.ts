@@ -75,14 +75,27 @@ function boot(selfSrc: string | null) {
   // The guard lives HERE, not in main(): two tags pasted into <head> would both defer to
   // DOMContentLoaded and both arrive with the host still absent, so a check made before the wait
   // would let two widgets through.
-  if (document.getElementById(HOST_ID)) return;      // double-insert guard: two script tags, one widget
+  // HARDENING RM-2101 (Bulgu 7): the guard is OUR marker, not the bare id. Two edge cases the id alone got wrong:
+  //   · the host page already uses the id for its own element → the widget never mounted, silently;
+  //   · a mount that threw half-way left the element behind → every later load returned early, no widget at all.
+  // `data-barber-widget` is "mounting" until the end of boot() and "mounted" after; both cases now say so in the
+  // console, visibly, and the widget still mounts.
+  const mine = document.querySelector('[data-barber-widget]');
+  if (mine) {
+    if (mine.getAttribute('data-barber-widget') === 'mounted') return;   // double-insert guard: two tags, one widget
+    console.warn('[barber-widget] a previous mount did not finish — removing it and mounting again');
+    mine.remove();
+  }
+  const clash = document.getElementById(HOST_ID);
+  if (clash) console.warn(`[barber-widget] this page already uses the id "${HOST_ID}" — the widget mounts without it`);
 
   const cfg = __BAKED_CONFIG__;
   const name = cfg.business.name;
   const endpoint = { webhookUrl: __WEBHOOK_URL__, turnstileSiteKey: __TURNSTILE_SITE_KEY__ };
 
   const host = document.createElement('div');
-  host.id = HOST_ID;
+  if (!clash) host.id = HOST_ID;
+  host.setAttribute('data-barber-widget', 'mounting');
   document.body.appendChild(host);
   const root = host.attachShadow({ mode: 'open' });
 
@@ -425,4 +438,5 @@ function boot(selfSrc: string | null) {
 
   launcher.addEventListener('click', () => setOpen(!panel.classList.contains('is-open')));
   closeBtn.addEventListener('click', () => setOpen(false));
+  host.setAttribute('data-barber-widget', 'mounted');   // RM-2101: only a COMPLETE mount stops the next load
 }

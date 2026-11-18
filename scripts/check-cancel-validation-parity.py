@@ -26,7 +26,10 @@
 # Exit 0 = parity OK, 1 = drift. Run at every close gate / pre-push (with the #5 coverage guard).
 import json, sys, re, collections, os
 
-PATH = sys.argv[1] if len(sys.argv) > 1 else 'n8n/workflow.main.sanitized.json'
+# The staged Main while one exists (it is the export the next put carries), else the committed one (HARDENING). While a
+# staged Main exists check-all therefore checks THAT, not the committed export; pass a path to check the other.
+_STAGED = 'n8n/staged/workflow.main.sanitized.json'
+PATH = sys.argv[1] if len(sys.argv) > 1 else (_STAGED if os.path.exists(_STAGED) else 'n8n/workflow.main.sanitized.json')
 w = json.load(open(PATH, encoding='utf-8'))
 by = {n['name']: n for n in w['nodes']}
 
@@ -103,22 +106,48 @@ def if_leftvalue(name):
     return None
 
 
-# 4) confirm-TTL byte-identity — Confirm Fresh? and Reschedule Fresh? must share ONE TTL expression
+# 4) confirm-TTL byte-identity — Confirm Fresh? and Reschedule Fresh? must share ONE TTL expression.
+#    HARDENING F5 (ruling K2, 2026-11-18): Reschedule Fresh? and Booking Fresh? may append exactly ONE more clause, the
+#    slot-in-the-future bound below (a yes acts only while the slot has not started) — and BOTH carry it or NEITHER does
+#    (an export from before the edit, e.g. render-client's render of the committed Main, has neither). Confirm Fresh?
+#    (cancel) has no slot to bound. Any other difference is drift. That the bound is PRESENT in the edit is held by
+#    tests/unit/hardening-main.test.cjs and its mutants, not here: this guard keeps the nodes in step.
+FUTURE = ("(() => { const s = $json.state.slots || {}; const d = DateTime.fromISO(String(s.date) + 'T' + String(s.time), "
+          "{ zone: $('Load Config').first().json.config.business.timezone }); return d.isValid && d.toMillis() > $now.toMillis(); })()")
 cf_ttl = if_leftvalue('Confirm Fresh?')
 rf_ttl = if_leftvalue('Reschedule Fresh?')
 if cf_ttl is None or rf_ttl is None:
     fails.append(f"confirm-TTL nodes missing (Confirm Fresh?={cf_ttl is not None}, Reschedule Fresh?={rf_ttl is not None})")
-elif cf_ttl != rf_ttl:
-    fails.append("confirm-TTL DRIFT — Confirm Fresh? and Reschedule Fresh? leftValue not byte-identical "
-                 "(reschedule must reuse the cancel-confirm TTL verbatim)")
+elif rf_ttl not in (cf_ttl, cf_ttl[:-3] + ' && ' + FUTURE + ' }}'):
+    fails.append("confirm-TTL DRIFT — Reschedule Fresh? is not Confirm Fresh?'s TTL (optionally plus exactly the "
+                 "slot-in-the-future bound, HARDENING F5)")
 # 4b) CLOSE-OUT M2: Booking Fresh? is the same TTL with ONE declared difference — its stage scope (only a pending booking
 #     confirm is checked; any other stage passes, which keeps N1's D-6 route). Anything else is drift.
 BF_SCOPE = "if ($json.state.stage !== 'confirming') return true; "
 bf_ttl = if_leftvalue('Booking Fresh?')
 if bf_ttl is None or cf_ttl is None:
     fails.append(f"booking-confirm TTL node missing (Booking Fresh?={bf_ttl is not None})")
-elif bf_ttl != cf_ttl.replace('{{ (() => { ', '{{ (() => { ' + BF_SCOPE, 1):
-    fails.append("booking-confirm TTL DRIFT — Booking Fresh? is not Confirm Fresh?'s TTL plus exactly its stage scope")
+elif bf_ttl not in (cf_ttl.replace('{{ (() => { ', '{{ (() => { ' + BF_SCOPE, 1),
+                    cf_ttl.replace('{{ (() => { ', '{{ (() => { ' + BF_SCOPE, 1)[:-3]
+                    + " && ($json.state.stage !== 'confirming' || " + FUTURE + ') }}'):
+    fails.append("booking-confirm TTL DRIFT — Booking Fresh? is not Confirm Fresh?'s TTL plus exactly its stage scope "
+                 "(optionally plus exactly the future bound for a pending booking confirm, HARDENING F5)")
+# 4c) HARDENING RM-1907: the two event-id gates (booking and reschedule writes) are ONE condition — same leftValue,
+#     regex, operator and options; only the condition id differs.
+def gate(name):
+    n = by.get(name)
+    if not n:
+        return None
+    c = json.loads(json.dumps(n.get('parameters', {}).get('conditions', {})))
+    for x in c.get('conditions', []) or []:
+        x.pop('id', None)
+    return json.dumps(c, sort_keys=True)
+if gate('Event ID Valid?') is None or gate('Event ID Valid?') != gate('Reschedule Event ID Valid?'):
+    fails.append("event-id gate DRIFT — Event ID Valid? and Reschedule Event ID Valid? are not the same condition")
+
+# 4d) HARDENING F5: the two yes-acting confirms carry the future bound together, or neither does.
+if rf_ttl is not None and bf_ttl is not None and ((FUTURE in rf_ttl) != (FUTURE in bf_ttl)):
+    fails.append("future-bound DRIFT — only one of Reschedule Fresh? / Booking Fresh? carries the slot-in-the-future bound")
 
 # 5) *_confirming ↔ stageContext — every *_confirming stage keyed in an IF/Switch routing condition
 #    must have a matching branch in Build LLM Request's stageContext ternary.
@@ -241,8 +270,8 @@ print(f'cancel-validation parity OK — gid regex {len(GID_NODES)}x identical [0
       'Validate Reschedule Target); '
       'confirm_turn regex 4x ^[1-9][0-9]*$ (Confirm Fresh?, Verify Confirm Live, Reschedule Fresh?, Booking Fresh?); '
       'Cancel Lookup + Validate Cancel Target + Reschedule Lookup all check {finite start_utc, gid shape, '
-      'calendar_id present}; Confirm Fresh?==Reschedule Fresh? TTL byte-identical; '
-      'Booking Fresh? == that TTL + its stage scope; '
+      'calendar_id present}; Reschedule Fresh? == Confirm Fresh?\'s TTL (+ the F5 future bound, in step with Booking Fresh?); '
+      'Booking Fresh? == that TTL + its stage scope + the future bound; Event ID Valid? == Reschedule Event ID Valid?; '
       f'routed *_confirming {sorted(routed)} all have a Build LLM Request stageContext branch; '
       'two Load Configs share identical business.timezone + bot.killSwitch; '
       'three Load Configs share identical ownerAlert.enabled + throttleMinutes; '

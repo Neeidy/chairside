@@ -252,6 +252,20 @@ RULES = [(n, re.compile(p, re.I)) for n, p in (
     ('n8n encryption key', r'(?:N8N_ENCRYPTION_KEY|encryptionKey)["\' ]*[:=]["\' ]*[A-Za-z0-9/+_=-]{16,}'),
     # (21) a Postgres URL with a password in it; `${VAR}` / `$VAR` passwords are stripped first and leave no match
     ('postgres url with credentials', r'postgres(?:ql)?(?:\+[A-Za-z0-9]+)?://[^\s:/@\'"]+:[^\s@/\'"]+@'),
+    # HARDENING RM-1899: the two product identifiers that leaked here before and that no rule saw — a Google Calendar id
+    # (its REPLACE_WITH_… placeholder is stripped first) and a numeric Telegram chat id assigned to a chat-id key.
+    # Not added: an Airtable app/tbl id rule. Airtable is retired (D6c) and the shape fires on ordinary words
+    # (`appendAttribution` on every Telegram node, `AppointmentsPanel`) — measured over every tracked file, 2026-11-18.
+    # NOT caught, stated: a primary calendar (an e-mail address) and the URL-encoded `%40group.calendar…` form.
+    ('google calendar id', r'[A-Za-z0-9._-]{10,}@group\.calendar\.google\.com'),
+    ('telegram chat id', r'chat_?id["\' ]*[:=]["\' ]*-?[0-9]{6,}'),
+    # HARDENING K14 (RM-2299): a phone number in E.164 form — PII on a public repo.
+    # It judges committed patch lines ONLY (PATCH_ONLY below): never a commit message, tag text or the manual-mode working
+    # tree, so an uncommitted number is caught at push time, after it is committed. The synthetic numbers already in
+    # history are fingerprint-excepted in secret-scan-ignore, one commit:path:rule at a time; a NEW one needs its own entry.
+    # NOT caught, stated: a number written with spaces or dashes (`+49 151 …`, `+1-415-…`), with a 00 prefix or no `+`
+    # (`004915…`, `whatsapp:4915…`), or with a letter right before the `+` (`\n+4915…` inside an escaped JSON string).
+    ('phone number (E.164)', r'(?<![A-Za-z0-9])\+[1-9][0-9]{7,14}(?![0-9])'),
 )]
 
 
@@ -261,6 +275,11 @@ def mask(line, span):
 
 
 RULE_NAMES = {n for n, _ in RULES}
+# HARDENING K14: the phone rule judges committed patch lines only, where a fingerprint exception is possible. Commit
+# messages cannot be excepted, and this history's messages quote the documented shared sandbox test number — a
+# message-wide phone rule would block every push to an empty remote forever (measured 2026-11-18).
+PATCH_ONLY = {'phone number (E.164)'}
+assert PATCH_ONLY <= RULE_NAMES
 
 
 # FINGERPRINT EXCEPTIONS (15) — `<full 40-hex commit>:<path>:<rule name>`. The rule name is what follows the LAST colon
@@ -385,6 +404,8 @@ def main(argv):
         count['lines'] += 1
         cand = strip(text)
         for name, rx in RULES:
+            if name in PATCH_ONLY and origin is None:
+                continue
             m = rx.search(cand)
             if not m:
                 continue
@@ -400,6 +421,10 @@ def main(argv):
             check(line.rstrip('\n'), None)
     # Labelled: every added line of every committed patch, with its commit and path.
     for c, p, line in patch_lines(patch_path):
+        # HARDENING K14 (code-reviewer MEDIUM-2): the diff's own `+` is not content — left on, a line that BEGINS with
+        # 8–15 digits (an epoch, a CSV row) was read with that plus in front, i.e. as an E.164 number.
+        if line.startswith('+'):
+            line = line[1:]
         for piece in universal_lines(line):
             check(piece, (c, p))
 
@@ -611,5 +636,5 @@ elif [[ "$rc" -ne 0 ]]; then
   echo "BLOCKED: the secret-scan rule engine failed (exit $rc) — it will not approve content it did not scan." >&2
   exit 2
 fi
-[[ "$mode" != hook ]] && echo "secret-scan: OK — ${scope}$([[ "$mode" == manual ]] && printf ' + working tree'): $(cat "$tmp/stats" 2>/dev/null) scanned against one rule set (line rules + n8n header pairs)." >&2
+[[ "$mode" != hook ]] && echo "secret-scan: OK — ${scope}$([[ "$mode" == manual ]] && printf ' + working tree'): $(cat "$tmp/stats" 2>/dev/null) scanned against one rule set (line rules + n8n header pairs; the phone rule on committed patch lines only)." >&2
 exit 0

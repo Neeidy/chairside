@@ -679,11 +679,17 @@ def project(node, smap):
     # `Resolve Date` among them — or one whose error routing had been changed left both parity guards GREEN.
     # "live == committed" was therefore a weaker claim than it read as, for every check that relied on it.
     # Normalised because n8n omits the field at its default rather than writing it.
-    # NOTE, deliberately not widened here: alwaysOutputData / retryOnFail / executeOnce are also
-    # execution-affecting and remain uncompared — out of scope for this change, recorded in ROADMAP.
+    # HARDENING RM-1938: alwaysOutputData / retryOnFail (with its maxTries / waitBetweenTries) / executeOnce are compared too. They change what a node does —
+    # a retried Record LLM Spend would ADD a delta twice now that the meter increments in SQL — and until this they left
+    # both parity guards green (tests/unit/content-parity-flags.test.py, one case per flag).
     return {'type': node.get('type'), 'parameters': p,
             'disabled': bool(node.get('disabled')),
             'onError': node.get('onError') or 'stopWorkflow',
+            'alwaysOutputData': bool(node.get('alwaysOutputData')),
+            'retryOnFail': bool(node.get('retryOnFail')),
+            'maxTries': node.get('maxTries') if node.get('retryOnFail') else None,
+            'waitBetweenTries': node.get('waitBetweenTries') if node.get('retryOnFail') else None,
+            'executeOnce': bool(node.get('executeOnce')),
             'credentials': canon(node.get('credentials'), smap)}
 
 
@@ -719,7 +725,7 @@ def content_drift(live, comm, smap):
             # Name the execution flags explicitly, with both values. Reporting a bare "fields []" for a
             # disabled node tells the operator nothing — and this is precisely the drift the flags were
             # added to catch, so its message has to be the clearest one in the guard.
-            for flag in ('disabled', 'onError'):
+            for flag in ('disabled', 'onError', 'alwaysOutputData', 'retryOnFail', 'maxTries', 'waitBetweenTries', 'executeOnce'):
                 if lp[flag] != cp[flag]:
                     extra.append(f'{flag} (committed={cp[flag]!r} live={lp[flag]!r})')
             fails.append(f"content DRIFT in '{nm}': fields {diff_keys + extra} differ (committed != live)")

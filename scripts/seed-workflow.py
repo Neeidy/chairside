@@ -13,7 +13,8 @@ The statements (SQL below, printed by --print-sql) — what makes them safe is I
     only as ONE jsonb value through the node's Query Parameters (`$1`), and the guard is applied to that value;
   · every write is prefix-guarded in its own WHERE clause:
       conversations / appointments  sender_key LIKE 'widget:w-mig-p7-%'
-      processed_messages            message_id LIKE 'mig-p7-%'  (the clean-up also takes the run-d11 dashboard
+      processed_messages            message_id LIKE 'mig-p7-%' or 'widget:mig-p7-%' (Main's claim key since HARDENING RT4-b;
+                                    pm-insert writes the prefixed form) — the clean-up also takes the run-d11 dashboard
                                     markers: message_id LIKE 'd11-%' AND sender_key = 'owner:dashboard' AND channel = 'owner')
       leads                         message LIKE 'mig-p7%'
     the public demo's actions (2026-10-29) carry their OWN prefix, so neither set of clean-ups can reach the other's:
@@ -86,7 +87,7 @@ PARAM = '={{ [ JSON.stringify($json.body.p) ] }}'     # ONE jsonb value; the arr
 
 # The guards, named once so the tests can look for them; the SQL below spells them out literally (no formatting).
 GUARD_SENDER = "sender_key LIKE 'widget:w-mig-p7-%'"
-GUARD_MESSAGE = "message_id LIKE 'mig-p7-%'"
+GUARD_MESSAGE = "message_id LIKE 'widget:mig-p7-%'"
 GUARD_D11 = "(message_id LIKE 'd11-%' AND sender_key = 'owner:dashboard' AND channel = 'owner')"
 GUARD_LEAD = "message LIKE 'mig-p7%'"
 GUARD_PD_SENDER = "sender_key LIKE 'widget:w-pd-%'"
@@ -154,11 +155,11 @@ SQL = {
     'pm-insert': (
         "WITH r AS (SELECT * FROM jsonb_to_recordset($1::jsonb -> 'rows') AS x(message_id text, sender_key text, "
         "channel text, created_at timestamptz)), "
-        "ok AS (SELECT NOT EXISTS (SELECT 1 FROM r AS q WHERE NOT coalesce(q.message_id LIKE 'mig-p7-%' "
+        "ok AS (SELECT NOT EXISTS (SELECT 1 FROM r AS q WHERE NOT coalesce(q.message_id LIKE 'widget:mig-p7-%' "
         "AND q.sender_key LIKE 'widget:w-mig-p7-%' AND q.created_at IS NOT NULL, false)) AS all_ok), "
         "ins AS (INSERT INTO salon.processed_messages (message_id, sender_key, channel, created_at) "
         "SELECT message_id, sender_key, channel, created_at FROM r, ok WHERE ok.all_ok "
-        "AND message_id LIKE 'mig-p7-%' AND sender_key LIKE 'widget:w-mig-p7-%' AND created_at IS NOT NULL RETURNING 1) "
+        "AND message_id LIKE 'widget:mig-p7-%' AND sender_key LIKE 'widget:w-mig-p7-%' AND created_at IS NOT NULL RETURNING 1) "
         "SELECT (SELECT count(*) FROM ins)::int AS inserted, (SELECT count(*) FROM r)::int AS sent"),
     'lead-insert': (
         "WITH r AS (SELECT * FROM jsonb_to_recordset($1::jsonb -> 'rows') AS x(name text, phone text, source text, "
@@ -171,7 +172,7 @@ SQL = {
     'clean': (
         "WITH c AS (DELETE FROM salon.conversations WHERE sender_key LIKE 'widget:w-mig-p7-%' RETURNING 1), "
         "a AS (DELETE FROM salon.appointments WHERE sender_key LIKE 'widget:w-mig-p7-%' RETURNING 1), "
-        "p AS (DELETE FROM salon.processed_messages WHERE message_id LIKE 'mig-p7-%' OR (message_id LIKE 'd11-%' "
+        "p AS (DELETE FROM salon.processed_messages WHERE message_id LIKE 'mig-p7-%' OR message_id LIKE 'widget:mig-p7-%' OR (message_id LIKE 'd11-%' "
         "AND sender_key = 'owner:dashboard' AND channel = 'owner') RETURNING 1), "
         "l AS (DELETE FROM salon.leads WHERE message LIKE 'mig-p7%' RETURNING 1) "
         "SELECT (SELECT count(*) FROM c)::int AS conversations, (SELECT count(*) FROM a)::int AS appointments, "
@@ -179,7 +180,7 @@ SQL = {
     'clean-p74': (
         "WITH c AS (DELETE FROM salon.conversations WHERE sender_key LIKE 'widget:w-p74-%' RETURNING 1), "
         "a AS (DELETE FROM salon.appointments WHERE sender_key LIKE 'widget:w-p74-%' RETURNING 1), "
-        "p AS (DELETE FROM salon.processed_messages WHERE message_id LIKE 'p74-%' AND sender_key LIKE 'widget:w-p74-%' "
+        "p AS (DELETE FROM salon.processed_messages WHERE (message_id LIKE 'p74-%' OR message_id LIKE 'widget:p74-%') AND sender_key LIKE 'widget:w-p74-%' "
         "RETURNING 1), "
         "l AS (DELETE FROM salon.leads WHERE message = 'My name is Alex, please call me back' AND source = 'widget' "
         "AND created_at >= '2026-10-27T20:06:00Z' AND created_at <= '2026-10-27T20:10:00Z' RETURNING 1) "
@@ -344,7 +345,9 @@ def payload(action, opt):
         if not MESSAGE_RE.match(opt.get('message_id') or ''):
             raise Refused(f'--message-id must match {MESSAGE_RE.pattern}')
         created = _iso(opt.get('created_at'), '--created-at')
-        return {'rows': [{'message_id': opt['message_id'], 'sender_key': sk, 'channel': 'widget',
+        # HARDENING RT4-b: Main claims `<channel>:<message_id>`, so a seeded "already processed" marker carries the same
+        # key — the bare id would no longer collide with Main's claim and the replay case would run a full turn.
+        return {'rows': [{'message_id': 'widget:' + opt['message_id'], 'sender_key': sk, 'channel': 'widget',
                           'created_at': created.strftime('%Y-%m-%dT%H:%M:%S.000Z')}]}
     if action in ('appt-delete',):
         return {'sender_key': sk}

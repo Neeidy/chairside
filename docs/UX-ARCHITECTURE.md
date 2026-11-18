@@ -277,7 +277,7 @@ Ayrı workflow: `Salon Booking Bot — Reminders`, **saatlik** schedule.
 Bu bölüm **eksiksiz** olmak zorunda. Sistemin ürettiği her HTTP çıkışı burada. Ekranı olmayan her
 çıkış **🕳 BOŞLUK** olarak işaretli — Phase 6 bunları tasarlamak zorunda.
 
-### 3.1 — Converged çıkışlar (12 dal → `Finalize Outbound` → `Channel Switch`)
+### 3.1 — Converged çıkışlar (13 dal → `Finalize Outbound` → `Channel Switch`)
 
 Widget `_outbound_body`'yi **birebir** alır (senkron). WhatsApp `_outbound_reply`'i alır ve yalnızca
 `_outbound_should_send === true` ise gönderilir.
@@ -296,6 +296,7 @@ Widget `_outbound_body`'yi **birebir** alır (senkron). WhatsApp `_outbound_repl
 | 10 | `Calendar Unavailable Reply` | 503 | ✅ `handoff` | ✅ | hata balonu |
 | 11 | `Cancel Delete Unavailable Reply` | 503 | ✅ `cancelUnavailable` + `cancel_delete_failed:true` | ✅ | hata balonu |
 | 12 | `Build Spend-Cap Reply` | 200 | ✅ `handoff` | ✅ | devir balonu — ⚠ drift-guard bunu denetlemiyor (§8 BULGU #2) |
+| 13 | `Build Empty-Message Reply` | 200 | ✅ `askIntent` | ✅ | normal balon — kontrol karakterleri silinince boş kalan mesaj (HARDENING H6); model çağrılmaz, state yazılmaz, alert yok; kilit / kill-switch / tur sınırı önce cevaplar |
 
 **#6 ve #7 kritik:** widget bu iki durumda **hiçbir okunabilir metin almıyor**. Bugün widget'ın ne
 göstereceği motorda tanımlı değil — frontend'in kendi kararı. §9 açık karar 4.

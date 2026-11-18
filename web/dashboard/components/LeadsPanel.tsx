@@ -7,7 +7,7 @@
  */
 import type { Page } from '../lib/store.ts';
 import type { Lead } from '../lib/types.ts';
-import { maskName, maskPhone, assertMasked } from '../lib/mask.ts';
+import { maskName, maskPhone, maskedOrWithheld } from '../lib/mask.ts';
 
 export function LeadsPanel({ page }: { page: Page<Lead> }) {
   return (
@@ -24,8 +24,8 @@ export function LeadsPanel({ page }: { page: Page<Lead> }) {
         <ul className="q-msgs">
           {page.rows.map((r) => (
             <li key={r.id} className="row">
-              <strong>{assertMasked(maskName(r.name), 'lead name')}</strong>
-              <span>{assertMasked(maskPhone(r.phone), 'lead phone')}</span>
+              <strong>{maskedOrWithheld(maskName(r.name), 'lead name')}</strong>
+              <span>{maskedOrWithheld(maskPhone(r.phone), 'lead phone')}</span>
               <span className="sw">{r.status ?? 'new'}</span>
               <span className="tech">{r.source ?? '—'}</span>
             </li>

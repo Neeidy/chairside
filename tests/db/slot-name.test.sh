@@ -34,7 +34,8 @@ check() { if [ "$2" = "$3" ]; then ok "$1"; else bad "$1 (got '$2', want '$3')";
 
 CID="$(docker run -d --rm --label c72=pgtest-slotname --network none -e POSTGRES_HOST_AUTH_METHOD=trust -e POSTGRES_DB=salon \
   -v "$ROOT/db/schema:/schema:ro" "$IMAGE")"
-trap 'docker rm -f "$CID" >/dev/null 2>&1 || true' EXIT
+# X2 (HARDENING): -v removes the image's anonymous data volume with the container (2f961fd's class).
+trap 'docker rm -f -v "$CID" >/dev/null 2>&1 || true' EXIT
 for _ in $(seq 1 60); do docker exec "$CID" pg_isready -U postgres -d salon >/dev/null 2>&1 && break; sleep 0.5; done
 sleep 1   # the image restarts the server once after its init scripts
 for _ in $(seq 1 60); do docker exec "$CID" pg_isready -U postgres -d salon >/dev/null 2>&1 && break; sleep 0.5; done
