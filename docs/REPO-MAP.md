@@ -282,7 +282,9 @@
 
 ### docs/hardening
 
+- `docs/hardening/B4-LIVE-DRILL.md`
 - `docs/hardening/ITEMS.md`
+- `docs/hardening/MYTHOS-HANDOVER.md`
 - `docs/hardening/PLAN.md`
 - `docs/hardening/register.md`
 
@@ -1776,6 +1778,9 @@
 ### `docs/codex/public-demo/prompt.md`
   - _(no `##` headings — flat file)_
 
+### `docs/hardening/B4-LIVE-DRILL.md`
+  - _(no `##` headings — flat file)_
+
 ### `docs/hardening/ITEMS.md`
   - ## A. Findings (12)
   - ## B. Engine / product FIX NOW
@@ -1783,6 +1788,9 @@
   - ## D. New RULE AS LIMIT (reason · cost of fixing)
   - ## E. v2 (needs a product decision · trigger)
   - ## F. Critic additions — classified
+
+### `docs/hardening/MYTHOS-HANDOVER.md`
+  - _(no `##` headings — flat file)_
 
 ### `docs/hardening/PLAN.md`
   - ## ⚠ AS BUILT (B1, 2026-11-18) — read this first; the Phase A text below is kept as approved and is NOT the build
