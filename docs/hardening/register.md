@@ -216,7 +216,7 @@ Generated 2026-11-18 by `plan-inputs/build_register.py` from `inv-roadmap.json`,
 | EN-CD-30 | Dashboard security: `salon_ro` reads every column; a cached write check; raw driver … | docs/ENGINEERING-NOTES.md:97 [EN-74B-5]; docs/CLOSE-OUT-PLAN.md:61 [EN-CD-30]; docs/CLOSE-OUT-PLAN.md:61 [CO-30] | still true | RULED ALREADY | role read-only, dashboard behind Access | none |
 | EN-CD-33 | Ship gate #18: Access's configuration is not in the repo | docs/CLOSE-OUT-PLAN.md:64 [EN-CD-33]; docs/CLOSE-OUT-PLAN.md:64 [CO-33]; docs/ROADMAP.md:2204 [SG-18] | still true | RULED ALREADY | K-6: a service inventory in a public repo · reopens when: "no trigger named" | none |
 | EN-CD-34 | Per-client Turnstile provisioning | docs/CLOSE-OUT-PLAN.md:65 [EN-CD-34]; docs/CLOSE-OUT-PLAN.md:65 [CO-34]; README.md (Honest limits / Not built yet, from line 165) [RM-NB-2] | still true | RULED ALREADY | required before the SECOND real client, not for the demo · reopens when: "the second real client" | none |
-| EN-CD-35 | A real second deployment | docs/CLOSE-OUT-PLAN.md:66 [EN-CD-35]; docs/CLOSE-OUT-PLAN.md:66 [CO-35]; README.md:198 [RM-HL-7]; README.md (Honest limits / Not built yet, from line 165) [RM-NB-1] | still true | RULED ALREADY | trigger: a real client · reopens when: "a real client" | none |
+| EN-CD-35 | A real second deployment | docs/CLOSE-OUT-PLAN.md:66 [EN-CD-35]; docs/CLOSE-OUT-PLAN.md:66 [CO-35]; README.md:199 [RM-HL-7]; README.md (Honest limits / Not built yet, from line 165) [RM-NB-1] | still true | RULED ALREADY | trigger: a real client · reopens when: "a real client" | none |
 | EN-CD-36 | WhatsApp end to end on Postgres (K-5) | docs/ENGINEERING-NOTES.md:102 [EN-v2-P2]; docs/CLOSE-OUT-PLAN.md:67 [EN-CD-36]; docs/CLOSE-OUT-PLAN.md:67 [CO-36]; README.md:173 [RM-HL-2]; README.md (Honest limits / Not built yet, from line 165) [RM-NB-3] | still true | RULED ALREADY | trigger: channel turned on for a client · reopens when: "the WhatsApp channel turned on for a client" | none |
 | EN-CD-4 | A stale line in the intent prompt (reschedule "routed to a human") | docs/ENGINEERING-NOTES.md:98 [EN-74B-6]; docs/CLOSE-OUT-PLAN.md:36 [EN-CD-4]; docs/CLOSE-OUT-PLAN.md:36 [CO-4] | still true | RULED ALREADY | keep: a prompt change needs a paid golden re-run (its second blocker, independent of the Main edit) | none |
 | EN-CD-40 | #17b–d: the `/api` Access service token, the owner-path Access service token, the … | docs/ENGINEERING-NOTES.md:93 [EN-74B-1]; docs/CLOSE-OUT-PLAN.md:71 [EN-CD-40]; docs/CLOSE-OUT-PLAN.md:71 [CO-40]; docs/ROADMAP.md:2203 [SG-17] | needs live read | RULED ALREADY | respect the decline (trigger: first real client / anyone else on the server); flag the weakened premise for his ruling, do not change the ruling text | none |
@@ -620,7 +620,7 @@ Rules applied globally (not repeated per row):
 | N | RM-HL-4 | README.md:179 | -> RT5-1 |
 | N | RM-HL-5 | README.md:181 | own row RM-HL-5 |
 | N | RM-HL-6 | README.md:182 | -> RT5-7, F5, F3 |
-| N | RM-HL-7 | README.md:198 | -> EN-CD-35 |
+| N | RM-HL-7 | README.md:199 | -> EN-CD-35 |
 | N | RM-NB-1 | README.md (Honest limits / Not built yet, from line 165) | -> EN-CD-35 |
 | N | RM-NB-2 | README.md (Honest limits / Not built yet, from line 165) | -> EN-CD-34 |
 | N | RM-NB-3 | README.md (Honest limits / Not built yet, from line 165) | -> EN-CD-36 |
