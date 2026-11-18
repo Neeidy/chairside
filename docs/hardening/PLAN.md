@@ -18,7 +18,7 @@ Inputs (scratchpad, committed under `docs/hardening/` in B5):
 ## ⚠ AS BUILT (B1, 2026-11-18) — read this first; the Phase A text below is kept as approved and is NOT the build
 
 Where the build differs from the approved text below, the build is what holds (rulings in `docs/ARCHITECTURE-DECISIONS.md`,
-2026-11-18 rows; per-item status in `register.md`, "BUILT (staged, not live)"):
+2026-11-18 rows; per-item status in `register.md`: LIVE, COMMITTED, or partly live-drilled — since the 2026-11-18 deploy):
 - **WU-1:** there is no `Check Consent` node. The clear-yes test is `Read Pending Answer` (before `Abort Cancel?`);
   `Abort Cancel?` / `Abort Reschedule?` act only on a clear yes the model also read as `confirm`; at the booking confirm
   `Classify Confirm Reply` tags a model `confirm` without a clear yes and `Route Consent` sends it back to `Slot Gate`

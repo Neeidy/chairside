@@ -106,7 +106,8 @@ Telegram (owner alerts) · Zernio (the WhatsApp Business API adapter).
   path, blocking for 10 s above that. Its block was shown before go-live (`docs/PUBLIC-DEMO-PLAN.md`, R2c), but it is
   **not re-verified as of 2026-11-16**: a burst sent from outside that day was not blocked at the edge. Every request was
   still refused by the Turnstile check, and nothing was written or billed (`docs/CLOSE-OUT-PLAN.md`, "Pre-post live
-  check", L2).
+  check", L2). **Re-tested 2026-11-18 (K13): one check passed, one failed; a follow-up and a re-test are
+  pending** (`docs/hardening/register.md`, EDGE-RL).
 - **Spend cap, fail-closed:** a monthly LLM cap is checked before every paid call. The meter is raised by one SQL
   statement (an increment, not an overwrite); the check before the call is still read-then-act, so turns already in
   flight when the cap is reached can finish and overshoot it. If the spend meter cannot be read,

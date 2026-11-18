@@ -217,6 +217,7 @@ What stands between that sentence and a fact, stated (`.claude/rules/honesty-dem
   (PHASE-7-PLAN §4j; `docs/ENGINEERING-NOTES.md`, "The final security pass: what stays open" — moved there from the
   README on 2026-11-03).
 - **The demo is public since 2026-11-01** (§10). The rate limit's BLOCK direction was shown before it went live.
+  *(2026-11-18, K13: re-tested — one check passed, one failed; a follow-up and a re-test are pending, `docs/hardening/register.md`, EDGE-RL.)*
   *(Corrected 2026-11-03: this line said the demo was not deployed.)*
 - The v2 list — what was deliberately deferred and why — is in `docs/ENGINEERING-NOTES.md`, "Not yet — deferred to
   v2" (moved there from the README on 2026-11-03).
@@ -306,7 +307,8 @@ row):
   letting the turn run with an alert.
 - **The rate limit's block direction was shown, on the second try.** The first probe was recorded as RED and then
   withdrawn: it sent 25 requests against a rule that blocks from the 31st. Forty requests then showed the block from
-  the 31st on, with no workflow execution (R2b, R2c).
+  the 31st on, with no workflow execution (R2b, R2c). *(Re-tested 2026-11-18: one check passed, one failed; a follow-up and a
+  re-test are pending.)*
 - **The privacy page names a controller and a contact without putting either in a public repo.** Both are build-time
   settings. The first contact address was on the project's own domain, which the host-leak guard flags, so that round
   stopped before committing it (R2g) and the values moved to the environment (R2h). The page states the legal basis, retention, the
