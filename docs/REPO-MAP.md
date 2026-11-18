@@ -236,7 +236,10 @@
 
 ### docs/codex/hardening
 
+- `docs/codex/hardening/p1.md`
+- `docs/codex/hardening/prompt-p2.md`
 - `docs/codex/hardening/prompt.md`
+- `docs/codex/hardening/run-p2.sh`
 - `docs/codex/hardening/run.sh`
 
 ### docs/codex/n1
@@ -1698,6 +1701,16 @@
 ### `docs/codex/date-phrasing/r6.md`
   - _(no `##` headings — flat file)_
 
+### `docs/codex/hardening/p1.md`
+  - ## MAIN
+  - ## OWNER ACTIONS
+  - ## TOOLING
+  - ## WIDGET / DASHBOARD
+  - ## TESTS
+
+### `docs/codex/hardening/prompt-p2.md`
+  - _(no `##` headings — flat file)_
+
 ### `docs/codex/hardening/prompt.md`
   - _(no `##` headings — flat file)_
 
@@ -1787,9 +1800,9 @@
 ### `docs/hardening/register.md`
   - ## A. Findings (F1-F7, SPEND, H3-H6) (13 rows)
   - ## B. Engine / product defects from ROADMAP and notes (14 rows)
-  - ## C. Ops / tooling / edge (13 rows)
+  - ## C. Ops / tooling / edge (17 rows)
   - ## D. Docs-only stale text (75 rows)
-  - ## E. Ruled limits kept (92 rows)
+  - ## E. Ruled limits kept (97 rows)
   - ## F. v2 (deferred, trigger-bound) (14 rows)
   - ## Counts
   - ## Reconciliation: count in vs rows out

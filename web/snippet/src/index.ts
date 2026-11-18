@@ -80,6 +80,9 @@ function boot(selfSrc: string | null) {
   //   · a mount that threw half-way left the element behind → every later load returned early, no widget at all.
   // `data-barber-widget` is "mounting" until the end of boot() and "mounted" after; both cases now say so in the
   // console, visibly, and the widget still mounts.
+  // RECORDED BOUND (Codex hardening p2): the marker is an attribute the HOST page could also set; a host that writes
+  // data-barber-widget="mounted" itself suppresses the widget. The host controls its own page (it can equally remove the
+  // script tag), so this is not a security boundary.
   const mine = document.querySelector('[data-barber-widget]');
   if (mine) {
     if (mine.getAttribute('data-barber-widget') === 'mounted') return;   // double-insert guard: two tags, one widget

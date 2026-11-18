@@ -196,6 +196,9 @@ import json, os, re, sys
 # loses its keyword and is not caught (it was not caught before either — the whole line was dropped). Keeping the
 # name was tried and fired on the dashboard tests' `test-…` fixtures, which a push of that file would then block.
 STRIP = [(re.compile(p), r) for p, r in (
+    # RECORDED BOUND (Codex hardening p2): these two strip a lockfile field's WHOLE value, so a secret or a phone number
+    # written inside an "integrity" / "resolved" value is not seen by any line rule. Kept: they are what keeps every
+    # package-lock line from firing; such a field is written by npm, not by hand.
     (r'"integrity"\s*:\s*"[^"]*"', ' '),
     (r'"resolved"\s*:\s*"[^"]*"', ' '),
     (r'sha(?:512|384|256|1)-[A-Za-z0-9+/]+=*', ' '),

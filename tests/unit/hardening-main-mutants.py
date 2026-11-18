@@ -128,8 +128,10 @@ MUTANTS = {
     'RM-2007: the clarify ask back to the greeting': code('Build Clarify State', "(collectingAsk() || cfg.messageTemplates.askIntent", "(cfg.messageTemplates.askIntent"),
     'Codex p1: the original text not consulted': code(RPA, "if (!tampered && t && t.length <= 80) {", "if (t && t.length <= 80) {"),
     'Codex p1: the reschedule marker survives a gap': code(MS, "(newSession && v === 'reschedule_ask') ? null : v", "v"),
-    'Codex p1: same-day bookings not split by time': code(CL, "if (hit.length > 1 && saidTime) hit", "if (false) hit"),
+    'Codex p1: same-day bookings not split by time': code(CL, "  if (saidTime) hit = hit.filter", "  if (false) hit = hit.filter"),
     'Codex p1: recent_messages not type-checked': code(BOA, "(typeof st.recent_messages === 'string' ? st.recent_messages : '')", "(st.recent_messages || '')"),
+    'Codex p2: another service moved anyway': code(RL, "const otherService = rw._rewritten_from_book === true", "const otherService = false && rw._rewritten_from_book === true"),
+    'Codex p2: the time filter only for several': code(CL, "  if (saidTime) hit = hit.filter", "  if (hit.length > 1 && saidTime) hit = hit.filter"),
     # WU-5 · SPEND
     'SPEND: the absolute value is written again': param('Record LLM Spend', "$json._delta,", "$json.cost_usd,"),
     'SPEND: the SQL overwrites instead of adding': code('Record LLM Spend', "SET cost_usd = salon.bot_metrics.cost_usd + EXCLUDED.cost_usd,", "SET cost_usd = EXCLUDED.cost_usd,"),

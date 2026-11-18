@@ -269,6 +269,9 @@ test('F6 static: no Code node downstream of Resolve Date reads the model\'s slot
   assert.ok(seen.has('Reschedule Lookup') && seen.has('Build Owner Alert') && seen.has('Merge Slots'), 'instrument: the walk reaches the three readers');
   const RAW = /\$\('(?:Validate Intent|Fill Name From Reply|Build LLM Request)'\)[^;\n]*\.slots|\bvi\.slots\b|\bj\.slots\b(?![\s\S]{0,3}=)/;
   const hits = [...seen].map(node).filter((n) => n && n.type.endsWith('.code') && n.name !== 'Merge Slots' && n.name !== 'Resolve Date'
+    // Read Pending Answer reads `j.slots.serviceId` from the item Resolve Date emitted (time already normalised) — the
+    // service id only, for the RM-1979 rewrite; it never reads a time.
+    && !(n.name === 'Read Pending Answer' && !/slots\)?\s*\|\|\s*\{\}\)\.time|\.slots\.time/.test(n.parameters.jsCode))
     && RAW.test(n.parameters.jsCode)).map((n) => n.name);
   assert.deepEqual(hits, []);
 });
@@ -507,4 +510,39 @@ test('Codex p1 MEDIUM: two bookings on one day — the named time picks one; the
 test('Codex p1 LOW: a non-string recent_messages does not throw in the alert builder', () => {
   const { out } = boa({ _outbound_kind: 'Handoff Lock Reply', state: { sender_key: 'widget:w-hd', stage: 'handoff', recent_messages: 12345 } });
   assert.equal(out.length, 1);
+});
+
+// ── Codex hardening pass 2 ─────────────────────────────────────────────────────────────────────────────────────
+test('Codex p2: a line break INSIDE the text never consents; Enter after a clear yes is the recorded N1 bound', () => {
+  for (const st of STAGES) { assert.equal(consentYes('yes\nno', st), false, st); assert.equal(consentYes('ok\r\nthanks', st), false, st); }
+  assert.equal(consentYes('yes\n', 'confirming'), true, 'boundary whitespace is trimmed (ruled bound, as "no\\n" in N1)');
+});
+test('Codex p2: right after the reschedule question, a request for ANOTHER service is a new booking, not the move', () => {
+  const r = replay(); book(r); r.turn('yes', answer('confirm', 0.95));
+  r.turn('I need to move my appointment', answer('reschedule', 0.9));
+  r.turn('a beard trim saturday at 12:00', answer('book', 0.92, { serviceId: 'beard', dateExpr: 'saturday', time: '12:00' }));
+  assert.notEqual(r.db.conv.stage, 'reschedule_confirming');
+  assert.notEqual(r.db.conv.stage, 'confirming', 'not a second booking either: the customer is asked');
+  assert.deepEqual(booked(r).map((a) => a.start_utc), ['2026-11-20T10:00:00.000Z'], 'the booking is not moved');
+});
+test('Codex p2 / flow-reviewer: two bookings of different services — the bound booking\'s OWN service decides, not the last one collected', () => {
+  const r = replay(); book(r, 'friday', '11:00'); r.turn('yes', answer('confirm', 0.95));              // haircut, Friday
+  r.turn('and a beard trim monday at 10:00', answer('book', 0.92, { serviceId: 'beard', dateExpr: 'monday', time: '10:00' }));
+  r.turn('yes', answer('confirm', 0.95)); assert.equal(booked(r).length, 2, 'setup');
+  r.turn('move my appointment', answer('reschedule', 0.9));                                          // binds the earliest: the haircut
+  const t = r.turn('saturday at 12:00', answer('book', 0.9, { serviceId: 'haircut', dateExpr: 'saturday', time: '12:00' }));
+  assert.equal(r.db.conv.stage, 'reschedule_confirming', 'the haircut is the one being moved');
+  assert.match(t.reply, /^Move your Haircut/);
+  const r2 = replay(T0, 'widget:w-hd-p2b'); book(r2, 'friday', '11:00'); r2.turn('yes', answer('confirm', 0.95));
+  r2.turn('and a beard trim monday at 10:00', answer('book', 0.92, { serviceId: 'beard', dateExpr: 'monday', time: '10:00' }));
+  r2.turn('yes', answer('confirm', 0.95)); r2.turn('move my appointment', answer('reschedule', 0.9));
+  const t2 = r2.turn('a beard trim saturday at 12:00', answer('book', 0.9, { serviceId: 'beard', dateExpr: 'saturday', time: '12:00' }));
+  assert.match(t2.reply, /Do you want to move your Haircut booking, or book a new appointment/);
+  assert.equal(r2.db.appts.filter((a) => a.status === 'booked').length, 2);
+});
+test('Codex p2: a named time that matches no booking on that day picks nothing (the customer is asked)', () => {
+  const r = replay(); book(r, 'friday', '11:00'); r.turn('yes', answer('confirm', 0.95));
+  const t = r.turn('cancel my friday 15:00 booking', answer('cancel', 0.9, { dateExpr: 'friday', time: '15:00' }));
+  assert.match(t.reply, /Which one should I cancel\?/);
+  assert.notEqual(r.db.conv.stage, 'cancel_confirming');
 });

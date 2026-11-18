@@ -47,13 +47,17 @@ Generated 2026-11-18 by `plan-inputs/build_register.py` from `inv-roadmap.json`,
 | RM-2143 | styles.ts --ink/--oxide hardcoded, equal to config.branding | docs/ROADMAP.md:2143 | BUILT (staged, not live) | FIX NOW | A second truth (contract-integrity.md) in a resellable template: a client with other branding gets the demo colours. Small: bake branding via build define + parity test. **RULED 2026-11-18: B1: web/snippet/test/branding.test.ts** | none |
 | RT4-b | Shared message_id namespace, held by entropy only | CHAIRSIDE-REDTEAM-REPORT.md:301 | BUILT (staged, not live) | FIX NOW | Small, and it makes the property structural. `Check Processed` claims `${channel}:${message_id}`. The owner regex contains no ':', so a Main key can never equal an owner marker, and WhatsApp and widget ids become disjoint too. … **RULED 2026-11-18: B1: hardening-main (RT4-b) + tests/db/claim-race.test.sh** | none |
 
-## C. Ops / tooling / edge (13 rows)
+## C. Ops / tooling / edge (17 rows)
 
 | id | title | source refs | status today | final class | reason | needs |
 |---|---|---|---|---|---|---|
 | A1-b | Edge-rule item — withheld until resolved (K12) | — | open | FIX NOW | Withheld (K12). | — |
 | CR-A1 | n8n execution retention not measured (customer text, Access JWT in errored runs) | plan-inputs/critic.md A1 | needs live read | FIX NOW | Critic A1: read-only measurement of the oldest kept execution per workflow; the result is recorded, a retention change would be a separate ruling. | none (read-only) |
 | CR-A2 | Archived Main still holds attacker-keyed static data incl. WhatsApp numbers | plan-inputs/critic.md A2; results/verify-F7.json | still true | FIX NOW | Critic A2 / verify-F7. K11: clear the archived Main's static data only, read back that it is empty. Live write, own ONAY. | live write (ONAY) |
+| CX2-1 | Codex p2 §1 HIGH: boundary whitespace trimmed before the consent test |  | Codex p2 | FIX NOW | FIXED: an interior line break never consents (test + mutant). RULED BOUND (proposed; same class Yigitcan ruled in N1 pass 2): leading/trailing whitespace is trimmed, so `yes`+Enter is a clear yes, as `no`+Enter is the closed no. Unicode look-alikes and interior zero-width/RTL characters never match (tested). | none |
+| CX2-2 | Codex p2 §2 MEDIUM: RM-1979 rewrite on an unrelated same-session booking |  | Codex p2 | FIX NOW | FIXED: an answer naming ANOTHER service than the bound booking's own (read from that booking's row in Reschedule Lookup; the first attempt compared the state's last-collected service and flow-reviewer reproduced it booking a second appointment) is asked about, never moved (tests + mutant). BOUND: after that question, a plain reschedule answer takes the earliest booking (the bound one in the common case), not the bound target. | none |
+| CX2-3 | Codex p2 §3 MEDIUM: named time not matching the only same-day booking |  | Codex p2 | FIX NOW | FIXED: a named time always filters; no match → "which one?" (test + mutant). BOUND (as L4): the "which one?" ask binds no marker; the next answer needs the model to read it as cancel. | none |
+| CX2-4 | Codex p2 §4 LOW: Alert Context sender.includes on a non-string |  | Codex p2 | FIX NOW | FIXED: typeof guard. Reachability not shown (Postgres sender keys are text). | none |
 | EDGE-RL | Edge-rule item — withheld until resolved (K12) | — | open | FIX NOW | Withheld (K12). | — |
 | RM-1413 | Eight selftest cases no longer discriminate anything (lexer-era) | docs/ROADMAP.md:1413 | BUILT (staged, not live) | FIX NOW | Small, offline, testable: label the eight as sentinels and exclude them from the printed fail-proof count. **RULED 2026-11-18: B1: check-client-imports --selftest (sentinel count asserted)** | tooling change |
 | RM-185 | CP5 Reminders: "R5 timezone/DST = ◐ inherited, NOT independently DST-drilled" | docs/ROADMAP.md:185 | BUILT (staged, not live) | FIX NOW | The behaviour is correct (measured offline on the committed export) but the evidence lives only in the scratchpad; FIX NOW = commit reminder-dst as a unit test so the ◐ can close on repo evidence. Extra: the node comment still … **RULED 2026-11-18: B1: tests/unit/reminder-dst.test.cjs** | none |
@@ -145,13 +149,16 @@ Generated 2026-11-18 by `plan-inputs/build_register.py` from `inv-roadmap.json`,
 | SG-19 | Ship gate #19: ✅ closed, by the store | docs/ROADMAP.md:2204 [SG-19] | stale text | STALE TEXT | closed | none |
 | SG-21 | Ship gate #21: ✅ closed | docs/ROADMAP.md:2206 [SG-21] | stale text | STALE TEXT | closed | none |
 
-## E. Ruled limits kept (92 rows)
+## E. Ruled limits kept (97 rows)
 
 | id | title | source refs | status today | final class | reason | needs |
 |---|---|---|---|---|---|---|
 | CO-L3e-2 | Pre-post FINAL L3e (2, 3): two September Main workflow-definition JSON files older … | docs/CLOSE-OUT-PLAN.md (Pre-post live check / FINAL, from line 963) [CO-L3e-2] | needs live read | RULE AS LIMIT | outside the published retention text by its own scope; a raw export may still carry credential ids or the chat id, so if kept it should sit behind the X1 deny rules — his ruling (keep or delete, ⚠ ONAY) **RULED 2026-11-18: still awaiting Yigitcan (keep / delete the two September JSONs); not decided by this approval.** | ruling |
 | CR-A3 | Postgres statement_timeout and Telegram node timeout absent | plan-inputs/critic.md A3 | still true | RULE AS LIMIT | Critic A3 / K8: no default measured, the Telegram node has no timeout field; recorded as a limit in spend-safety.md (already stated there). | none |
 | CR-A8 | Lost week context may propose the wrong week's day; only the confirm catches it | plan-inputs/critic.md A8; docs/ROADMAP.md:1527 | still true | RULE AS LIMIT | Critic A8 (ROADMAP:1527). With WU-1 the confirm check that catches it runs in code (F3), which restores the stated compensating control. | none |
+| CX2-10 | Codex p2 §10 LOW: a host page can set the mount marker itself |  | Codex p2 | RULE AS LIMIT | Proposed: the host controls its own page; stated in index.ts. | none |
+| CX2-5 | Codex p2 §5 MEDIUM: the D3 test is structural, not proof of exactly-once delivery |  | Codex p2 | RULE AS LIMIT | Proposed: D3 is a structural guard (every handoff writer has an alert route); behaviour is driven end to end for 4 of the 7 F1 branches + the consent handoff; "exactly once" is bounded by the 30-min throttle and ownerAlert.enabled by design. The live B4 run reads one real alert. | none |
+| CX2-9 | Codex p2 §9 MEDIUM: lockfile integrity/resolved values stripped whole |  | Codex p2 | RULE AS LIMIT | Proposed: pre-existing exclusion (written by npm, not by hand); now stated in secret-scan.sh. | none |
 | RM-1048 | L2 round on 6c-3 (◐): M1/M2/M3 closed; E4 CRT #10b prop path … | docs/ROADMAP.md:1048 | still true | RULE AS LIMIT | Prop-path is rule-covered only; a real gate needs an RSC render harness. | none |
 | RM-1613 | date_expr_forged alert RATE unmeasured (20% split threshold declared) | docs/ROADMAP.md:1613 | still true | RULE AS LIMIT | Needs representative traffic; the demo has none, and adversarial drill sets are not a rate. Threshold already declared in advance. | none |
 | RM-1886 | STILL UNDRILLED after the round-3 window (five behaviours, live) | docs/ROADMAP.md:1886 | still true | RULE AS LIMIT | Live LLM spend in a window; the deterministic halves are covered by the replay. (0) the collecting echo rate depends on the model and has no offline answer. | none |
@@ -169,6 +176,8 @@ Generated 2026-11-18 by `plan-inputs/build_register.py` from `inv-roadmap.json`,
 | SPEND-b | LLM timeout/error records no spend; meter can undercount without concurrency | results/SPEND.json (extra) | still true (unmeasured) | RULE AS LIMIT | New from SPEND: Extract Intent error output writes no spend although a 60 s-timed-out call may still be billed. Not measured; record next to the SPEND limit. | none |
 | CO-RL-2 | Ruled limit: no Anthropic-side spend limit; the engine cap is the brake | docs/CLOSE-OUT-PLAN.md:992 [PP-1c]; docs/CLOSE-OUT-PLAN.md (Pre-post live check / FINAL, from line 963) [PP-O5]; docs/CLOSE-OUT-PLAN.md (Pre-post live check / FINAL, from line 963) [CO-RL-2] | needs live read | RULED ALREADY | already ruled; note the engine meter itself undercounts under concurrency (SPEND) | none |
 | CO-RL-3 | Ruled limit: whether .vercelignore applies to Git deploys is not measured | docs/CLOSE-OUT-PLAN.md (Pre-post live check / FINAL, from line 963) [CO-RL-3] | needs live read | RULED ALREADY | already ruled | none |
+| CX2-11 | Codex p2 §11: D3 instrument assertion tests literals |  | Codex p2 | RULED ALREADY | By design: it proves the regex can tell a SET from a WHERE; the workflow side is tested by the D3 tests beside it. | none |
+| CX2-6 | Codex p2 §6/§7/§8: idempotency, spend, dates — no finding; Codex incomplete |  | Codex p2 | RULED ALREADY | Codex found nothing in what it read and said it did not finish; L2 flow-reviewer traced the readers (M1) and the docker tests ran (claim-race, spend-meter, booking-lookup). | none |
 | EN-722-1 | deploy tool: a snapshot's age is not checked | docs/ENGINEERING-NOTES.md:55 [EN-722-1]; docs/CLOSE-OUT-PLAN.md:69 [EN-CD-38]; docs/CLOSE-OUT-PLAN.md:69 [CO-38] | still true (not re-measured) | RULED ALREADY | ruled 7-2 R4 / DC-1; premise not contradicted · recorded reason: "snapshots are deleted once an edit closes (`remote-operator.md`), and any snapshot must still pass the webhook invariants before a rollback" | none |
 | EN-722-10 | deploy tool: `settings` does not enforce running after the probes | docs/ENGINEERING-NOTES.md:64 [EN-722-10]; docs/CLOSE-OUT-PLAN.md:69 [EN-CD-38]; docs/CLOSE-OUT-PLAN.md:69 [CO-38] | still true (not re-measured) | RULED ALREADY | ruled 7-2 R4 / DC-1; premise not contradicted · recorded reason: "the runbook orders it last, and the check after it is a body probe that counts no executions" | none |
 | EN-722-11 | deploy tool: pre-snapshot parity cannot see an IF/Switch condition's option fields | docs/ENGINEERING-NOTES.md:65 [EN-722-11]; docs/CLOSE-OUT-PLAN.md:69 [EN-CD-38]; docs/CLOSE-OUT-PLAN.md:69 [CO-38] | still true (not re-measured) | RULED ALREADY | ruled 7-2 R4 / DC-1; premise not contradicted · recorded reason: "no gate decision depends on them today (R2b)" | none |
@@ -263,26 +272,26 @@ Generated 2026-11-18 by `plan-inputs/build_register.py` from `inv-roadmap.json`,
 
 ## Counts
 
-**Rows out: 221.**
+**Rows out: 230.**
 
 | class | rows | of which conditional |
 |---|---|---|
-| FIX NOW | 37 | 1 |
-| RULE AS LIMIT | 20 | 0 |
+| FIX NOW | 41 | 1 |
+| RULE AS LIMIT | 23 | 0 |
 | v2 | 15 | 0 |
 | STALE TEXT | 75 | 0 |
-| RULED ALREADY | 74 | 0 |
-| **total** | **221** | |
+| RULED ALREADY | 76 | 0 |
+| **total** | **230** | |
 
 | group | rows |
 |---|---|
 | A. Findings (F1-F7, SPEND, H3-H6) | 13 |
 | B. Engine / product defects from ROADMAP and notes | 14 |
-| C. Ops / tooling / edge | 13 |
+| C. Ops / tooling / edge | 17 |
 | D. Docs-only stale text | 75 |
-| E. Ruled limits kept | 92 |
+| E. Ruled limits kept | 97 |
 | F. v2 (deferred, trigger-bound) | 14 |
-| **total** | **221** |
+| **total** | **230** |
 
 Class by group:
 
@@ -290,9 +299,9 @@ Class by group:
 |---|---|---|---|---|---|
 | A | 10 | 2 | 1 | 0 | 0 |
 | B | 14 | 0 | 0 | 0 | 0 |
-| C | 13 | 0 | 0 | 0 | 0 |
+| C | 17 | 0 | 0 | 0 | 0 |
 | D | 0 | 0 | 0 | 75 | 0 |
-| E | 0 | 18 | 0 | 0 | 74 |
+| E | 0 | 21 | 0 | 0 | 76 |
 | F | 0 | 0 | 14 | 0 | 0 |
 
 STALE TEXT split (heuristic from the inventories' fix_cost: empty / none / n/a = closed record, no edit): 24 rows need a docs edit, 51 are closed records that need none. The 7 rows added from the findings (D-*) and the 6 reclassified doc-only rows need an edit.
@@ -310,7 +319,7 @@ Every input ref maps to at least one row (asserted by the generator: no unmapped
 | 12 findings | 12 | 12 | 0 | 13 rows (H5 split into H5 + H5b by me) |
 | rows added from the findings' extras (X1, SPEND-b, D-F2, D-F3, D-F4, D-SP, D-F7) | n/a | n/a | n/a | 7 |
 
-Arithmetic: 286 inventory refs = 191 refs that own a row under their own id + 95 refs merged into another row. The 4 merge targets with no ref of their own id (EDGE-RL, EN-v2-12, RM-1979, RT5-6) are rows opened by the merged refs: 191 + 4 = **195 inventory rows**. Plus 13 finding rows (12 findings, H5 split in two) plus 7 rows from the findings' extras = **221 rows out**.
+Arithmetic: 286 inventory refs = 191 refs that own a row under their own id + 95 refs merged into another row. The 4 merge targets with no ref of their own id (EDGE-RL, EN-v2-12, RM-1979, RT5-6) are rows opened by the merged refs: 191 + 4 = **195 inventory rows**. Plus 13 finding rows (12 findings, H5 split in two) plus 7 rows from the findings' extras = **230 rows out**.
 
 Unmapped input refs (a ref whose target row does not exist): **0** []. Appendix rows: 286 (= count in 286).
 
@@ -621,7 +630,7 @@ Rules applied globally (not repeated per row):
 | P | §5-2 | CHAIRSIDE-REDTEAM-REPORT.md:314 | own row RT5-2 |
 | P | §5-3 | CHAIRSIDE-REDTEAM-REPORT.md:315 | own row RT5-3 |
 | P | §5-4 | CHAIRSIDE-REDTEAM-REPORT.md:316 | -> SPEND |
-| P | §5-5 | CHAIRSIDE-REDTEAM-REPORT.md:317 | -> EDGE-RL |
+| P | §5-5 | CHAIRSIDE-REDTEAM-REPORT.md §5-5 | -> EDGE-RL |
 | P | §5-6 | CHAIRSIDE-REDTEAM-REPORT.md:318 | -> RT5-6 |
 | P | §5-7 | CHAIRSIDE-REDTEAM-REPORT.md:319 | own row RT5-7 |
 | P | §5-8 | CHAIRSIDE-REDTEAM-REPORT.md:320 | own row RT5-8 |
@@ -660,4 +669,4 @@ Findings and extras:
 | F7 extra (MIGRATION-PLAN #11) | D-F7 |
 | H5 Reminders half | H5b |
 
-Locator coverage (best-effort text match for notes/README refs): 264 exact file:line, 22 section anchor only.
+Locator coverage (best-effort text match for notes/README refs): 263 exact file:line, 23 section anchor only.
